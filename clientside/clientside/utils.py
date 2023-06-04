@@ -17,6 +17,7 @@ def create_new_user(*args, **kwargs):
         "doctype": "User",
         "first_name": firstname,
         "last_name":lastname,
+        "full_name": firstname + " " + lastname,
         "email": email,
         "send_welcome_email":0,
         "new_password":password,
