@@ -44,7 +44,7 @@ async function createNewUser(
   companyname,
   password
 ) {
-  await frappe.call({
+  frappe.call({
     method: "clientside.clientside.utils.create_new_user",
     args: {
       email: email,
@@ -53,6 +53,7 @@ async function createNewUser(
       companyname: companyname,
       password: password,
     },
+    async: false,
     callback: async function (r) {
       console.log(r);
       if (r.message === "OK") {
