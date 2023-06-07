@@ -60,7 +60,9 @@ async function createNewUser(
       console.log(r);
       if (r.message.status == "OK") {
         console.log("User created", email);
-        redirect();
+        login(email, password).then(() => {
+          redirect();
+        });
       } else {
         console.log(r.message);
         if (r.message == errorMessages.EMAIL_ALREADY_REGISTERED) {
