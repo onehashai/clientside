@@ -15,13 +15,13 @@ def create_new_user(*args, **kwargs):
     print(email, password, firstname, lastname)
     if not checkEmailFormatWithRegex(email):
         return "INVALID_EMAIL_FORMAT"
-    if (
-        check_password_strength(
-            password=password, first_name=firstname, last_name=lastname, email=email
-        )["feedback"]["password_policy_validation_passed"]
-        == False
-    ):
-        return "PASSWORD_NOT_STRONG"
+    # if (
+    #     check_password_strength(
+    #         password=password, first_name=firstname, last_name=lastname, email=email
+    #     )["feedback"]["password_policy_validation_passed"]
+    #     == False
+    # ):
+    #     return "PASSWORD_NOT_STRONG"
     if not firstname:
         return "FIRST_NAME_NOT_PROVIDED"
     if not lastname:
