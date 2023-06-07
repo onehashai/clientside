@@ -9,6 +9,16 @@ if (window.dev_server) {
 } else {
   domain = ".onehash.store";
 }
+const errorMessages = {
+  EMAIL_ALREADY_REGISTERED: "Email already registered",
+  INVALID_EMAIL_FORMAT: "Invalid email format",
+  PASSWORD_NOT_STRONG: "Password not strong",
+  FIRST_NAME_NOT_PROVIDED: "First name not provided",
+  LAST_NAME_NOT_PROVIDED: "Last name not provided",
+  EMAIL_ALREADY_REGISTERED: "Email already registered",
+  EMAIL_ALREADY_REGISTERED_BUT_DISABLED:
+    "Email already registered but disabled",
+};
 async function logout() {
   await $.ajax({
     url: "/api/method/logout",
@@ -21,6 +31,8 @@ async function logout() {
     success: function (data) {
       if (data.message == "ok") {
         console.log("User logged out");
+      } else {
+        frappe.msgprint("Error logging out");
       }
     },
   });
@@ -42,9 +54,13 @@ async function createNewUser(
       password: password,
     },
     callback: async function (r) {
-      console.log("User created", email);
-      await login(email, password);
-      redirect();
+      if (r.message === "OK") {
+        console.log("User created", email);
+        await login(email, password);
+        redirect();
+      } else {
+        frappe.msgprint(errorMessages[r.message]);
+      }
     },
   });
 }
@@ -56,19 +72,25 @@ function redirect() {
 }
 
 async function login(email, password) {
-  await $.ajax({
-    url: "/api/method/login",
-    type: "POST",
-    data: {
-      usr: email,
-      pwd: password,
-    },
-    crossDomain: true,
-    xhrFields: {
-      withCredentials: true,
-    },
-    dataType: "json",
-  });
+  try {
+    await $.ajax({
+      url: "/api/method/login",
+      type: "POST",
+      data: {
+        usr: email,
+        pwd: password,
+      },
+      crossDomain: true,
+      xhrFields: {
+        withCredentials: true,
+      },
+      dataType: "json",
+    });
+  } catch (error) {
+    console.log(error);
+    frappe.msgprint("Some Internal error , please try again later");
+  }
+
   console.log("User logged in", email);
 }
 window.onload = function () {
@@ -92,24 +114,4 @@ async function init() {
   const companyname = url.searchParams.get("companyname") || "OneHash";
   await login("Administrator", password);
   await createNewUser(email, firstname, lastname, companyname, password);
-}
-function updateUserRoleToSystemManager(email) {
-  $.ajax({
-    url: "/api/resource/User",
-    type: "PUT",
-    data: {
-      email: email,
-      roles: ["System Manager"],
-    },
-    crossDomain: true,
-    xhrFields: {
-      withCredentials: true,
-    },
-    dataType: "json",
-    success: function (data) {
-      if (data.data.length > 0) {
-        return data.data[0];
-      }
-    },
-  });
 }
