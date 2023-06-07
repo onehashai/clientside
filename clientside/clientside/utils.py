@@ -68,3 +68,55 @@ def create_new_user(*args, **kwargs):
             "password_policy_validation_passed"
         ],
     }
+
+
+def InsertFiscalYear():
+    print("Inserting Fiscal Year")
+    try:
+        fiscalYear = frappe.get_doc(
+            {
+                "doctype": "Fiscal Year",
+                "year": "2021",
+                "year_start_date": "2021-01-01",
+                "year_end_date": "2021-12-31",
+            }
+        )
+        fiscalYear.flags.ignore_permissions = True
+        fiscalYear.insert()
+    except Exception as e:
+        print(e)
+        return e
+    return {
+        "status": "OK",
+    }
+
+
+def InsertCompany():
+    print("Inserting Company")
+    try:
+        company = frappe.get_doc(
+            {
+                "doctype": "Company",
+                "abbr": "All",
+                "company_name": "All",
+                "default_currency": "USD",
+                "country": "United States",
+            }
+        )
+        company.flags.ignore_permissions = True
+        company.insert()
+    except Exception as e:
+        print(e)
+        return e
+    return {
+        "status": "OK",
+    }
+
+
+def post_install():
+    print("Post Install")
+    InsertFiscalYear()
+    InsertCompany()
+    return {
+        "status": "OK",
+    }

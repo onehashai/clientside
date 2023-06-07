@@ -64,7 +64,7 @@ app_license = "MIT"
 # ------------
 
 # before_install = "clientside.install.before_install"
-after_install = "clientside.clientside.hooks.tps"
+after_install = "clientside.clientside.utils.post_install"
 import frappe
 
 
