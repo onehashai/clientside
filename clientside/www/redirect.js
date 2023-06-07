@@ -54,6 +54,7 @@ async function createNewUser(
       password: password,
     },
     callback: async function (r) {
+      console.log(r);
       if (r.message === "OK") {
         console.log("User created", email);
         await login(email, password);
@@ -61,6 +62,12 @@ async function createNewUser(
       } else {
         frappe.msgprint(errorMessages[r.message]);
       }
+    },
+    success: function (r) {
+      console.log(r);
+    },
+    error: function (r) {
+      console.log(r);
     },
   });
 }
