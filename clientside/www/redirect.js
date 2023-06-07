@@ -53,7 +53,7 @@ async function createNewUser(
       companyname: companyname,
       password: password,
     },
-    async: false,
+    async: true,
     callback: async function (r) {
       console.log(r);
       if (r.message === "OK") {
