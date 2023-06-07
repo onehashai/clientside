@@ -44,33 +44,42 @@ async function createNewUser(
   companyname,
   password
 ) {
-  frappe.call({
-    method: "clientside.clientside.utils.create_new_user",
-    args: {
-      email: email,
-      firstname: firstname,
-      lastname: lastname,
-      companyname: companyname,
-      password: password,
-    },
-    async: true,
-    callback: async function (r) {
+  frappe
+    .call({
+      method: "clientside.clientside.utils.create_new_user",
+      args: {
+        email: email,
+        firstname: firstname,
+        lastname: lastname,
+        companyname: companyname,
+        password: password,
+      },
+      async: true,
+    })
+    .then((r) => {
       console.log(r);
-      if (r.message === "OK") {
+      if (r.message.status == "OK") {
         console.log("User created", email);
-        await login(email, password);
         redirect();
       } else {
-        frappe.msgprint(errorMessages[r.message]);
+        console.log(r.message);
+        if (r.message == errorMessages.EMAIL_ALREADY_REGISTERED) {
+          console.log("User already exists, logging in");
+          login(email, password).then(() => {
+            redirect();
+          });
+        } else if (
+          r.message == errorMessages.EMAIL_ALREADY_REGISTERED_BUT_DISABLED
+        ) {
+          console.log("User already exists, logging in");
+          login(email, password).then(() => {
+            redirect();
+          });
+        } else {
+          frappe.msgprint(r.message);
+        }
       }
-    },
-    success: function (r) {
-      console.log(r);
-    },
-    error: function (r) {
-      console.log(r);
-    },
-  });
+    });
 }
 function redirect() {
   console.log("redirecting to the new site");
