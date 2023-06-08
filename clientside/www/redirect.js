@@ -46,7 +46,7 @@ async function createNewUser(
 ) {
   frappe
     .call({
-      method: "clientside.clientside.utils.create_new_user",
+      method: "clientside.clientside.utils.testSomethingRandom",
       args: {
         email: email,
         firstname: firstname,

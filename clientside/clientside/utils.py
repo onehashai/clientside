@@ -70,6 +70,45 @@ def create_new_user(*args, **kwargs):
     }
 
 
+@frappe.whitelist()
+def testSomethingRandom(*args, **kwargs):
+    email = kwargs["email"]
+    password = kwargs["password"]
+    firstname = kwargs["firstname"]
+    lastname = kwargs["lastname"]
+    frappe.clear_cache()
+    from frappe.utils.data import now_datetime
+    from frappe.desk.page.setup_wizard.setup_wizard import setup_complete
+
+    print(frappe.db.a_row_exists("Company"))
+    if True:
+        print("heree")
+        current_year = now_datetime().year
+        setup_complete(
+            {
+                "currency": "USD",
+                "full_name": firstname + " " + lastname,
+                "first_name": firstname,
+                "last_name": lastname,
+                "email": email,
+                "password": password,
+                "company_name": "Wind Power LLC",
+                "timezone": "America/New_York",
+                "company_abbr": "WP",
+                "industry": "Manufacturing",
+                "country": "United States",
+                "fy_start_date": f"{current_year}-01-01",
+                "fy_end_date": f"{current_year}-12-31",
+                "language": "english",
+                "company_tagline": "Testing",
+                "chart_of_accounts": "Standard",
+            }
+        )
+    return {
+        "status": "OK",
+    }
+
+
 def InsertFiscalYear():
     print("Inserting Fiscal Year")
     try:
@@ -113,10 +152,36 @@ def InsertCompany():
     }
 
 
+def insertDefaultCountryCurrencyAndTimeZones():
+    print("Inserting Country")
+    try:
+        country = frappe.get_doc(
+            {
+                "doctype": "Country",
+                "country_name": "United States",
+                "code": "US",
+                "date_format": "mm-dd-yyyy",
+                "time_format": "HH:mm:ss",
+                "default_currency": "USD",
+                "number_format": "#,###.##",
+                "timezones": "America/Chicago",
+            }
+        )
+        country.flags.ignore_permissions = True
+        country.insert()
+    except Exception as e:
+        print(e)
+        return e
+    return {
+        "status": "OK",
+    }
+
+
 def post_install():
     print("Post Install")
     InsertFiscalYear()
     InsertCompany()
+    insertDefaultCountryCurrencyAndTimeZones()
     return {
         "status": "OK",
     }
