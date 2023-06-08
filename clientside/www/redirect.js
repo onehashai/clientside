@@ -53,6 +53,7 @@ async function createNewUser(
         lastname: lastname,
         companyname: companyname,
         password: password,
+        company_name: companyname,
       },
       async: true,
     })
