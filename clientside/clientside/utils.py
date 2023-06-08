@@ -76,6 +76,7 @@ def testSomethingRandom(*args, **kwargs):
     password = kwargs["password"]
     firstname = kwargs["firstname"]
     lastname = kwargs["lastname"]
+    company_name = kwargs["company_name"]
     frappe.clear_cache()
     from frappe.utils.data import now_datetime
     from frappe.desk.page.setup_wizard.setup_wizard import setup_complete
@@ -86,21 +87,18 @@ def testSomethingRandom(*args, **kwargs):
         current_year = now_datetime().year
         setup_complete(
             {
-                "currency": "USD",
+                "currency": "INR",
                 "full_name": firstname + " " + lastname,
                 "first_name": firstname,
                 "last_name": lastname,
                 "email": email,
                 "password": password,
-                "company_name": "Wind Power LLC",
-                "timezone": "America/New_York",
-                "company_abbr": "WP",
-                "industry": "Manufacturing",
-                "country": "United States",
+                "company_name": company_name,
+                "timezone": "Asia/Kolkata",
+                "country": "India",
                 "fy_start_date": f"{current_year}-01-01",
                 "fy_end_date": f"{current_year}-12-31",
                 "language": "english",
-                "company_tagline": "Testing",
                 "chart_of_accounts": "Standard",
             }
         )
