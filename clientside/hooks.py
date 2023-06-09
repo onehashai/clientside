@@ -122,7 +122,9 @@ def tps():
 # ---------------
 
 scheduler_events = {
-    "* * * *": ["clientside.clientside.utils.pri"],
+    "cron": {
+        "* * * *": ["clientside.clientside.utils.pri"],
+    }
 }
 
 # Testing
