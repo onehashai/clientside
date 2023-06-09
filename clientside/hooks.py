@@ -121,23 +121,9 @@ def tps():
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"clientside.tasks.all"
-# 	],
-# 	"daily": [
-# 		"clientside.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"clientside.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"clientside.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"clientside.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+    "* * * *": ["clientside.clientside.utils.pri"],
+}
 
 # Testing
 # -------
@@ -147,9 +133,10 @@ def tps():
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "clientside.event.get_events"
-# }
+override_whitelisted_methods = {
+    "frappe.frappe.core.doctype.user.user.sign_up": "clientside.clientside.overrides.sign_up",
+    "frappe.core.doctype.communication.email.make": "clientside.clientside.overrides.make",
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
@@ -207,3 +194,11 @@ def tps():
 # auth_hooks = [
 # 	"clientside.auth.validate"
 # ]
+
+doc_events = {
+    "User": {
+        # will run before a ToDo record is inserted into database
+        "before_insert": "clientside.clientside.utils.check_user",
+    },
+}
+override_email_send = "clientside.clientside.overrides.sendEmail"

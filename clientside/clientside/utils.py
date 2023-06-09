@@ -1,5 +1,6 @@
 import json
 import frappe
+import requests
 from setup_app.setup_app.doctype.saas_sites.saas_sites import (
     checkEmailFormatWithRegex,
     check_password_strength,
@@ -77,6 +78,20 @@ def testSomethingRandom(*args, **kwargs):
     firstname = kwargs["firstname"]
     lastname = kwargs["lastname"]
     company_name = kwargs["company_name"]
+    print(email, password, firstname, lastname, company_name)
+    if not checkEmailFormatWithRegex(email):
+        return "INVALID_EMAIL_FORMAT"
+    if (
+        check_password_strength(
+            password=password, first_name=firstname, last_name=lastname, email=email
+        )["feedback"]["password_policy_validation_passed"]
+        == False
+    ):
+        return "PASSWORD_NOT_STRONG"
+    if not firstname:
+        return "FIRST_NAME_NOT_PROVIDED"
+    if not lastname:
+        return "LAST_NAME_NOT_PROVIDED"
     frappe.clear_cache()
     from frappe.utils.data import now_datetime
     from frappe.desk.page.setup_wizard.setup_wizard import setup_complete
@@ -102,6 +117,7 @@ def testSomethingRandom(*args, **kwargs):
                 "chart_of_accounts": "Standard",
             }
         )
+
     return {
         "status": "OK",
     }
@@ -183,3 +199,69 @@ def post_install():
     return {
         "status": "OK",
     }
+
+
+def check_user(*args, **kwargs):
+    current_number_of_users = frappe.db.count("User")
+    if frappe.conf.max_users and current_number_of_users > int(frappe.conf.max_users):
+        frappe.throw(
+            (
+                "You have reached maximum user limit on your site , please contact support for further info"
+            ),
+            frappe.PermissionError,
+        )
+    return False
+
+
+@frappe.whitelist()
+def getNumberOfUsers():
+    return frappe.db.count("User")
+
+
+@frappe.whitelist()
+def getNumberOfEmailSent():
+    return frappe.db.count(
+        "Communication",
+        {"communication_type": "Communication", "sent_or_received": "Sent"},
+    )
+
+
+@frappe.whitelist()
+def getDataBaseSizeOfSite():
+    # return frappe.db.sql(
+    #     "SELECT pg_database_size('" + frappe.conf.db_name + "');", as_dict=True
+    # )[0].pg_database_size
+    return frappe.db.sql(
+        "SELECT table_schema "
+        + frappe.conf.db_name
+        + ", SUM(data_length + index_length) / (1024 * 1024) 'Database Size in MB' FROM information_schema.TABLES GROUP BY table_schema;"
+    )
+
+
+def checkDiskSize(path):
+    # this finds the disk size of a folder named site in the /sites folder
+    import subprocess
+
+    return subprocess.check_output(["du", "-hs", path]).decode("utf-8").split("\t")[0]
+
+
+# .decode("utf-8").split("\t")[0]
+
+
+@frappe.whitelist()
+def getUsage(site):
+    site += "." + frappe.conf.domain
+
+    return {
+        "users": getNumberOfUsers(),
+        "emails": getNumberOfEmailSent(),
+        "storage": {
+            "database_size": str(getDataBaseSizeOfSite()[1][1]) + "M",
+            "site_size": checkDiskSize("./" + site),
+            "backup_size": checkDiskSize("./" + site + "/private/backups"),
+        },
+    }
+
+
+def pri():
+    frappe.msgprint("cron test")
