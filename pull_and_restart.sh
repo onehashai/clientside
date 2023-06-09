@@ -10,5 +10,6 @@ cd /home/frappe/frappe-bench/apps/setup_app
 git add .
 git stash
 git pull
+bench --site app.onehash.store migrate
 sudo supervisorctl restart all
 sudo bench setup production frappe
