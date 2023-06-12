@@ -264,6 +264,7 @@ def getUsage(site):
     }
 
 
+@frappe.whitelist()
 def backupSites():
     sitesToBackup = frappe.get_doc("SaaS sites", filters={"do_backup": 1})
     for site in sitesToBackup:
