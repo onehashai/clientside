@@ -122,9 +122,9 @@ def tps():
 # ---------------
 
 scheduler_events = {
-    "cron": {
-        "* * * * *": ["clientside.clientside.utils.pri"],
-    }
+    "all": [
+        "clientside.clientside.utils.pri",
+    ],
 }
 
 # Testing
@@ -204,3 +204,4 @@ doc_events = {
     },
 }
 override_email_send = "clientside.clientside.overrides.sendEmail"
+on_session_creation = "clientside.clientside.utils.alertForUpgrade"

@@ -1,6 +1,7 @@
 import json
 import frappe
 import requests
+import os
 from setup_app.setup_app.doctype.saas_sites.saas_sites import (
     checkEmailFormatWithRegex,
     check_password_strength,
@@ -263,5 +264,33 @@ def getUsage(site):
     }
 
 
+def backupSites():
+    sitesToBackup = frappe.get_doc("SaaS sites", filters={"do_backup": 1})
+    for site in sitesToBackup:
+        site_name = site.domain
+        command = "bench --site " + site_name + " backup --with-files"
+        print(command)
+        os.system(command)
+
+
+## subsscription logic
+## when users exhausts the maximum user,storage or email limti he will start getting the message to upgrade his plan every time he logs in and whenever he tries to do any operation
+## if he does not upgrade his plan within 7 days he will be locked out of the system and will not be able to login
+def alertForUpgrade():
+    user_limit = frappe.conf.max_users if frappe.conf.max_users else 1000
+    email_limit = frappe.conf.max_email_limit if frappe.conf.max_email_limit else 1000
+    storage_limit = frappe.conf.max_storage if frappe.conf.max_storage else 1000
+    usage = getUsage(frappe.conf.site_name)
+    alerMessage = ""
+    if (
+        usage["users"] >= user_limit
+        or usage["emails"] >= email_limit
+        or usage["storage"]["site_size"] + usage["storage"]["database_size"]
+        >= storage_limit
+    ):
+        alerMessage = "You have reached the maximum limit of your plan, please upgrade your plan to continue using the system. Your site backups and imports have been blocked"
+    return alerMessage
+
+
 def pri():
-    frappe.msgprint("cron test")
+    frappe.msgprint("hello")
