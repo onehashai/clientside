@@ -128,10 +128,17 @@ async function init() {
   if (password == null) {
     password = "admin";
   }
-  password = password.replaceAll(/%23/g, "#");
+
   const firstname = url.searchParams.get("firstname") || "Test";
   const lastname = url.searchParams.get("lastname") || "User";
   const companyname = url.searchParams.get("companyname") || "OneHash";
+
+  const decryptedPassword = CryptoJS.enc.Base64.parse(password).toString(
+    CryptoJS.enc.Utf8
+  );
+  console.log("decryptedPassword", decryptedPassword);
+  password = decryptedPassword;
+  password = password.replaceAll(/%23/g, "#");
   await login("Administrator", password);
   await createNewUser(email, firstname, lastname, companyname, password);
 }

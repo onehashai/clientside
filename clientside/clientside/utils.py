@@ -300,3 +300,9 @@ def alertForUpgrade():
 
 def pri():
     frappe.msgprint("hello")
+
+
+@frappe.whitelist()
+def getDecryptedPassword(*args, **kwargs):
+    print("getDecryptedPassword", kwargs)
+    return getDecryptedPassword(kwargs["password"])
