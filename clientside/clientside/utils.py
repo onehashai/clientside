@@ -264,16 +264,6 @@ def getUsage(site):
     }
 
 
-@frappe.whitelist()
-def backupSites():
-    sitesToBackup = frappe.get_doc("SaaS sites", filters={"do_backup": 1})
-    for site in sitesToBackup:
-        site_name = site.domain
-        command = "bench --site " + site_name + " backup --with-files"
-        print(command)
-        os.system(command)
-
-
 ## subsscription logic
 ## when users exhausts the maximum user,storage or email limti he will start getting the message to upgrade his plan every time he logs in and whenever he tries to do any operation
 ## if he does not upgrade his plan within 7 days he will be locked out of the system and will not be able to login
