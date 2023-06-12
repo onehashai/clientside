@@ -2,9 +2,6 @@ window.onload = async function () {
   frappe.call({
     method: "clientside.clientside.utils.getUsage",
     async: true,
-    args: {
-      site: window.location.hostname.split(".")[0],
-    },
     callback: function (r) {
       console.log(r.message);
       Object.keys(r.message.storage).forEach((key) => {

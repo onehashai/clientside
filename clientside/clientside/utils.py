@@ -249,9 +249,23 @@ def checkDiskSize(path):
 # .decode("utf-8").split("\t")[0]
 
 
+def convertToMB(sizeInStringWithPrefix):
+    if sizeInStringWithPrefix == "0":
+        return 0
+    print("converting to MB", sizeInStringWithPrefix)
+    prefix = sizeInStringWithPrefix[-1]
+    if prefix == "M":
+        return float(sizeInStringWithPrefix[:-1])
+    elif prefix == "G":
+        return float(sizeInStringWithPrefix[:-1]) * 1024
+    elif prefix == "K":
+        return float(sizeInStringWithPrefix[:-1]) / 1024
+    return 0
+
+
 @frappe.whitelist()
-def getUsage(site):
-    site += "." + frappe.conf.domain
+def getUsage():
+    site = frappe.conf.site_name
 
     return {
         "users": getNumberOfUsers(),
@@ -271,13 +285,14 @@ def alertForUpgrade():
     user_limit = frappe.conf.max_users if frappe.conf.max_users else 1000
     email_limit = frappe.conf.max_email_limit if frappe.conf.max_email_limit else 1000
     storage_limit = frappe.conf.max_storage if frappe.conf.max_storage else 1000
-    usage = getUsage(frappe.conf.site_name)
+    usage = getUsage()
     alerMessage = ""
     if (
-        usage["users"] >= user_limit
-        or usage["emails"] >= email_limit
-        or usage["storage"]["site_size"] + usage["storage"]["database_size"]
-        >= storage_limit
+        int(usage["users"]) >= int(user_limit)
+        or int(usage["emails"]) >= int(email_limit)
+        or convertToMB(usage["storage"]["site_size"])
+        + convertToMB(usage["storage"]["database_size"])
+        >= int(storage_limit)
     ):
         alerMessage = "You have reached the maximum limit of your plan, please upgrade your plan to continue using the system. Your site backups and imports have been blocked"
     return alerMessage
