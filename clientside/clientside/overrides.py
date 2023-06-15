@@ -2,10 +2,8 @@ import frappe
 from frappe.website.utils import is_signup_disabled
 from frappe import _
 from clientside.clientside.utils import getNumberOfEmailSent
-
-from frappe.utils import (
-    escape_html,
-)
+from frappe.core.doctype.communication.email import _make
+from frappe.utils import escape_html, cint
 
 
 def sendEmail(*args, **kwargs):

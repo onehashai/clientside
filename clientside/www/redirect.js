@@ -42,11 +42,18 @@ async function createNewUser(
   firstname,
   lastname,
   companyname,
-  password
+  password,
+  country
 ) {
+  const country_name = (
+    await (
+      await fetch("https://restcountries.com/v3.1/alpha/" + country)
+    ).json()
+  )[0]["name"]["common"];
+  console.log(country_name);
   frappe
     .call({
-      method: "clientside.clientside.utils.testSomethingRandom",
+      method: "clientside.clientside.utils.createUserOnTargetSite",
       args: {
         email: email,
         firstname: firstname,
@@ -54,6 +61,7 @@ async function createNewUser(
         companyname: companyname,
         password: password,
         company_name: companyname,
+        country: country_name,
       },
       async: true,
     })
@@ -124,7 +132,7 @@ async function init() {
   const email =
     url.searchParams.get("email") ||
     Math.random().toString(36).substring(7) + "@onehash.ai";
-  let password = url.searchParams.get("password");
+  let password = url.searchParams.get("password") || "admin";
   if (password == null) {
     password = "admin";
   }
@@ -132,13 +140,27 @@ async function init() {
   const firstname = url.searchParams.get("firstname") || "Test";
   const lastname = url.searchParams.get("lastname") || "User";
   const companyname = url.searchParams.get("companyname") || "OneHash";
-
+  const country = url.searchParams.get("country") || "India";
   const decryptedPassword = CryptoJS.enc.Base64.parse(password).toString(
     CryptoJS.enc.Utf8
   );
+  const createUser = url.searchParams.get("createUser") || false;
   console.log("decryptedPassword", decryptedPassword);
   password = decryptedPassword;
   password = password.replaceAll(/%23/g, "#");
-  await login("Administrator", password);
-  await createNewUser(email, firstname, lastname, companyname, password);
+  if (createUser) {
+    await login("Administrator", password);
+    await createNewUser(
+      email,
+      firstname,
+      lastname,
+      companyname,
+      password,
+      country
+    );
+  } else {
+    // just login and redirect
+    await login(email, password);
+    redirect();
+  }
 }

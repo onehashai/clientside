@@ -6,6 +6,7 @@ from setup_app.setup_app.doctype.saas_sites.saas_sites import (
     checkEmailFormatWithRegex,
     check_password_strength,
 )
+from frappe.geo.country_info import get_country_timezone_info
 
 
 @frappe.whitelist()
@@ -73,13 +74,14 @@ def create_new_user(*args, **kwargs):
 
 
 @frappe.whitelist()
-def testSomethingRandom(*args, **kwargs):
+def createUserOnTargetSite(*args, **kwargs):
     email = kwargs["email"]
     password = kwargs["password"]
     firstname = kwargs["firstname"]
     lastname = kwargs["lastname"]
     company_name = kwargs["company_name"]
-    print(email, password, firstname, lastname, company_name)
+    country = kwargs["country"]
+    print("input", email, password, firstname, lastname, company_name, country)
     if not checkEmailFormatWithRegex(email):
         return "INVALID_EMAIL_FORMAT"
     if (
@@ -99,19 +101,21 @@ def testSomethingRandom(*args, **kwargs):
 
     print(frappe.db.a_row_exists("Company"))
     if True:
-        print("heree")
         current_year = now_datetime().year
+
+        country_info = get_country_timezone_info()["country_info"][country]
+        print(country_info)
         setup_complete(
             {
-                "currency": "INR",
+                "currency": country_info["currency"],
                 "full_name": firstname + " " + lastname,
                 "first_name": firstname,
                 "last_name": lastname,
                 "email": email,
                 "password": password,
                 "company_name": company_name,
-                "timezone": "Asia/Kolkata",
-                "country": "India",
+                "timezone": country_info["timezones"][0],
+                "country": country,
                 "fy_start_date": f"{current_year}-01-01",
                 "fy_end_date": f"{current_year}-12-31",
                 "language": "english",
@@ -240,13 +244,10 @@ def getDataBaseSizeOfSite():
 
 
 def checkDiskSize(path):
-    # this finds the disk size of a folder named site in the /sites folder
+    # this finds the disk size of a folder named site in the /sites folderx
     import subprocess
 
     return subprocess.check_output(["du", "-hs", path]).decode("utf-8").split("\t")[0]
-
-
-# .decode("utf-8").split("\t")[0]
 
 
 def convertToMB(sizeInStringWithPrefix):
@@ -278,14 +279,13 @@ def getUsage():
     }
 
 
-## subsscription logic
-## when users exhausts the maximum user,storage or email limti he will start getting the message to upgrade his plan every time he logs in and whenever he tries to do any operation
-## if he does not upgrade his plan within 7 days he will be locked out of the system and will not be able to login
 def alertForUpgrade():
+    frappe.msgprint("alertForUpgrade")
     user_limit = frappe.conf.max_users if frappe.conf.max_users else 1000
     email_limit = frappe.conf.max_email_limit if frappe.conf.max_email_limit else 1000
     storage_limit = frappe.conf.max_storage if frappe.conf.max_storage else 1000
     usage = getUsage()
+    print(user_limit, email_limit, storage_limit, usage)
     alerMessage = ""
     if (
         int(usage["users"]) >= int(user_limit)
@@ -296,10 +296,6 @@ def alertForUpgrade():
     ):
         alerMessage = "You have reached the maximum limit of your plan, please upgrade your plan to continue using the system. Your site backups and imports have been blocked"
     return alerMessage
-
-
-def pri():
-    frappe.msgprint("hello")
 
 
 @frappe.whitelist()

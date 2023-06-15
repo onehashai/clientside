@@ -191,9 +191,7 @@ override_whitelisted_methods = {
 # Authentication and authorization
 # --------------------------------
 
-# auth_hooks = [
-# 	"clientside.auth.validate"
-# ]
+on_login = ["clientside.clientside.utils.alertForUpgrade"]
 
 doc_events = {
     "User": {
@@ -202,4 +200,5 @@ doc_events = {
     },
 }
 override_email_send = "clientside.clientside.overrides.sendEmail"
-on_session_creation = "clientside.clientside.utils.alertForUpgrade"
+# on_session_creation = "clientside.clientside.utils.alertForUpgrade"
+page_js = {"/": "public/js/file.js"}
