@@ -206,18 +206,6 @@ def post_install():
     }
 
 
-def check_user(*args, **kwargs):
-    current_number_of_users = frappe.db.count("User")
-    if frappe.conf.max_users and current_number_of_users > int(frappe.conf.max_users):
-        frappe.throw(
-            (
-                "You have reached maximum user limit on your site , please contact support for further info"
-            ),
-            frappe.PermissionError,
-        )
-    return False
-
-
 @frappe.whitelist()
 def getNumberOfUsers():
     return frappe.db.count("User")

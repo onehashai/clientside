@@ -102,7 +102,10 @@ def tps():
 # ---------------
 # Override standard doctype classes
 
-override_doctype_class = {"LoginManager": "clientside.clientside.utils.test"}
+override_doctype_class = {
+    "LoginManager": "clientside.clientside.utils.test",
+    "Communication": "clientside.clientside.overrides.communication.CommunicationOverride",
+}
 
 # Document Events
 # ---------------
@@ -135,7 +138,8 @@ scheduler_events = {
 #
 override_whitelisted_methods = {
     "frappe.frappe.core.doctype.user.user.sign_up": "clientside.clientside.overrides.sign_up",
-    "frappe.core.doctype.communication.email.make": "clientside.clientside.overrides.make",
+    "frappe.client.save": "clientside.clientside.overrides.globals.saveOverride",
+    "frappe.desk.form.save.savedocs": "clientside.clientside.overrides.globals.savedocsoverride",
 }
 #
 # each overriding function accepts a `data` argument;
@@ -193,12 +197,6 @@ override_whitelisted_methods = {
 
 on_login = ["clientside.clientside.utils.alertForUpgrade"]
 
-doc_events = {
-    "User": {
-        # will run before a ToDo record is inserted into database
-        "before_insert": "clientside.clientside.utils.check_user",
-    },
-}
-override_email_send = "clientside.clientside.overrides.sendEmail"
+doc_events = {}
 # on_session_creation = "clientside.clientside.utils.alertForUpgrade"
 page_js = {"/": "public/js/file.js"}
