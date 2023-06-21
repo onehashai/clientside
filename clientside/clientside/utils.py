@@ -7,6 +7,7 @@ from setup_app.setup_app.doctype.saas_sites.saas_sites import (
     check_password_strength,
 )
 from frappe.geo.country_info import get_country_timezone_info
+from frappe.desk.doctype.workspace.workspace import update_page
 
 
 @frappe.whitelist()
@@ -73,6 +74,11 @@ def create_new_user(*args, **kwargs):
     }
 
 
+def changeERPNames():
+    update_page("ERPNext Settings", "OneHash Settings", "setting", "", 1)
+    update_page("ERPNext Integrations", "OneHash Integrations", "setting", "", 1)
+
+
 @frappe.whitelist()
 def createUserOnTargetSite(*args, **kwargs):
     email = kwargs["email"]
@@ -122,7 +128,7 @@ def createUserOnTargetSite(*args, **kwargs):
                 "chart_of_accounts": "Standard",
             }
         )
-
+    changeERPNames()
     return {
         "status": "OK",
     }
@@ -290,3 +296,36 @@ def alertForUpgrade():
 def getDecryptedPassword(*args, **kwargs):
     print("getDecryptedPassword", kwargs)
     return getDecryptedPassword(kwargs["password"])
+
+
+def getInstalledApps(site):
+    import subprocess
+
+    output = (
+        subprocess.check_output(
+            " bench --site {} list-apps --format text".format(site),
+            shell=True,
+        )
+        .decode("utf-8")
+        .split("\n")
+    )
+    output = [x for x in output if x != ""]
+    return output
+
+
+@frappe.whitelist()
+def installApp(app):
+    frappe.utils.execute_in_shell(
+        "bench --site {} install-app {}".format(frappe.local.site, app)
+    )
+
+
+@frappe.whitelist()
+def installApps(*args, **kwargs):
+    installedApps = getInstalledApps(frappe.local.site)
+    apps_to_install = kwargs["apps"][1:-1].split(",")
+    print(apps_to_install)
+    for app in apps_to_install:
+        if app not in installedApps:
+            installApp(app)
+    return "OK"

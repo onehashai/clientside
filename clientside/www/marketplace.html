@@ -1,0 +1,42 @@
+{% extends "templates/web.html" %} {% block style %}
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/uikit@3.16.19/dist/css/uikit.min.css"
+/>
+<style>
+  .navbar,
+  .web-footer {
+    display: none;
+  }
+</style>
+{% endblock %} {% block page_content %}
+<div class="main">
+  <div class="uk-heading-small">marketplace</div>
+  <div class="cards">
+    <div class="uk-card uk-card-default uk-card-body uk-width-1-2@m">
+      <h3 class="uk-card-title">India compliance</h3>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nostrum nihil
+        officia quo necessitatibus? Earum omnis minus provident nobis libero
+        blanditiis quas nisi sequi. Rem eum esse enim iure obcaecati maxime.
+      </p>
+      <button
+        id="installApp"
+        class="uk-button uk-button-primary"
+        onclick="installApp"
+      >
+        Install
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block script %}
+<script src="https://cdn.jsdelivr.net/npm/uikit@3.16.19/dist/js/uikit.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/uikit@3.16.19/dist/js/uikit-icons.min.js"></script>
+<script
+  src="https://code.jquery.com/jquery-3.7.0.min.js"
+  integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g="
+  crossorigin="anonymous"
+></script>
+<script src="./marketplace.js"></script>
+{% endblock %}
