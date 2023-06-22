@@ -2,12 +2,42 @@ import json
 import frappe
 import requests
 import os
-from setup_app.setup_app.doctype.saas_sites.saas_sites import (
-    checkEmailFormatWithRegex,
-    check_password_strength,
-)
+from frappe.core.doctype.user.user import test_password_strength
+
+
+@frappe.whitelist(allow_guest=True)
+def check_password_strength(*args, **kwargs):
+    print("ljewfhe", kwargs)
+    print("check password strength called")
+    print(kwargs)
+    passphrase = kwargs["password"]
+    first_name = kwargs["first_name"]
+    last_name = kwargs["last_name"]
+    email = kwargs["email"]
+    print(passphrase, first_name, last_name, email)
+    user_data = (first_name, "", last_name, email, "")
+    if "'" in passphrase or '"' in passphrase:
+        return {
+            "feedback": {
+                "password_policy_validation_passed": False,
+                "suggestions": ["Password should not contain ' or \""],
+            }
+        }
+    return test_password_strength(passphrase, user_data=user_data)
+
+
 from frappe.geo.country_info import get_country_timezone_info
 from frappe.desk.doctype.workspace.workspace import update_page
+
+
+def checkEmailFormatWithRegex(email):
+    import re
+
+    regex = "^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$"
+    if re.search(regex, email):
+        return True
+    else:
+        return False
 
 
 @frappe.whitelist()
