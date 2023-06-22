@@ -6,7 +6,7 @@ cd /home/frappe/frappe-bench/apps/clientside
 git add .
 git stash
 git pull
-cd /home/frappe/frappe-bench/apps/setup_app
+cd /home/frappe/frappe-bench/apps/bettersaas
 git add .
 git stash
 git pull
