@@ -1,0 +1,18 @@
+{
+ "content": null,
+ "creation": "2023-06-21 16:20:43.962331",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2023-06-21 16:20:43.962331",
+ "modified_by": "Administrator",
+ "module": "Clientside",
+ "name": "page-name",
+ "owner": "Administrator",
+ "page_name": "page-name",
+ "roles": [],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0
+}

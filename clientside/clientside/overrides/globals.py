@@ -19,11 +19,11 @@ def isUserCreationAllowed(doc):
 
 @frappe.whitelist(methods=["POST", "PUT"])
 def saveOverride(doc):
-    isUserCreationAllowed(doc)
+    # isUserCreationAllowed(doc)
     return save(doc)
 
 
 @frappe.whitelist()
 def savedocsoverride(doc, action):
-    isUserCreationAllowed(doc)
+    # isUserCreationAllowed(doc)
     return savedocs(doc, action)

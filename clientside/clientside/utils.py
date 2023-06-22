@@ -76,7 +76,7 @@ def create_new_user(*args, **kwargs):
 
 def changeERPNames():
     update_page("ERPNext Settings", "OneHash Settings", "setting", "", 1)
-    update_page("ERPNext Integrations", "OneHash Integrations", "setting", "", 1)
+    update_page("ERPNext Integrations", "OneHash Integrations", "integration", "", 1)
 
 
 @frappe.whitelist()
@@ -105,6 +105,7 @@ def createUserOnTargetSite(*args, **kwargs):
     from frappe.utils.data import now_datetime
     from frappe.desk.page.setup_wizard.setup_wizard import setup_complete
 
+    frappe.delete_doc_if_exists("Page", "welcome-to-erpnext", force=1)
     print(frappe.db.a_row_exists("Company"))
     if True:
         current_year = now_datetime().year
@@ -128,85 +129,6 @@ def createUserOnTargetSite(*args, **kwargs):
                 "chart_of_accounts": "Standard",
             }
         )
-    changeERPNames()
-    return {
-        "status": "OK",
-    }
-
-
-def InsertFiscalYear():
-    print("Inserting Fiscal Year")
-    try:
-        fiscalYear = frappe.get_doc(
-            {
-                "doctype": "Fiscal Year",
-                "year": "2021",
-                "year_start_date": "2021-01-01",
-                "year_end_date": "2021-12-31",
-            }
-        )
-        fiscalYear.flags.ignore_permissions = True
-        fiscalYear.insert()
-    except Exception as e:
-        print(e)
-        return e
-    return {
-        "status": "OK",
-    }
-
-
-def InsertCompany():
-    print("Inserting Company")
-    try:
-        company = frappe.get_doc(
-            {
-                "doctype": "Company",
-                "abbr": "All",
-                "company_name": "All",
-                "default_currency": "USD",
-                "country": "United States",
-            }
-        )
-        company.flags.ignore_permissions = True
-        company.insert()
-    except Exception as e:
-        print(e)
-        return e
-    return {
-        "status": "OK",
-    }
-
-
-def insertDefaultCountryCurrencyAndTimeZones():
-    print("Inserting Country")
-    try:
-        country = frappe.get_doc(
-            {
-                "doctype": "Country",
-                "country_name": "United States",
-                "code": "US",
-                "date_format": "mm-dd-yyyy",
-                "time_format": "HH:mm:ss",
-                "default_currency": "USD",
-                "number_format": "#,###.##",
-                "timezones": "America/Chicago",
-            }
-        )
-        country.flags.ignore_permissions = True
-        country.insert()
-    except Exception as e:
-        print(e)
-        return e
-    return {
-        "status": "OK",
-    }
-
-
-def post_install():
-    print("Post Install")
-    InsertFiscalYear()
-    InsertCompany()
-    insertDefaultCountryCurrencyAndTimeZones()
     return {
         "status": "OK",
     }
@@ -274,22 +196,8 @@ def getUsage():
 
 
 def alertForUpgrade():
-    frappe.msgprint("alertForUpgrade")
-    user_limit = frappe.conf.max_users if frappe.conf.max_users else 1000
-    email_limit = frappe.conf.max_email_limit if frappe.conf.max_email_limit else 1000
-    storage_limit = frappe.conf.max_storage if frappe.conf.max_storage else 1000
-    usage = getUsage()
-    print(user_limit, email_limit, storage_limit, usage)
-    alerMessage = ""
-    if (
-        int(usage["users"]) >= int(user_limit)
-        or int(usage["emails"]) >= int(email_limit)
-        or convertToMB(usage["storage"]["site_size"])
-        + convertToMB(usage["storage"]["database_size"])
-        >= int(storage_limit)
-    ):
-        alerMessage = "You have reached the maximum limit of your plan, please upgrade your plan to continue using the system. Your site backups and imports have been blocked"
-    return alerMessage
+    # frappe.msgprint("alertForUpgrade")
+    pass
 
 
 @frappe.whitelist()
@@ -329,3 +237,7 @@ def installApps(*args, **kwargs):
         if app not in installedApps:
             installApp(app)
     return "OK"
+
+
+def post_install():
+    changeERPNames()
