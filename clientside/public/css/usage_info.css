@@ -1,0 +1,20 @@
+.is-flex {
+  display: flex;
+}
+.usage-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.ldBar path.mainline {
+  stroke-width: 10;
+  stroke: #09f;
+  stroke-linecap: round;
+}
+.ldBar path.baseline {
+  stroke-width: 14;
+  stroke: #f1f2f3;
+  stroke-linecap: round;
+  filter: url(#custom-shadow);
+}

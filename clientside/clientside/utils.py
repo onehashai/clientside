@@ -3,6 +3,9 @@ import frappe
 import requests
 import os
 from frappe.core.doctype.user.user import test_password_strength
+from frappe.utils import cint
+from frappe.utils.background_jobs import enqueue
+import boto3
 
 
 @frappe.whitelist(allow_guest=True)
@@ -271,3 +274,145 @@ def installApps(*args, **kwargs):
 
 def post_install():
     changeERPNames()
+
+
+from frappe.integrations.offsite_backup_utils import (
+    generate_files_backup,
+    get_latest_backup_file,
+    send_email,
+    validate_file_size,
+)
+
+from rq.timeouts import JobTimeoutException
+
+
+@frappe.whitelist()
+def take_backups_s3(retry_count=0):
+    try:
+        validate_file_size()
+        backup_to_s3()
+    except JobTimeoutException:
+        if retry_count < 2:
+            take_backups_s3(retry_count=retry_count + 1)
+
+    except Exception:
+        print(frappe.get_traceback())
+
+
+def backup_to_s3():
+    from frappe.utils import get_backups_path
+    from frappe.utils.backups import new_backup
+
+    bucket = frappe.conf.aws_bucket_name
+    backup_files = True
+
+    conn = boto3.client(
+        "s3",
+        aws_access_key_id=frappe.conf.aws_access_key_id,
+        aws_secret_access_key=frappe.conf.aws_secret_access_key,
+        endpoint_url=frappe.conf.endpoint_url,
+    )
+
+    if frappe.flags.create_new_backup:
+        backup = new_backup(
+            ignore_files=False,
+            backup_path_db=None,
+            backup_path_files=None,
+            backup_path_private_files=None,
+            force=True,
+        )
+        print(
+            backup.backup_path_db,
+            backup.backup_path_files,
+            backup.backup_path_private_files,
+            backup.backup_path_conf,
+        )
+        print(get_backups_path())
+        db_filename = os.path.join(
+            get_backups_path(), os.path.basename(backup.backup_path_db)
+        )
+        site_config = os.path.join(
+            get_backups_path(), os.path.basename(backup.backup_path_conf)
+        )
+        if backup_files:
+            files_filename = os.path.join(
+                get_backups_path(), os.path.basename(backup.backup_path_files)
+            )
+            private_files = os.path.join(
+                get_backups_path(), os.path.basename(backup.backup_path_private_files)
+            )
+    else:
+        if backup_files:
+            (
+                db_filename,
+                site_config,
+                files_filename,
+                private_files,
+            ) = get_latest_backup_file(with_files=backup_files)
+
+            if not files_filename or not private_files:
+                generate_files_backup()
+                (
+                    db_filename,
+                    site_config,
+                    files_filename,
+                    private_files,
+                ) = get_latest_backup_file(with_files=backup_files)
+
+        else:
+            db_filename, site_config = get_latest_backup_file()
+
+    folder = os.path.basename(db_filename)[:15] + "/"
+    print("folder name in s3", folder)
+    # for adding datetime to folder name
+    print(
+        db_filename,
+        folder,
+    )
+    to_upload_config = []
+    to_upload_config.append([db_filename, folder])
+    to_upload_config.append([site_config, folder])
+
+    # TODO: delete the files after uploading
+    # call function on site fresh.localhost to save details of backup
+
+    if backup_files:
+        if private_files:
+            to_upload_config.append([private_files, folder])
+
+        if files_filename:
+            to_upload_config.append([files_filename, folder])
+    for file in to_upload_config:
+        import threading
+
+        t = threading.Timer(120.0, os.remove, args=[file[0]])
+        t.start()
+        upload_file_to_s3(file[0], file[1], conn, bucket)
+
+
+def upload_file_to_s3(filename, folder, conn, bucket):
+    destpath = os.path.join(folder, os.path.basename(filename))
+    command = "bench --site {} execute bettersaas.bettersaas.doctype.saas_sites.saas_sites.insert_backup_record --args \"'{}','{}','{}'\"".format(
+        frappe.conf.admin_subdomain + "." + frappe.conf.domain,
+        filename[2:],
+        destpath,
+        frappe.local.site,
+    )
+    print("file name", filename)
+    try:
+        conn.upload_file(filename, bucket, destpath)  # Requires PutObject permission
+        frappe.utils.execute_in_shell(command)
+    except Exception as e:
+        frappe.log_error()
+        print("Error uploading: %s" % (e))
+
+
+# @frappe.whitelist()
+# def download_backup( bucket="onehash", filename="", destpath):
+#     conn = boto3.client(
+#         "s3",
+#         aws_access_key_id=frappe.conf.aws_access_key_id,
+#         aws_secret_access_key=frappe.conf.aws_secret_access_key,
+#         endpoint_url=frappe.conf.endpoint_url,
+#     )
+#     conn.download_file(bucket, filename, destpath)
