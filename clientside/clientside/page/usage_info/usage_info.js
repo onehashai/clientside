@@ -7,13 +7,22 @@ frappe.pages["usage-info"].on_page_load = function (wrapper) {
   $(frappe.render_template("usage_info")).appendTo(
     page.body.addClass("no-border")
   );
-  $("head").append(
-    '<link rel="stylesheet" href="/assets/clientside/css/loading-bar.min.css" type="text/css" />'
-  );
-  $("head").append(
-    '<link rel="stylesheet" href="/assets/clientside/css/usage_info.css" type="text/css" />'
-  );
-  $("head").append(
-    '<script src="/assets/clientside/css/loading-bar.min.js"></script>'
-  );
+
+  var forEach = function (array, callback, scope) {
+    for (var i = 0; i < array.length; i++) {
+      callback.call(scope, i, array[i]);
+    }
+  };
+  var max = -219.99078369140625;
+  forEach(document.querySelectorAll(".iprogress"), function (index, value) {
+    console.log(value);
+    percent = value.getAttribute("data-progress");
+    value
+      .querySelector(".fill")
+      .setAttribute(
+        "style",
+        "stroke-dashoffset: " + ((100 - percent) / 100) * max
+      );
+    value.querySelector(".value").innerHTML = percent + "%";
+  });
 };

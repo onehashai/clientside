@@ -1,20 +1,67 @@
+/*===== Not The CSS :P =====*/
+@import url("https://fonts.googleapis.com/css?family=Open+Sans:400,700");
+
+#wrapper {
+  position: relative;
+  top: 80px;
+  width: 404px;
+}
+.center {
+  left: 50%;
+  -webkit-transform: translate(-50%);
+  -ms-transform: translate(-50%);
+  transform: translate(-50%);
+}
+
+/*===== The CSS =====*/
+.iprogress {
+  width: 117px;
+  height: 140px;
+}
+.iprogress .track,
+.iprogress .fill {
+  fill: rgba(0, 0, 0, 0);
+  transform: rotate(90deg) translate(0px, -80px);
+  stroke-width: 8;
+}
+.iprogress .track {
+  stroke: rgb(149 152 154 / 26%);
+}
+.iprogress .fill {
+  stroke: rgb(255, 255, 255);
+  stroke-dasharray: 219.99078369140625;
+  stroke-dashoffset: -219.99078369140625;
+  transition: stroke-dashoffset 1s;
+}
+.iprogress.blue .fill {
+  stroke: rgb(104, 214, 198);
+}
+.iprogress.green .fill {
+  stroke: rgb(186, 223, 172);
+}
+.iprogress .value,
+.iprogress .text {
+  font-family: "Open Sans";
+  fill: rgb(255, 255, 255);
+  text-anchor: middle;
+}
+.iprogress .text {
+  font-size: 12px;
+}
+.noselect {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+
 .is-flex {
   display: flex;
 }
-.usage-card {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-}
-.ldBar path.mainline {
-  stroke-width: 10;
-  stroke: #09f;
-  stroke-linecap: round;
-}
-.ldBar path.baseline {
-  stroke-width: 14;
-  stroke: #f1f2f3;
-  stroke-linecap: round;
-  filter: url(#custom-shadow);
+
+.h-100 {
+  height: 100%;
 }
