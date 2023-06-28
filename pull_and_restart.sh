@@ -14,6 +14,6 @@ cd /home/frappe/frappe-bench/apps/whitelabel
 git add .
 git stash
 git pull
-bench --site app.onehash.store migrate
+bench --site admin.onehash.store migrate
 sudo supervisorctl restart all
 sudo bench setup production frappe
