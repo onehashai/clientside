@@ -2,12 +2,45 @@ import json
 import frappe
 import requests
 import os
-from setup_app.setup_app.doctype.saas_sites.saas_sites import (
-    checkEmailFormatWithRegex,
-    check_password_strength,
-)
+from frappe.core.doctype.user.user import test_password_strength
+from frappe.utils import cint
+from frappe.utils.background_jobs import enqueue
+import boto3
+
+
+@frappe.whitelist(allow_guest=True)
+def check_password_strength(*args, **kwargs):
+    print("ljewfhe", kwargs)
+    print("check password strength called")
+    print(kwargs)
+    passphrase = kwargs["password"]
+    first_name = kwargs["first_name"]
+    last_name = kwargs["last_name"]
+    email = kwargs["email"]
+    print(passphrase, first_name, last_name, email)
+    user_data = (first_name, "", last_name, email, "")
+    if "'" in passphrase or '"' in passphrase:
+        return {
+            "feedback": {
+                "password_policy_validation_passed": False,
+                "suggestions": ["Password should not contain ' or \""],
+            }
+        }
+    return test_password_strength(passphrase, user_data=user_data)
+
+
 from frappe.geo.country_info import get_country_timezone_info
 from frappe.desk.doctype.workspace.workspace import update_page
+
+
+def checkEmailFormatWithRegex(email):
+    import re
+
+    regex = "^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$"
+    if re.search(regex, email):
+        return True
+    else:
+        return False
 
 
 @frappe.whitelist()
@@ -178,20 +211,39 @@ def convertToMB(sizeInStringWithPrefix):
     elif prefix == "K":
         return float(sizeInStringWithPrefix[:-1]) / 1024
     return 0
-
-
+from frappe.core.doctype.user.user import get_system_users
+def get_number_of_emails_sent(sender = frappe.conf.email):
+    return frappe.db.count(
+        "Email Queue",
+        { "sender": sender},
+    )
 @frappe.whitelist()
 def getUsage():
+    import datetime
     site = frappe.conf.site_name
-
+    print(frappe.conf.expiry_date)
+    expiry_date = frappe.utils.get_datetime(frappe.conf.expiry_date).date()
+    print(expiry_date, datetime.date.today())
+    days_left = (expiry_date - datetime.date.today()).days
+    start_date = None
+    if frappe.conf.last_purchase_date:
+        start_date = frappe.utils.get_datetime(frappe.conf.last_purchase_date).date()
+    else :
+        start_date = frappe.utils.get_datetime(frappe.conf.creation_date).date()
+    total_days = (expiry_date - start_date).days
     return {
-        "users": getNumberOfUsers(),
-        "emails": getNumberOfEmailSent(),
+        "users": len(get_system_users()),
+        "emails": get_number_of_emails_sent(),
+        "days_left": days_left,
+        "total_days": total_days,
         "storage": {
             "database_size": str(getDataBaseSizeOfSite()[1][1]) + "M",
             "site_size": checkDiskSize("./" + site),
             "backup_size": checkDiskSize("./" + site + "/private/backups"),
         },
+        "user_limit":frappe.conf.max_users,
+        "email_limit":frappe.conf.max_email,
+        "storage_limit":str(frappe.conf.max_space) + 'G',
     }
 
 
@@ -241,3 +293,154 @@ def installApps(*args, **kwargs):
 
 def post_install():
     changeERPNames()
+
+
+from frappe.integrations.offsite_backup_utils import (
+    generate_files_backup,
+    get_latest_backup_file,
+    send_email,
+    validate_file_size,
+)
+
+from rq.timeouts import JobTimeoutException
+
+
+@frappe.whitelist()
+def take_backups_s3(retry_count=0):
+    try:
+        validate_file_size()
+        backup_to_s3()
+    except JobTimeoutException:
+        if retry_count < 2:
+            take_backups_s3(retry_count=retry_count + 1)
+
+    except Exception:
+        print(frappe.get_traceback())
+
+
+def backup_to_s3():
+    from frappe.utils import get_backups_path
+    from frappe.utils.backups import new_backup
+
+    bucket = frappe.conf.aws_bucket_name
+    backup_files = True
+
+    conn = boto3.client(
+        "s3",
+        aws_access_key_id=frappe.conf.aws_access_key_id,
+        aws_secret_access_key=frappe.conf.aws_secret_access_key,
+        endpoint_url=frappe.conf.endpoint_url,
+    )
+
+    if frappe.flags.create_new_backup:
+        backup = new_backup(
+            ignore_files=False,
+            backup_path_db=None,
+            backup_path_files=None,
+            backup_path_private_files=None,
+            force=True,
+        )
+        print(
+            backup.backup_path_db,
+            backup.backup_path_files,
+            backup.backup_path_private_files,
+            backup.backup_path_conf,
+        )
+        print(get_backups_path())
+        db_filename = os.path.join(
+            get_backups_path(), os.path.basename(backup.backup_path_db)
+        )
+        site_config = os.path.join(
+            get_backups_path(), os.path.basename(backup.backup_path_conf)
+        )
+        if backup_files:
+            files_filename = os.path.join(
+                get_backups_path(), os.path.basename(backup.backup_path_files)
+            )
+            private_files = os.path.join(
+                get_backups_path(), os.path.basename(backup.backup_path_private_files)
+            )
+    else:
+        if backup_files:
+            (
+                db_filename,
+                site_config,
+                files_filename,
+                private_files,
+            ) = get_latest_backup_file(with_files=backup_files)
+
+            if not files_filename or not private_files:
+                generate_files_backup()
+                (
+                    db_filename,
+                    site_config,
+                    files_filename,
+                    private_files,
+                ) = get_latest_backup_file(with_files=backup_files)
+
+        else:
+            db_filename, site_config = get_latest_backup_file()
+
+    folder = os.path.basename(db_filename)[:15] + "/"
+    print("folder name in s3", folder)
+    # for adding datetime to folder name
+    print(
+        db_filename,
+        folder,
+    )
+    to_upload_config = []
+    to_upload_config.append([db_filename, folder])
+    to_upload_config.append([site_config, folder])
+
+    # TODO: delete the files after uploading
+    # call function on site fresh.localhost to save details of backup
+
+    if backup_files:
+        if private_files:
+            to_upload_config.append([private_files, folder])
+
+        if files_filename:
+            to_upload_config.append([files_filename, folder])
+    for file in to_upload_config:
+        import threading
+
+        t = threading.Timer(120.0, os.remove, args=[file[0]])
+        t.start()
+        upload_file_to_s3(file[0], file[1], conn, bucket)
+
+
+def upload_file_to_s3(filename, folder, conn, bucket):
+    destpath = os.path.join(folder, os.path.basename(filename))
+    command = "bench --site {} execute bettersaas.bettersaas.doctype.saas_sites.saas_sites.insert_backup_record --args \"'{}','{}','{}'\"".format(
+        frappe.conf.admin_subdomain + "." + frappe.conf.domain,
+        filename[2:],
+        destpath,
+        frappe.local.site,
+    )
+    print("file name", filename)
+    try:
+        conn.upload_file(filename, bucket, destpath)  # Requires PutObject permission
+        frappe.utils.execute_in_shell(command)
+    except Exception as e:
+        frappe.log_error()
+        print("Error uploading: %s" % (e))
+
+
+# @frappe.whitelist()
+# def download_backup( bucket="onehash", filename="", destpath):
+#     conn = boto3.client(
+#         "s3",
+#         aws_access_key_id=frappe.conf.aws_access_key_id,
+#         aws_secret_access_key=frappe.conf.aws_secret_access_key,
+#         endpoint_url=frappe.conf.endpoint_url,
+#     )
+#     conn.download_file(bucket, filename, destpath)
+
+@frappe.whitelist()
+def delete_site_from_server():
+    import requests
+    import time
+    command = "bench drop-site {} --db-root-password {}".format(frappe.local.site, frappe.conf.db_pass)
+    os.system(command)
+    time.sleep(3)
+    return "OK"
