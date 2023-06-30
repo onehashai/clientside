@@ -211,20 +211,39 @@ def convertToMB(sizeInStringWithPrefix):
     elif prefix == "K":
         return float(sizeInStringWithPrefix[:-1]) / 1024
     return 0
-
-
+from frappe.core.doctype.user.user import get_system_users
+def get_number_of_emails_sent(sender = frappe.conf.email):
+    return frappe.db.count(
+        "Email Queue",
+        { "sender": sender},
+    )
 @frappe.whitelist()
 def getUsage():
+    import datetime
     site = frappe.conf.site_name
-
+    print(frappe.conf.expiry_date)
+    expiry_date = frappe.utils.get_datetime(frappe.conf.expiry_date).date()
+    print(expiry_date, datetime.date.today())
+    days_left = (expiry_date - datetime.date.today()).days
+    start_date = None
+    if frappe.conf.last_purchase_date:
+        start_date = frappe.utils.get_datetime(frappe.conf.last_purchase_date).date()
+    else :
+        start_date = frappe.utils.get_datetime(frappe.conf.creation_date).date()
+    total_days = (expiry_date - start_date).days
     return {
-        "users": getNumberOfUsers(),
-        "emails": getNumberOfEmailSent(),
+        "users": len(get_system_users()),
+        "emails": get_number_of_emails_sent(),
+        "days_left": days_left,
+        "total_days": total_days,
         "storage": {
             "database_size": str(getDataBaseSizeOfSite()[1][1]) + "M",
             "site_size": checkDiskSize("./" + site),
             "backup_size": checkDiskSize("./" + site + "/private/backups"),
         },
+        "user_limit":frappe.conf.max_users,
+        "email_limit":frappe.conf.max_email,
+        "storage_limit":str(frappe.conf.max_space) + 'G',
     }
 
 
@@ -416,3 +435,12 @@ def upload_file_to_s3(filename, folder, conn, bucket):
 #         endpoint_url=frappe.conf.endpoint_url,
 #     )
 #     conn.download_file(bucket, filename, destpath)
+
+@frappe.whitelist()
+def delete_site_from_server():
+    import requests
+    import time
+    command = "bench drop-site {} --db-root-password {}".format(frappe.local.site, frappe.conf.db_pass)
+    os.system(command)
+    time.sleep(3)
+    return "OK"

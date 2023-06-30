@@ -6,7 +6,7 @@ from frappe import _
 def checkIfUserCanSendEmailsFromOneHashEmailAccount():
     current_usage = frappe.conf.get("onehash_mail_usage") or 0
     print("current_usage", current_usage)
-    if current_usage >= int(frappe.conf.get("max_email_limit") or 0):
+    if current_usage >= int(frappe.conf.get("max_email") or 0):
         return False
     else:
         return True
