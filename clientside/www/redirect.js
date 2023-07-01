@@ -4,11 +4,11 @@ var getQueryString = function (field, url) {
   var string = reg.exec(href);
   return string ? string[1] : null;
 };
-if (window.dev_server) {
-  domain = ".localhost:8000";
-} else {
-  domain = ".onehash.store";
+let domain = "." + window.location.hostname.split(".").splice(1, 2).join(".");
+if (window.location.port) {
+  domain += ":" + window.location.port;
 }
+const http_protocol = window.location.protocol;
 const errorMessages = {
   EMAIL_ALREADY_REGISTERED: "Email already registered",
   INVALID_EMAIL_FORMAT: "Invalid email format",
