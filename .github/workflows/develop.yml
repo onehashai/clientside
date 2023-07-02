@@ -18,7 +18,7 @@ jobs:
       - name: Execute commands via SSH
         uses: appleboy/ssh-action@master
         with:
-          host: 43.204.22.246
+          host: 3.108.66.86
           username: "frappe"
           key: ${{ secrets.EC2_KEY }}
           script: |
