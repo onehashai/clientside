@@ -3,11 +3,11 @@
 
 frappe.ui.form.on("Custom domains", {
   refresh: async function (frm) {
-    const http_url = `http://${window.location.host}/api/method/clientside.clientside.utils.verify_custom_domain`;
+    const http_url = `${window.location.protocol}//${window.location.host}/api/method/clientside.clientside.utils.verify_custom_domain`;
     $(".btn[data-fieldname='verify']").text("Verifying domain...");
     $(".btn[data-fieldname='verify']").attr("disabled", true);
     // when  verify button is clicked , call the verify api
-    console.log(frm.doc);
+    console.log(http_url);
     let isVerified = false;
     try {
       console.log(http_url);
