@@ -444,3 +444,20 @@ def delete_site_from_server():
     os.system(command)
     time.sleep(3)
     return "OK"
+
+
+
+
+@frappe.whitelist()
+def verify_custom_domain(new_domain):
+    current_domains = frappe.conf.domains or []
+    if new_domain in current_domains:
+        return "ALREADY_EXISTS"
+    else :
+        # run command
+        command = "bench setup add-domain {} --site {}".format( new_domain, frappe.local.site)
+        frappe.utils.execute_in_shell(command)
+        frappe.utils.execute_in_shell("bench setup nginx --yes")
+        frappe.utils.execute_in_shell("sudo service nginx reload")
+        return "OK"
+    
