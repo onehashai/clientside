@@ -232,6 +232,8 @@ def getUsage():
         start_date = frappe.utils.get_datetime(frappe.conf.creation_date).date()
     total_days = (expiry_date - start_date).days
     return {
+        "start_date": start_date,
+        "expiry_date": expiry_date,
         "users": len(get_system_users()),
         "emails": get_number_of_emails_sent(),
         "days_left": days_left,
@@ -450,14 +452,30 @@ def delete_site_from_server():
 
 @frappe.whitelist()
 def verify_custom_domain(new_domain):
-    current_domains = frappe.conf.domains or []
-    if new_domain in current_domains:
-        return "ALREADY_EXISTS"
-    else :
-        # run command
-        command = "bench setup add-domain {} --site {}".format( new_domain, frappe.local.site)
-        frappe.utils.execute_in_shell(command)
-        frappe.utils.execute_in_shell("bench setup nginx --yes")
-        frappe.utils.execute_in_shell("sudo service nginx reload")
-        return "OK"
+    ## if domain does not have www then add it
+    if new_domain in frappe.conf.domains :
+        return "VERIFIED"
+    parts = new_domain.split(".")
+    if len(parts) < 2:
+        return "INVALID_DOMAIN_FORMAT"
+    if len(parts) == 2:
+        new_domain = "www." + new_domain
+    print("checking for",new_domain)
+    command = "dig {} CNAME +short".format(new_domain)
+    try:
+        cname = frappe.utils.execute_in_shell(command)[1].decode("utf-8").strip()[:-1]
+        print("cname", cname)
+        if cname == frappe.local.site and new_domain != frappe.local.site :
+            command = "bench setup add-domain {} --site {}".format( new_domain, frappe.local.site)
+            frappe.utils.execute_in_shell(command)
+            frappe.utils.execute_in_shell("bench setup nginx --yes")
+            frappe.utils.execute_in_shell("echo {} | sudo -S service nginx reload".format(frappe.conf.root_password))
+            return "VERIFIED"
+        if new_domain == frappe.local.site:
+            return "ALREADY_REGISTERED"
+        return "INVALID_RECORD"
+            
+    except Exception as e:
+        print(e)
+        return "INVALID_DOMAIN"
     

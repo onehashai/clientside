@@ -3,11 +3,9 @@
 
 frappe.ui.form.on("Custom domains", {
   refresh: async function (frm) {
-    const http_url = `http://${
-      frm.doc.new_domain +
-      (window.location.port ? ":" + window.location.port : "")
-    }/api/method/clientside.clientside.utils.verify_custom_domain`;
-    $(frm.fields_dict.verify.wrapper).hide();
+    const http_url = `http://${window.location.host}/api/method/clientside.clientside.utils.verify_custom_domain`;
+    $(".btn[data-fieldname='verify']").text("Verifying domain...");
+    $(".btn[data-fieldname='verify']").attr("disabled", true);
     // when  verify button is clicked , call the verify api
     console.log(frm.doc);
     let isVerified = false;
@@ -21,15 +19,16 @@ frappe.ui.form.on("Custom domains", {
           new_domain: frm.doc.new_domain,
         },
       });
-      console.log("CNAME record verified");
-      isVerified = true;
+      if (message !== "VERIFIED") {
+        $(".btn[data-fieldname='verify']").text("Verify");
+        $(".btn[data-fieldname='verify']").attr("disabled", false);
+      } else {
+        $(".btn[data-fieldname='verify']").hide();
+      }
     } catch (error) {
       console.log(error);
     }
 
-    if (!isVerified) {
-      $(frm.fields_dict.verify.wrapper).show();
-    }
     $(frm.fields_dict.verify.wrapper).on("click", function () {
       console.log("verify button clicked");
 
@@ -37,19 +36,28 @@ frappe.ui.form.on("Custom domains", {
         args: {
           new_domain: frm.doc.new_domain,
         },
-        url: http_url,
+        method: "clientside.clientside.utils.verify_custom_domain",
         freeze: true,
         freeze_message: "Verifying domain",
-        success: function (r) {
-          console.log(r);
-
-          frappe.msgprint("Domain verified successfully");
-          // refresh the page
-          window.location.reload();
-        },
-        error: function (r) {
-          console.log(r);
-          frappe.msgprint("Error verifying domain");
+        callback: function (r) {
+          const { message } = r;
+          // message could be VERIFIED,INVALID_DOMAIN_FORMAT,INVALID_RECORD,ALREADY_REGISTERED and INVALID_DOMAIN
+          // handle each case and throw a descriptive error in frappe.msgprint
+          console.log(message);
+          if (message == "VERIFIED") {
+            frappe.msgprint("Domain verified successfully");
+            $(".btn[data-fieldname='verify']").hide();
+            frm.reload_doc();
+          } else if (message == "INVALID_DOMAIN_FORMAT") {
+            frappe.throw("Please enter a valid domain name");
+          } else if (message == "INVALID_RECORD") {
+            console.log("invalid record");
+            frappe.throw("Please check your DNS records");
+          } else if (message == "ALREADY_REGISTERED") {
+            frappe.throw("Domain already registered");
+          } else if (message == "INVALID_DOMAIN") {
+            frappe.throw("Please enter a valid domain name");
+          }
         },
       });
     });
