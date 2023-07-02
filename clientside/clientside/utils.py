@@ -470,10 +470,10 @@ def verify_custom_domain(new_domain):
             frappe.utils.execute_in_shell(command)
             frappe.utils.execute_in_shell("bench setup nginx --yes")
             frappe.utils.execute_in_shell("echo {} | sudo -S service nginx reload".format(frappe.conf.root_password))
-            return "VERIFIED"
+            return ["VERIFIED",cname]
         if new_domain == frappe.local.site:
-            return "ALREADY_REGISTERED"
-        return "INVALID_RECORD"
+            return ["ALREADY_REGISTERED",cname]
+        return ["INVALID_RECORD",cname]
             
     except Exception as e:
         print(e)
