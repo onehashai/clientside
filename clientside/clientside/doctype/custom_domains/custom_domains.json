@@ -37,13 +37,12 @@
    "default": "0",
    "fieldname": "verified",
    "fieldtype": "Data",
-   "hidden": 1,
    "label": "verified"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2023-07-02 10:12:01.078055",
+ "modified": "2023-07-02 23:04:50.531028",
  "modified_by": "Administrator",
  "module": "Clientside",
  "name": "Custom domains",

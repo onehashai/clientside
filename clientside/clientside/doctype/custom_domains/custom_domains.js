@@ -2,7 +2,11 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("Custom domains", {
+  remove: async function (frm) {
+    console.log("delete button clicked", frm.doc);
+  },
   refresh: async function (frm) {
+    frm.set_df_property("verified", "hidden", true);
     const http_url = `${window.location.protocol}//${window.location.host}/api/method/clientside.clientside.utils.verify_custom_domain`;
     $(".btn[data-fieldname='verify']").text("Verifying domain...");
     $(".btn[data-fieldname='verify']").attr("disabled", true);
@@ -11,7 +15,7 @@ frappe.ui.form.on("Custom domains", {
     let isVerified = false;
     try {
       console.log(http_url);
-      const { message } = await $.ajax({
+      let { message } = await $.ajax({
         url: http_url,
         type: "GET",
         dataType: "json",
@@ -19,11 +23,16 @@ frappe.ui.form.on("Custom domains", {
           new_domain: frm.doc.new_domain,
         },
       });
+      console.log("cname", message[1]);
+      message = message[0];
       if (message !== "VERIFIED") {
         $(".btn[data-fieldname='verify']").text("Verify");
         $(".btn[data-fieldname='verify']").attr("disabled", false);
       } else {
         $(".btn[data-fieldname='verify']").hide();
+        // set verified field to true
+        frm.set_value("verified", "1");
+        frm.save();
       }
     } catch (error) {
       console.log(error);
@@ -40,10 +49,12 @@ frappe.ui.form.on("Custom domains", {
         freeze: true,
         freeze_message: "Verifying domain",
         callback: function (r) {
-          const { message } = r;
+          let { message } = r;
           // message could be VERIFIED,INVALID_DOMAIN_FORMAT,INVALID_RECORD,ALREADY_REGISTERED and INVALID_DOMAIN
           // handle each case and throw a descriptive error in frappe.msgprint
-          console.log(message);
+          console.log("cname", message[1]);
+          message = message[0];
+
           if (message == "VERIFIED") {
             frappe.msgprint("Domain verified successfully");
             $(".btn[data-fieldname='verify']").hide();

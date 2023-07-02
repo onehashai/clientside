@@ -454,10 +454,10 @@ def delete_site_from_server():
 def verify_custom_domain(new_domain):
     ## if domain does not have www then add it
     if new_domain in frappe.conf.domains :
-        return "VERIFIED"
+        return ["VERIFIED",new_domain]
     parts = new_domain.split(".")
     if len(parts) < 2:
-        return "INVALID_DOMAIN_FORMAT"
+        return ["INVALID_DOMAIN_FORMAT",""]
     if len(parts) == 2:
         new_domain = "www." + new_domain
     print("checking for",new_domain)
@@ -477,5 +477,5 @@ def verify_custom_domain(new_domain):
             
     except Exception as e:
         print(e)
-        return "INVALID_DOMAIN"
+        return[ "INVALID_DOMAIN",""]
     
