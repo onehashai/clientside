@@ -113,7 +113,7 @@ function fillStorageUsage(usage_info) {
   // we then calculate the percentage of each and fill the progress bar
   const total_storage = Number(convertToG(usage_info.storage_limit));
   const backup = convertToG(usage_info.storage.backup_size);
-  const site_files = convertToG(usage_info.storage.site_size) - backup;
+  const site_files = convertToG(usage_info.storage.site_size);
   const db = convertToG(usage_info.storage.database_size);
   console.log("total storage", total_storage);
   console.log("backup", backup);
@@ -122,7 +122,10 @@ function fillStorageUsage(usage_info) {
   const used_storage = Number(backup) + Number(site_files) + Number(db);
 
   console.log("used storage", used_storage);
-
+  $("#storage-info").text(
+    `Database: ${usage_info.storage.database_size}  | Site Files: ${usage_info.storage.site_size} | Backup: ${usage_info.storage.backup_size}`
+  );
+  // Database size: 40MB | Backup size: 20MB
   const used_percentage = (used_storage / total_storage) * 100;
   setPercentage(
     "storage",

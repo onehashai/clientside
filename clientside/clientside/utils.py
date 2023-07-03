@@ -240,7 +240,7 @@ def getUsage():
         "total_days": total_days,
         "storage": {
             "database_size": str(getDataBaseSizeOfSite()[1][1]) + "M",
-            "site_size": checkDiskSize("./" + site),
+            "site_size": str(0.0045 + convertToMB(checkDiskSize("./" + site + "/public")) + convertToMB(checkDiskSize("./" + site + "/private/files")) ) + "M",
             "backup_size": checkDiskSize("./" + site + "/private/backups"),
         },
         "user_limit":frappe.conf.max_users,
