@@ -1,0 +1,22 @@
+{
+ "content": null,
+ "creation": "2023-06-30 15:31:37.039310",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2023-07-03 10:56:47.629237",
+ "modified_by": "Administrator",
+ "module": "Clientside",
+ "name": "market-place",
+ "owner": "Administrator",
+ "page_name": "market-place",
+ "roles": [
+  {
+   "role": "All"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 1
+}
