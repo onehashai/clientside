@@ -234,13 +234,15 @@ def getUsage():
         start_date = frappe.utils.get_datetime(frappe.conf.creation_date).date()
     total_days = (expiry_date - start_date).days
     return {
+        "start_date": start_date,
+        "expiry_date": expiry_date,
         "users": len(get_system_users()),
         "emails": get_number_of_emails_sent(),
         "days_left": days_left,
         "total_days": total_days,
         "storage": {
             "database_size": str(getDataBaseSizeOfSite()[1][1]) + "M",
-            "site_size": checkDiskSize("./" + site),
+            "site_size": str(0.0045 + convertToMB(checkDiskSize("./" + site + "/public")) + convertToMB(checkDiskSize("./" + site + "/private/files")) ) + "M",
             "backup_size": checkDiskSize("./" + site + "/private/backups"),
         },
         "user_limit":frappe.conf.max_users,
@@ -447,6 +449,7 @@ def delete_site_from_server():
     time.sleep(3)
     return "OK"
 
+
 @frappe.whitelist(allow_guest=True)
 def get_all_apps():
     site_name = cstr(frappe.local.site)
@@ -488,3 +491,36 @@ def uninstall_app(*args,**kwrgs):
         return 'Success'
     else:
         return 'Failure'
+
+
+
+
+@frappe.whitelist()
+def verify_custom_domain(new_domain):
+    ## if domain does not have www then add it
+    if new_domain in frappe.conf.domains :
+        return ["VERIFIED",new_domain]
+    parts = new_domain.split(".")
+    if len(parts) < 2:
+        return ["INVALID_DOMAIN_FORMAT",""]
+    if len(parts) == 2:
+        new_domain = "www." + new_domain
+    print("checking for",new_domain)
+    command = "dig {} CNAME +short".format(new_domain)
+    try:
+        cname = frappe.utils.execute_in_shell(command)[1].decode("utf-8").strip()[:-1]
+        print("cname", cname)
+        if cname == frappe.local.site and new_domain != frappe.local.site :
+            command = "bench setup add-domain {} --site {}".format( new_domain, frappe.local.site)
+            frappe.utils.execute_in_shell(command)
+            frappe.utils.execute_in_shell("bench setup nginx --yes")
+            frappe.utils.execute_in_shell("echo {} | sudo -S service nginx reload".format(frappe.conf.root_password))
+            return ["VERIFIED",cname]
+        if new_domain == frappe.local.site:
+            return ["ALREADY_REGISTERED",cname]
+        return ["INVALID_RECORD",cname]
+            
+    except Exception as e:
+        print(e)
+        return[ "INVALID_DOMAIN",""]
+    
