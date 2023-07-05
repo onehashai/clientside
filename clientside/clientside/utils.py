@@ -1,25 +1,25 @@
-import json
 import frappe
-import requests
 import subprocess
 import os
 from frappe.utils import cstr
 from frappe.core.doctype.user.user import test_password_strength
-from frappe.utils import cint
-from frappe.utils.background_jobs import enqueue
 import boto3
-
+from frappe.integrations.offsite_backup_utils import (
+    generate_files_backup,
+    get_latest_backup_file,
+    validate_file_size,
+)
+from frappe.core.doctype.user.user import get_system_users
+from rq.timeouts import JobTimeoutException
+from frappe.geo.country_info import get_country_timezone_info
+from frappe.desk.doctype.workspace.workspace import update_page
 
 @frappe.whitelist(allow_guest=True)
 def check_password_strength(*args, **kwargs):
-    print("ljewfhe", kwargs)
-    print("check password strength called")
-    print(kwargs)
     passphrase = kwargs["password"]
     first_name = kwargs["first_name"]
     last_name = kwargs["last_name"]
     email = kwargs["email"]
-    print(passphrase, first_name, last_name, email)
     user_data = (first_name, "", last_name, email, "")
     if "'" in passphrase or '"' in passphrase:
         return {
@@ -29,12 +29,6 @@ def check_password_strength(*args, **kwargs):
             }
         }
     return test_password_strength(passphrase, user_data=user_data)
-
-
-from frappe.geo.country_info import get_country_timezone_info
-from frappe.desk.doctype.workspace.workspace import update_page
-
-
 def checkEmailFormatWithRegex(email):
     import re
 
@@ -44,75 +38,9 @@ def checkEmailFormatWithRegex(email):
     else:
         return False
 
-
-@frappe.whitelist()
-def create_new_user(*args, **kwargs):
-    email = kwargs["email"]
-    password = kwargs["password"]
-    firstname = kwargs["firstname"]
-    lastname = kwargs["lastname"]
-    print(email, password, firstname, lastname)
-    if not checkEmailFormatWithRegex(email):
-        return "INVALID_EMAIL_FORMAT"
-    passwordResult = check_password_strength(
-        password=password, first_name=firstname, last_name=lastname, email=email
-    )
-    if (
-        check_password_strength(
-            password=password, first_name=firstname, last_name=lastname, email=email
-        )["feedback"]["password_policy_validation_passed"]
-        == False
-    ):
-        return "PASSWORD_NOT_STRONG"
-    if not firstname:
-        return "FIRST_NAME_NOT_PROVIDED"
-    if not lastname:
-        return "LAST_NAME_NOT_PROVIDED"
-
-    try:
-        user = frappe.db.get("User", {"email": email})
-        if user:
-            if user.enabled:
-                return "EMAIL_ALREADY_REGISTERED"
-            else:
-                return "EMAIL_ALREADY_REGISTERED_BUT_DISABLED"
-        user = frappe.get_doc(
-            {
-                "doctype": "User",
-                "first_name": firstname,
-                "last_name": lastname,
-                "full_name": firstname + " " + lastname,
-                "email": email,
-                "send_welcome_email": 0,
-                "new_password": password,
-                "enabled": 1,
-            }
-        )
-        user.flags.ignore_permissions = True
-        user.flags.ignore_password_policy = True
-        user.insert()
-        adminUser = frappe.get_doc("User", "Administrator")
-        roles_to_add = []
-        for role in adminUser.roles:
-            print(role.role)
-            roles_to_add.append(role.role)
-        user.add_roles(*roles_to_add)
-    except Exception as e:
-        print(e)
-        return e
-    return {
-        "status": "OK",
-        "roles_added": roles_to_add,
-        "password_policy": passwordResult["feedback"][
-            "password_policy_validation_passed"
-        ],
-    }
-
-
 def changeERPNames():
     update_page("ERPNext Settings", "OneHash Settings", "setting", "", 1)
     update_page("ERPNext Integrations", "OneHash Integrations", "integration", "", 1)
-
 
 @frappe.whitelist()
 def createUserOnTargetSite(*args, **kwargs):
@@ -184,9 +112,6 @@ def getNumberOfEmailSent():
 
 @frappe.whitelist()
 def getDataBaseSizeOfSite():
-    # return frappe.db.sql(
-    #     "SELECT pg_database_size('" + frappe.conf.db_name + "');", as_dict=True
-    # )[0].pg_database_size
     return frappe.db.sql(
         "SELECT table_schema "
         + frappe.conf.db_name
@@ -195,7 +120,6 @@ def getDataBaseSizeOfSite():
 
 
 def checkDiskSize(path):
-    # this finds the disk size of a folder named site in the /sites folderx
     import subprocess
 
     return subprocess.check_output(["du", "-hs", path]).decode("utf-8").split("\t")[0]
@@ -213,12 +137,12 @@ def convertToMB(sizeInStringWithPrefix):
     elif prefix == "K":
         return float(sizeInStringWithPrefix[:-1]) / 1024
     return 0
-from frappe.core.doctype.user.user import get_system_users
 def get_number_of_emails_sent(sender = frappe.conf.email):
     return frappe.db.count(
         "Email Queue",
         { "sender": sender},
     )
+    
 @frappe.whitelist()
 def getUsage():
     import datetime
@@ -249,18 +173,6 @@ def getUsage():
         "email_limit":frappe.conf.max_email,
         "storage_limit":str(frappe.conf.max_space) + 'G',
     }
-
-
-def alertForUpgrade():
-    # frappe.msgprint("alertForUpgrade")
-    pass
-
-
-@frappe.whitelist()
-def getDecryptedPassword(*args, **kwargs):
-    print("getDecryptedPassword", kwargs)
-    return getDecryptedPassword(kwargs["password"])
-
 
 def getInstalledApps(site):
     import subprocess
@@ -297,18 +209,7 @@ def installApps(*args, **kwargs):
 
 def post_install():
     changeERPNames()
-
-
-from frappe.integrations.offsite_backup_utils import (
-    generate_files_backup,
-    get_latest_backup_file,
-    send_email,
-    validate_file_size,
-)
-
-from rq.timeouts import JobTimeoutException
-
-
+    
 @frappe.whitelist()
 def take_backups_s3(retry_count=0):
     try:
@@ -428,18 +329,6 @@ def upload_file_to_s3(filename, folder, conn, bucket):
     except Exception as e:
         frappe.log_error()
         print("Error uploading: %s" % (e))
-
-
-# @frappe.whitelist()
-# def download_backup( bucket="onehash", filename="", destpath):
-#     conn = boto3.client(
-#         "s3",
-#         aws_access_key_id=frappe.conf.aws_access_key_id,
-#         aws_secret_access_key=frappe.conf.aws_secret_access_key,
-#         endpoint_url=frappe.conf.endpoint_url,
-#     )
-#     conn.download_file(bucket, filename, destpath)
-
 @frappe.whitelist()
 def delete_site_from_server():
     import requests
@@ -450,7 +339,7 @@ def delete_site_from_server():
     return "OK"
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_all_apps():
     site_name = cstr(frappe.local.site)
     all_apps = frappe.db.get_list('Available Apps',fields=['*'])
@@ -463,7 +352,7 @@ def get_all_apps():
 
     return all_apps
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def install_app(*args,**kwrgs):
     arr=[]
     for key,value in kwrgs.items():
@@ -479,7 +368,7 @@ def install_app(*args,**kwrgs):
     return 'Success'
     
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def uninstall_app(*args,**kwrgs):
     arr=[]
     for key,value in kwrgs.items():
@@ -492,12 +381,8 @@ def uninstall_app(*args,**kwrgs):
     else:
         return 'Failure'
 
-
-
-
 @frappe.whitelist()
 def verify_custom_domain(new_domain):
-    ## if domain does not have www then add it
     if new_domain in frappe.conf.domains :
         return ["VERIFIED",new_domain]
     parts = new_domain.split(".")
@@ -505,11 +390,9 @@ def verify_custom_domain(new_domain):
         return ["INVALID_DOMAIN_FORMAT",""]
     if len(parts) == 2:
         new_domain = "www." + new_domain
-    print("checking for",new_domain)
     command = "dig {} CNAME +short".format(new_domain)
     try:
         cname = frappe.utils.execute_in_shell(command)[1].decode("utf-8").strip()[:-1]
-        print("cname", cname)
         if cname == frappe.local.site and new_domain != frappe.local.site :
             command = "bench setup add-domain {} --site {}".format( new_domain, frappe.local.site)
             frappe.utils.execute_in_shell(command)
