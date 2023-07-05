@@ -137,7 +137,7 @@ def createUserOnTargetSite(*args, **kwargs):
     frappe.clear_cache()
     from frappe.utils.data import now_datetime
     from frappe.desk.page.setup_wizard.setup_wizard import setup_complete
-
+        
     frappe.delete_doc_if_exists("Page", "welcome-to-erpnext", force=1)
     print(frappe.db.a_row_exists("Company"))
     if True:

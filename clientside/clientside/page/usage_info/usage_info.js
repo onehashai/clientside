@@ -122,6 +122,9 @@ function fillStorageUsage(usage_info) {
   const used_storage = Number(backup) + Number(site_files) + Number(db);
 
   console.log("used storage", used_storage);
+  $("#upgrade").click(function () {
+    window.open(fra);
+  });
   $("#storage-info").text(
     `Database: ${usage_info.storage.database_size}  | Site Files: ${usage_info.storage.site_size} | Backup: ${usage_info.storage.backup_size}`
   );
