@@ -195,7 +195,6 @@ override_whitelisted_methods = {
 # Authentication and authorization
 # --------------------------------
 
-on_login = ["clientside.clientside.utils.alertForUpgrade"]
 
 doc_events = {}
 # on_session_creation = "clientside.clientside.utils.alertForUpgrade"

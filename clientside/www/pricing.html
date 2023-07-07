@@ -1,10 +1,24 @@
-<div class="mt-4">
-  {% block script %}
-  <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
-  {% endblock %}
-  <stripe-pricing-table
-    pricing-table-id="prctbl_1MwkXdEwPMdYWOILK0RIFbTQ"
-    publishable-key="pk_test_51HIMtgEwPMdYWOILUeDZLBVUIZkPYb0NOuSdQ674c9DdoPMzNICA4SXp6sNsWovATFnwvMMURO8iqptJ38xnVAIH008jtQwvq7"
-  >
-  </stripe-pricing-table>
+{% extends "templates/web.html" %} {% block style %}
+<style>
+  .navbar,
+  .web-footer {
+    display: none;
+  }
+</style>
+{% endblock %} {% block page_content %} {% block script %}
+<script async src="https://js.stripe.com/v3/pricing-table.js"></script>
+{% endblock %}
+
+<div class="main">
+  <div>
+    {{customer_email}}
+    <stripe-pricing-table
+      pricing-table-id="prctbl_1NQ6xPEwPMdYWOILbXGhHte0"
+      publishable-key="pk_test_51HIMtgEwPMdYWOILUeDZLBVUIZkPYb0NOuSdQ674c9DdoPMzNICA4SXp6sNsWovATFnwvMMURO8iqptJ38xnVAIH008jtQwvq7"
+      client-reference-id="{{subdomain}}"
+      customer-email="{{customer_email}}"
+    >
+    </stripe-pricing-table>
+  </div>
 </div>
+{% endblock %}

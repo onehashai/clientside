@@ -103,9 +103,11 @@ async function init() {
   const lastname = url.searchParams.get("lastname") || "User";
   const companyname = url.searchParams.get("companyname") || "OneHash";
   const country = url.searchParams.get("country") || "India";
+  console.log(password);
   const decryptedPassword = CryptoJS.enc.Base64.parse(password).toString(
     CryptoJS.enc.Utf8
   );
+  console.log(decryptedPassword);
   const createUser = url.searchParams.get("createUser") || false;
   password = decryptedPassword;
   password = password.replaceAll(/%23/g, "#");
