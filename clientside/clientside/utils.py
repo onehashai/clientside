@@ -145,6 +145,9 @@ def get_number_of_emails_sent(sender = frappe.conf.email):
     
 @frappe.whitelist()
 def getUsage():
+    import requests
+    url = "http://"+frappe.conf.admin_url+ "/api/method/bettersaas.bettersaas.doctype.saas_sites.saas_sites.get_site_backup_size?sitename=" + frappe.local.site
+    resp = requests.get(url)
     import datetime
     site = frappe.conf.site_name
     print(frappe.conf.expiry_date)
@@ -167,7 +170,7 @@ def getUsage():
         "storage": {
             "database_size": str(getDataBaseSizeOfSite()[1][1]) + "M",
             "site_size": str(0.0045 + convertToMB(checkDiskSize("./" + site + "/public")) + convertToMB(checkDiskSize("./" + site + "/private/files")) ) + "M",
-            "backup_size": checkDiskSize("./" + site + "/private/backups"),
+            "backup_size": str(resp.json()["message"]) + "M",
         },
         "user_limit":frappe.conf.max_users,
         "email_limit":frappe.conf.max_email,
@@ -306,29 +309,36 @@ def backup_to_s3():
 
         if files_filename:
             to_upload_config.append([files_filename, folder])
+    upload_keys = [ os.path.join(x[1],os.path.basename(x[0]))  for x in to_upload_config]
+    print("uploading files to s3",len(to_upload_config))
+    backup_size = checkDiskSize("./" + frappe.local.site + "/private/backups")
+    command = "bench --site {} execute bettersaas.bettersaas.doctype.saas_sites.saas_sites.insert_backup_record --args \"'{}','{}','{}','{}','{}','{}'\"".format(
+        frappe.conf.admin_subdomain + "." + frappe.conf.domain,upload_keys[0],upload_keys[2],upload_keys[3],upload_keys[1] ,frappe.local.site,backup_size)
+    try:
+        p =frappe.utils.execute_in_shell(command)
+        print(p)
+    except Exception as e:
+        print(e)
     for file in to_upload_config:
         import threading
 
-        t = threading.Timer(120.0, os.remove, args=[file[0]])
-        t.start()
+       # t = threading.Timer(120.0, os.remove, args=[file[0]])
+       # t.start()
         upload_file_to_s3(file[0], file[1], conn, bucket)
 
 
 def upload_file_to_s3(filename, folder, conn, bucket):
     destpath = os.path.join(folder, os.path.basename(filename))
-    command = "bench --site {} execute bettersaas.bettersaas.doctype.saas_sites.saas_sites.insert_backup_record --args \"'{}','{}','{}'\"".format(
-        frappe.conf.admin_subdomain + "." + frappe.conf.domain,
-        filename[2:],
-        destpath,
-        frappe.local.site,
-    )
-    print("file name", filename)
     try:
-        conn.upload_file(filename, bucket, destpath)  # Requires PutObject permission
-        frappe.utils.execute_in_shell(command)
+        conn.upload_file(filename, bucket, "site_backups/"+ frappe.local.site + "/" + destpath)  # Requires PutObject permission
+        
+        # delete the file after uploading
+        os.remove(filename)
+        
     except Exception as e:
         frappe.log_error()
         print("Error uploading: %s" % (e))
+    return True
 @frappe.whitelist()
 def delete_site_from_server():
     import requests
@@ -407,3 +417,5 @@ def verify_custom_domain(new_domain):
         print(e)
         return[ "INVALID_DOMAIN",""]
     
+def tests():
+    frappe.msgprint("hello")

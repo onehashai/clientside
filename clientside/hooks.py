@@ -123,8 +123,8 @@ override_doctype_class = {
 # ---------------
 
 scheduler_events = {
-    "all": [
-        "clientside.clientside.utils.pri",
+   "* * * * *": [
+            "clientside.clientside.utils.tests"
     ],
 }
 
