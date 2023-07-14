@@ -4,9 +4,9 @@ from frappe import _
 
 
 def checkIfUserCanSendEmailsFromOneHashEmailAccount():
-    current_usage = frappe.conf.get("onehash_mail_usage") or 0
+    current_usage = int(frappe.conf.get("onehash_mail_usage") or 0)
     print("current_usage", current_usage)
-    if current_usage >= int(frappe.conf.get("max_email") or 0):
+    if current_usage >= int(frappe.conf.get("max_email")) or 0:
         return False
     else:
         return True
@@ -22,8 +22,8 @@ class CommunicationOverride(Communication):
             print("send from default account")
             email_account = super().get_outgoing_email_account()
             if email_account.as_dict().login_id == frappe.conf.get("mail_login"):
-                current_usage = frappe.conf.get("onehash_mail_usage") or 0
-                command = "bench --site {} set-config onehash_mail_usage {0}".format(
+                current_usage = int(frappe.conf.get("onehash_mail_usage") or 0)
+                command = "bench --site {} set-config onehash_mail_usage {}".format(
                     frappe.local.site, int(current_usage) + 1
                 )
                 frappe.utils.execute_in_shell(command)
@@ -35,7 +35,7 @@ class CommunicationOverride(Communication):
             if comm.as_dict().login_id == frappe.conf.get("mail_login"):
                 frappe.throw(
                     _(
-                        "Please set up your own Email account or buy more email tokens from the store."
+                        "Please set up your own Email account to send emails"
                     ),
                     exc=frappe.OutgoingEmailError,
                 )

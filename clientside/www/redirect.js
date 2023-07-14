@@ -67,6 +67,7 @@ function redirect() {
 }
 
 async function login(email, password) {
+  console.log("trying to login", email, password);
   try {
     await $.ajax({
       url: "/api/method/login",

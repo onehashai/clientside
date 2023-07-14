@@ -1,4 +1,14 @@
 frappe.pages["usage-info"].on_page_load = async function (wrapper) {
+  $("#manage").click(function () {
+    window.open(
+      "https://billing.stripe.com/p/login/test_3cs3du4oRe4P5yMaEE",
+      "_blank"
+    );
+  });
+  $("#purchase").click(function () {
+    window.open("/pricing", "_blank");
+  });
+
   var page = frappe.ui.make_app_page({
     parent: wrapper,
     title: __("Usage Info"),
@@ -7,9 +17,20 @@ frappe.pages["usage-info"].on_page_load = async function (wrapper) {
   $(frappe.render_template("usage_info")).appendTo(
     page.body.addClass("no-border")
   );
+  $("#loading").show();
+  $("#content").hide();
   const r = await fetch("/api/method/clientside.clientside.utils.getUsage");
   const { message } = await r.json();
   console.log(message);
+  $("#loading").hide();
+  $("#content").show();
+
+  document.getElementById("manage").addEventListener("click", function () {
+    window.open(message.stripe_conf.customer_portal, "_blank");
+  });
+  document.getElementById("purchase").addEventListener("click", function () {
+    window.open("/pricing", "_blank");
+  });
   init(message);
 };
 function fillEmailUsage(usage_info) {
@@ -30,6 +51,7 @@ async function addNumberOfDays(usage_info) {
 function init(usage_info) {
   addNumberOfDays(usage_info);
   filUserUsage(usage_info);
+  fillCurrentPlan(usage_info);
   fillEmailUsage(usage_info);
   fillStorageUsage(usage_info);
   $("#delete-site").click(async function () {
@@ -58,7 +80,18 @@ function init(usage_info) {
 function filUserUsage(usage_info) {
   const percent = (usage_info.users / usage_info.user_limit) * 100;
   console.log("user perc", percent);
-  setPercentage("user", percent, usage_info.users, usage_info.user_limit);
+  setPercentage(
+    "user",
+    percent,
+    usage_info.users,
+    usage_info.user_limit,
+    usage_info.plan
+  );
+}
+function fillCurrentPlan(usage_info) {
+  console.log($("#current-plan"));
+  console.log(document.getElementById("current-plan"));
+  $("#current-plan").text(usage_info.plan);
 }
 function getColor(percent) {
   console.log("get color", percent);
@@ -158,15 +191,22 @@ function convertToG(strinWithPrefix) {
   }
 }
 
-function setPercentage(name, percentage, used, total) {
-  const getText = function (name, used, total) {
+function setPercentage(name, percentage, used, total, plan = "") {
+  const getText = function (name, used, total, plan = "") {
     if (name === "user") {
+      console.log("plan", plan);
+      if (plan === "ONEHASH_PRO") {
+        return used + " Created";
+      }
       return used + " / " + total + " Created";
     }
     if (name === "storage") {
       return used + " / " + total + " GB";
     }
     if (name === "emails") {
+      if (used > total) {
+        return used + " Sent";
+      }
       return used + " / " + total + " Sent";
     }
   };

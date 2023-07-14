@@ -4,11 +4,13 @@ import os
 from frappe.utils import cstr
 from frappe.core.doctype.user.user import test_password_strength
 import boto3
+from whitelabel.api import get_room
 from frappe.integrations.offsite_backup_utils import (
     generate_files_backup,
     get_latest_backup_file,
     validate_file_size,
 )
+from whitelabel.api import StripeSubscriptionManager,subscription_key,price_ids
 from frappe.core.doctype.user.user import get_system_users
 from rq.timeouts import JobTimeoutException
 from frappe.geo.country_info import get_country_timezone_info
@@ -138,35 +140,35 @@ def convertToMB(sizeInStringWithPrefix):
         return float(sizeInStringWithPrefix[:-1]) / 1024
     return 0
 def get_number_of_emails_sent(sender = frappe.conf.email):
-    return frappe.db.count(
-        "Email Queue",
-        { "sender": sender},
-    )
-    
-@frappe.whitelist()
+    return frappe.conf.onehash_mail_usage or 0
+@frappe.whitelist(allow_guest=True)
 def getUsage():
     import requests
     url = "http://"+frappe.conf.admin_url+ "/api/method/bettersaas.bettersaas.doctype.saas_sites.saas_sites.get_site_backup_size?sitename=" + frappe.local.site
     resp = requests.get(url)
     import datetime
     site = frappe.conf.site_name
-    print(frappe.conf.expiry_date)
-    expiry_date = frappe.utils.get_datetime(frappe.conf.expiry_date).date()
-    print(expiry_date, datetime.date.today())
-    days_left = (expiry_date - datetime.date.today()).days
-    start_date = None
-    if frappe.conf.last_purchase_date:
-        start_date = frappe.utils.get_datetime(frappe.conf.last_purchase_date).date()
+    subscription = StripeSubscriptionManager()
+    sub = subscription.get_onehash_subscription(frappe.conf.customer_id)
+    if(sub != "NONE"):
+        start_date = datetime.datetime.fromtimestamp(sub["current_period_start"])
+        end_date = datetime.datetime.fromtimestamp(sub["current_period_end"])
+    
+        days_left = (end_date - datetime.datetime.now()).days
+        total_days = (end_date - start_date).days
+        current_product = subscription.get_current_onehash_product(frappe.conf.customer_id)
     else :
-        start_date = frappe.utils.get_datetime(frappe.conf.creation_date).date()
-    total_days = (expiry_date - start_date).days
+        days_left = 0
+        total_days = 0
+        current_product = {
+            "name":"NO_PRODUCT",
+        }
     return {
-        "start_date": start_date,
-        "expiry_date": expiry_date,
         "users": len(get_system_users()),
         "emails": get_number_of_emails_sent(),
         "days_left": days_left,
         "total_days": total_days,
+        "plan": current_product["name"],
         "storage": {
             "database_size": str(getDataBaseSizeOfSite()[1][1]) + "M",
             "site_size": str(0.0045 + convertToMB(checkDiskSize("./" + site + "/public")) + convertToMB(checkDiskSize("./" + site + "/private/files")) ) + "M",
@@ -175,6 +177,7 @@ def getUsage():
         "user_limit":frappe.conf.max_users,
         "email_limit":frappe.conf.max_email,
         "storage_limit":str(frappe.conf.max_space) + 'G',
+        "stripe_conf": getSiteStripeConfig()
     }
 
 def getInstalledApps(site):
@@ -349,7 +352,7 @@ def delete_site_from_server():
     return "OK"
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def get_all_apps():
     site_name = cstr(frappe.local.site)
     all_apps = frappe.db.get_list('Available Apps',fields=['*'])
@@ -416,6 +419,106 @@ def verify_custom_domain(new_domain):
     except Exception as e:
         print(e)
         return[ "INVALID_DOMAIN",""]
+@frappe.whitelist(allow_guest=True)
+def hasActiveSubscription():
+    stripe = StripeSubscriptionManager()
+    return False
+    return stripe.has_valid_site_subscription(frappe.conf.customer_id)
+
+@frappe.whitelist(allow_guest=True)
+def createNewPurchaseSession(*args, **kwargs):
+    stripe = StripeSubscriptionManager()
+    resp =  stripe.create_new_purchase_session(frappe.conf.customer_id,kwargs["price_id"],frappe.local.site.split(".")[0])
+    return {"url":resp}
+@frappe.whitelist(allow_guest=True)
+def upgradeOneHashPlan(*args, **kwargs):
+    stripe = StripeSubscriptionManager(country=frappe.conf.country or "US")
+    res = stripe.upgrade_subscription(frappe.conf.customer_id,kwargs["price_id"],frappe.local.site.split(".")[0])
+    if res != "SUCCESS" and res!="PENDING_UPDATE":
+        print("upgrade failed")
+        frappe.publish_realtime("upgrade_failed",room=f"{frappe.local.site}:website",message={"reason":res})
+    elif res == "SUCCESS":
+        frappe.publish_realtime("upgrade_succeeded",room=f"{frappe.local.site}:website",message={"reason":res})
+    return {"url":"response"}
+@frappe.whitelist(allow_guest=True)
+def getSiteStripeConfig():
+    country = frappe.conf.country or "US"
+    if country == "IN":
+        return {
+            "publishable_key":frappe.conf.publishable_key_in,
+            "customer_portal":frappe.conf.customer_portal_in,
+            "country":frappe.conf.country,
+            "pricing":{
+                        "ONEHASH_PRO":{
+                            "monthly":{
+                                "price_id":"price_1NTJIZCwmuPVDwVyrKuQqnUY",
+                                "price":"16,250",
+                            },
+                            "yearly":{
+                                "price_id":"price_1NTJIZCwmuPVDwVyGNdlnJsl",
+                                "price":"195,000"
+                            }
+                            
+                        },
+                        "ONEHASH_STARTER":{
+                            "monthly":{
+                                "price_id":"price_1NTJGHCwmuPVDwVyLgzRNKRI",
+                                "price":"5,500",
+                            },
+                            "yearly":{
+                                "price_id":"price_1NTJFOCwmuPVDwVyqPnGUQ6L",
+                                "price":"48,000"
+                            }
+                            
+                        },
+                        "ONEHASH_PLUS":{
+                            "monthly":{
+                                "price_id":"price_1NTJHECwmuPVDwVywGmFiC0m",
+                                "price":"10,300",
+                            },
+                            "yearly":{
+                                "price_id":"price_1NTJHECwmuPVDwVyplRDnjow",
+                                "price":"96,000"
+                            }
+                        }
+            }
+        }
+    else :
+        return {
+            "publishable_key":frappe.conf.publishable_key,
+            "customer_portal":frappe.conf.customer_portal,
+            "country":frappe.conf.country,
+            "pricing":{
+                "ONEHASH_PRO":{
+                        "monthly":{
+                            "price_id":"price_1NTKzuEwPMdYWOIL1UBnXt9r",
+                            "price":"649",
+                        },
+                        "yearly":{
+                            "price_id":"price_1NTKzREwPMdYWOILklDKorqG",
+                            "price":"6,588"
+                        }
+                    },
+                "ONEHASH_STARTER":{
+                    "monthly":{
+                        "price_id":"price_1NTKs4EwPMdYWOILQ8TBJ5Mi",
+                        "price":"129",
+                    },
+                    "yearly":{
+                        "price_id":"price_1NTKxvEwPMdYWOILymCB3hWr",
+                        "price":"1,188"
+                    }
     
-def tests():
-    frappe.msgprint("hello")
+                },
+                "ONEHASH_PLUS":{
+                    "monthly":{
+                        "price_id":"price_1NTKs4EwPMdYWOILQ8TBJ5Mi",
+                        "price":"299"
+                    },
+                    "yearly":{
+                        "price_id":"price_1NTKypEwPMdYWOILdybQnp2W",
+                        "price":"2,988"
+                    }
+                }
+        }
+        }

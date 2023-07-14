@@ -1,143 +1,159 @@
 <!-- jinja -->
-<div class="row">
-  <div class="col-md-12">
-    <div class="row">
-      <div class="col-md-8">
-        <div class="frappe-card card-body">
-          <h4 class="card-title">Subscription</h4>
-          <div class="mt-4">
-            <div class="is-flex">
-              <svg
-                class="iprogress blue noselect"
-                data-progress="65"
-                x="0px"
-                y="0px"
-                viewBox="0 0 80 80"
-              >
-                <path
-                  class="track"
-                  d="M5,40a35,35 0 1,0 70,0a35,35 0 1,0 -70,0"
-                />
-                <path
-                  class="fill"
-                  d="M5,40a35,35 0 1,0 70,0a35,35 0 1,0 -70,0"
-                />
-                <text class="value" x="50%" y="55%"></text>
-                <text class="text" x="50%" y="115%"></text>
-              </svg>
-              <div class="ml-4">
-                <p class="h4">
-                  <i class="fa fa-calendar"></i>
+<div id="loading">
+  <div
+    class="spinner-bg"
+    id="spinner-bg spinner-primary"
+    style="display: flex; justify-content: center"
+  >
+    <div class="spinner-border" role="status">
+      <span class="sr-only">Loading...</span>
+    </div>
+  </div>
+</div>
+<div id="content">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="row">
+        <div class="col-md-8">
+          <div class="frappe-card card-body">
+            <h4 class="card-title">
+              Subscription
 
-                  <span id="days"></span>
-                </p>
-                <p>
-                  Upgrade to a premium plan with more users, storage and
-                  priority support.
-                </p>
-                <p>
-                  <button
-                    type="button"
-                    class="btn btn-primary btn-sm"
-                    id="upgrade"
-                  >
-                    Renew/Upgrade
-                  </button>
-                </p>
+              <span class="current_plan" id="current-plan"></span>
+            </h4>
+            <div class="mt-4">
+              <div class="is-flex">
+                <svg
+                  class="iprogress blue noselect"
+                  data-progress="65"
+                  x="0px"
+                  y="0px"
+                  viewBox="0 0 80 80"
+                >
+                  <path
+                    class="track"
+                    d="M5,40a35,35 0 1,0 70,0a35,35 0 1,0 -70,0"
+                  />
+                  <path
+                    class="fill"
+                    d="M5,40a35,35 0 1,0 70,0a35,35 0 1,0 -70,0"
+                  />
+                  <text class="value" x="50%" y="55%"></text>
+                  <text class="text" x="50%" y="115%"></text>
+                </svg>
+                <div class="ml-4">
+                  <p class="h4">
+                    <i class="fa fa-calendar"></i>
+
+                    <span id="days"></span>
+                  </p>
+                  <p>
+                    Upgrade to a premium plan with more users, storage and
+                    priority support.
+                  </p>
+                  <p>
+                    <button
+                      type="button"
+                      class="btn btn-primary btn-sm"
+                      id="purchase"
+                    >
+                      Upgrade
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-outline-info btn-sm"
+                      id="manage"
+                    >
+                      Manage Subscription
+                    </button>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="frappe-card card-body h-100">
+            <h4 class="card-title">Current Subscripttion</h4>
+
+            <div class="mt-4">
+              <div class="input-group mb-3">
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Enter Code"
+                  aria-label="Enter Code"
+                  aria-describedby="basic-addon2"
+                />
+                <div class="input-group-append">
+                  <button class="btn btn-primary" type="button">Apply</button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
+  </div>
+  <div class="row mt-4">
+    <div class="col-md-4">
+      <div class="frappe-card frappe-body">
+        <p class="h4 mt-2"><i class="fa fa-user"></i> Users</p>
+        You can create upto 2 System Users
+        <div class="usage-card">
+          <div class="mt-3">
+            <div class="hprogress-container" id="progress-container-user">
+              <div class="hprogress" id="progress-user"></div>
+              <div class="percentage" id="progress-user-perc">70%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="frappe-card frappe-body">
+        <p class="h4 mt-2">Emails</p>
+        You can send upto 2 emails using OneHash mail
+        <div class="usage-card">
+          <div class="mt-3">
+            <div class="hprogress-container" id="progress-container-emails">
+              <div class="hprogress" id="progress-emails"></div>
+              <div class="percentage" id="progress-emails-perc">70%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="frappe-card frappe-body">
+        <p class="h4 mt-2">Storage</p>
+        <span id="storage-info"></span>
+
+        <div class="usage-card">
+          <div class="mt-3">
+            <div class="hprogress-container" id="progress-container-storage">
+              <div class="hprogress" id="progress-storage"></div>
+              <div class="percentage" id="progress-storage-perc">70%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-12" style="margin-top: 40px">
+    <div class="row">
+      <div class="col-md-8"></div>
       <div class="col-md-4">
         <div class="frappe-card card-body h-100">
-          <h4 class="card-title">Redeem Code</h4>
+          <h4 class="card-title">Delete site</h4>
           <div class="mt-4">
-            <div class="input-group mb-3">
-              <input
-                type="text"
-                class="form-control"
-                placeholder="Enter Code"
-                aria-label="Enter Code"
-                aria-describedby="basic-addon2"
-              />
-              <div class="input-group-append">
-                <button class="btn btn-primary" type="button">Apply</button>
-              </div>
-            </div>
+            <p>
+              Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae
+              commodi corporis ctio?
+            </p>
+            <button class="btn btn-danger" id="delete-site">Delete site</button>
           </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="row mt-4">
-  <div class="col-md-4">
-    <div class="frappe-card frappe-body">
-      <p class="h4 mt-2"><i class="fa fa-user"></i> Users</p>
-      You can create upto 2 System Users
-      <div class="usage-card">
-        <div class="mt-3">
-          <div class="hprogress-container" id="progress-container-user">
-            <div class="hprogress" id="progress-user"></div>
-            <div class="percentage" id="progress-user-perc">70%</div>
-          </div>
-          <button data-name="users" type="button" class="btn mt-3">
-            Upgrade for more users
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="frappe-card frappe-body">
-      <p class="h4 mt-2">Emails</p>
-      You can send upto 2 emails using OneHash mail
-      <div class="usage-card">
-        <div class="mt-3">
-          <div class="hprogress-container" id="progress-container-emails">
-            <div class="hprogress" id="progress-emails"></div>
-            <div class="percentage" id="progress-emails-perc">70%</div>
-          </div>
-          <button data-name="emails" type="button" class="btn mt-3">
-            Purchase email credits
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="frappe-card frappe-body">
-      <p class="h4 mt-2">Storage</p>
-      <span id="storage-info"></span>
-
-      <div class="usage-card">
-        <div class="mt-3">
-          <div class="hprogress-container" id="progress-container-storage">
-            <div class="hprogress" id="progress-storage"></div>
-            <div class="percentage" id="progress-storage-perc">70%</div>
-          </div>
-          <button data-name="storage" type="button" class="btn mt-3">
-            Upgrade for more storage space
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="col-md-12 mt-4">
-  <div class="row">
-    <div class="col-md-8"></div>
-    <div class="col-md-4">
-      <div class="frappe-card card-body h-100">
-        <h4 class="card-title">Delete site</h4>
-        <div class="mt-4">
-          <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae
-            commodi corporis ctio?
-          </p>
-          <button class="btn btn-danger" id="delete-site">Delete site</button>
         </div>
       </div>
     </div>

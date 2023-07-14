@@ -106,7 +106,6 @@ override_doctype_class = {
     "LoginManager": "clientside.clientside.utils.test",
     "Communication": "clientside.clientside.overrides.communication.CommunicationOverride",
 }
-
 # Document Events
 # ---------------
 # Hook on document methods and events
@@ -122,11 +121,7 @@ override_doctype_class = {
 # Scheduled Tasks
 # ---------------
 
-scheduler_events = {
-   "* * * * *": [
-            "clientside.clientside.utils.tests"
-    ],
-}
+
 
 # Testing
 # -------
@@ -148,7 +143,7 @@ override_whitelisted_methods = {
 # override_doctype_dashboards = {
 # 	"Task": "clientside.task.get_dashboard_data"
 # }
-
+boot_session = "clientside.api.boot_session"
 # exempt linked doctypes from being automatically cancelled
 #
 # auto_cancel_exempted_doctypes = ["Auto Repeat"]

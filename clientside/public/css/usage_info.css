@@ -129,3 +129,12 @@
   width: 10px;
   z-index: -1;
 }
+.current_plan {
+  display: inline-block;
+  background: rgb(142 160 157);
+  color: white;
+  padding: 4px 15px;
+  font-size: 14px;
+  box-shadow: 10px 10px 10px;
+  border-radius: 30px;
+}
