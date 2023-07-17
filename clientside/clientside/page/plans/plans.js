@@ -1,3 +1,12 @@
+frappe.pages["plans"].on_page_load = async function (wrapper) {
+  var page = frappe.ui.make_app_page({
+    parent: wrapper,
+    title: __("Usage Info"),
+    single_column: true,
+  });
+  $(frappe.render_template("plans")).appendTo(page.body.addClass("no-border"));
+  init();
+};
 class StripeManager {
   constructor(pk_key = "", resgion = "US") {
     this.current_process = "";
@@ -36,9 +45,6 @@ function switchPlans(price_info) {
 
   console.log("switching plans");
   function setPrices(annual) {
-    if (document.querySelector(".plan-tag")) {
-      document.querySelector(".plan-tag").remove();
-    }
     const plans = ["ONEHASH_STARTER", "ONEHASH_PRO", "ONEHASH_PLUS"];
     plans.forEach((plan) => {
       console.log(plan);
@@ -70,7 +76,6 @@ function switchPlans(price_info) {
       const price_id =
         price_info[plan][annual ? "yearly" : "monthly"]["price_id"];
       $("#plan[data-plan='" + plan + "']").text(price);
-      $(".plan-text[data-plan='" + plan + "']").attr("data-price-id", price_id);
       if (
         price_id == current_price_id &&
         !onTrial &&
@@ -81,20 +86,11 @@ function switchPlans(price_info) {
         // create a tag of "free trial" or "current plan" and append it after the .plan-text[data-plan="plan"]
       } else {
         $("p[data-plan='" + plan + "']").html(subscibe_button_html);
-        console.log(onTrial, price_id, current_price_id);
-        if (onTrial && price_id == current_price_id) {
-          console.log("creating tag");
-          if (!document.querySelector(".plan-tag")) {
-            setTimeout(() => {
-              console.log("creating tag for", plan);
-              console.log(".plan-text[data-plan='" + plan + "']");
-              console.log($(".plan-text[data-plan='" + plan + "']"));
-              $(".plan-text[data-plan='" + plan + "']").append(
-                `<span class="text-xs ml-2 plan-tag">Free Trial</span>`
-              );
-            }, 0);
-          }
-        }
+        if (onTrial)
+          if (!document.querySelector(".plan-tag"))
+            $(".plan-text[data-plan='" + plan + "']").append(
+              `<span class="text-xs ml-2 plan-tag">On Trial</span>`
+            );
       }
       $("button[data-plan='" + plan + "']").attr("data-price-id", price_id);
       $("#year-label[data-plan='" + plan + "']").text(
@@ -246,39 +242,10 @@ function realtimeListeners(stripeManager) {
     hideModal();
   });
 }
-window.onload = async function () {
+async function init() {
+  // get current logged in user , if not logged in then redirect to login page
   const user = await frappe.session.user;
-  // now check is this user has "OneHash manager" role
-  if (user == "Guest") {
-    frappe.msgprint({
-      title: __("Login Required"),
-      indicator: "red",
-      message: __("Please login to access this page."),
-    });
-    $(".spinner").hide();
-    return;
-  }
-  const { message } = await fetch(
-    "/api/method/clientside.clientside.utils.hasRoleToManageOnehashPayments",
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  ).then((r) => r.json());
-  console.log(message);
-  if (message == "False" || message == false) {
-    frappe.msgprint({
-      title: __("Access Denied"),
-      indicator: "red",
-      message: __("You do not have access to this page."),
-    });
-    $(".spinner").hide();
-    return;
-  }
-
-  $(".spinner").hide();
+  console.log(user);
   const urlParams = new URLSearchParams(window.location.search);
   const payment_success = urlParams.get("payment_success");
   if (payment_success == "True") {
@@ -307,7 +274,6 @@ window.onload = async function () {
   $("#payments_portal").click(async function () {
     window.open(usage["stripe_conf"]["customer_portal"], "_blank");
   });
-
   const country = usage["stripe_conf"]["country"];
   const price_info = usage["stripe_conf"]["pricing"];
   document.querySelectorAll("#price_symbol").forEach((el) => {
@@ -327,26 +293,8 @@ window.onload = async function () {
     addEventListeners(stripeManager, price_info);
   });
   $(".spinner").hide();
-  // set the switch according to the current plan
-  // current_price_id
-  const current_price = current_price_id;
-  const monthly_prices = Object.keys(price_info).map((key) => {
-    return price_info[key]["monthly"]["price_id"];
-  });
-  const yearly_prices = Object.keys(price_info).map((key) => {
-    return price_info[key]["yearly"]["price_id"];
-  });
-  if (monthly_prices.includes(current_price)) {
-    $("#switch-move").toggleClass("switch-move-on");
-    $("#switch").toggleClass("switch-on-bg");
-  } else if (yearly_prices.includes(current_price)) {
-    $("#switch-move").toggleClass("switch-move-on");
-    $("#switch").toggleClass("switch-on-bg");
-  }
-  // set the current plan
-
   document.getElementById("main").style.visibility = "visible";
-};
+}
 
 function showModal() {
   document.querySelector(".modals").style.visibility = "visible";

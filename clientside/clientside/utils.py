@@ -4,13 +4,12 @@ import os
 from frappe.utils import cstr
 from frappe.core.doctype.user.user import test_password_strength
 import boto3
-from whitelabel.api import get_room
 from frappe.integrations.offsite_backup_utils import (
     generate_files_backup,
     get_latest_backup_file,
     validate_file_size,
 )
-from whitelabel.api import StripeSubscriptionManager,subscription_key,price_ids
+from clientside.stripe import StripeSubscriptionManager
 from frappe.core.doctype.user.user import get_system_users
 from rq.timeouts import JobTimeoutException
 from frappe.geo.country_info import get_country_timezone_info
@@ -41,10 +40,16 @@ def checkEmailFormatWithRegex(email):
         return False
 
 def changeERPNames():
-    update_page("ERPNext Settings", "OneHash Settings", "setting", "", 1)
-    update_page("ERPNext Integrations", "OneHash Integrations", "integration", "", 1)
+    try:
+        update_page("ERPNext Settings", "OneHash Settings", "setting", "", 1)
+    except:
+        print("error updating page", "ERPNext Settings", "OneHash Settings", "setting", "", 1)
+    try:
+        update_page("ERPNext Integrations", "OneHash Integrations", "integration", "", 1)
+    except:
+        print("error updating page", "ERPNext Integrations", "OneHash Integrations", "integration", "", 1)
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def createUserOnTargetSite(*args, **kwargs):
     email = kwargs["email"]
     password = kwargs["password"]
@@ -94,6 +99,15 @@ def createUserOnTargetSite(*args, **kwargs):
                 "chart_of_accounts": "Standard",
             }
         )
+    # get the newly created user and add the role  "OneHash Manager"
+    # print 
+  #  changeERPNames()
+    user = frappe.get_doc("User", email)
+    user.add_roles("OneHash Manager")
+    user.save(ignore_permissions=True)
+    frappe.utils.execute_in_shell("bench --site {} clear-cache".format(frappe.local.site))
+    frappe.utils.execute_in_shell("bench --site {} clear-website-cache".format(frappe.local.site))
+    
     return {
         "status": "OK",
     }
@@ -147,7 +161,7 @@ def getUsage():
     url = "http://"+frappe.conf.admin_url+ "/api/method/bettersaas.bettersaas.doctype.saas_sites.saas_sites.get_site_backup_size?sitename=" + frappe.local.site
     resp = requests.get(url)
     import datetime
-    site = frappe.conf.site_name
+    site = frappe.local.site
     subscription = StripeSubscriptionManager()
     sub = subscription.get_onehash_subscription(frappe.conf.customer_id)
     if(sub != "NONE"):
@@ -214,12 +228,12 @@ def installApps(*args, **kwargs):
 
 
 def post_install():
+    createRole("OneHash Manager")
     changeERPNames()
-    
 @frappe.whitelist()
 def take_backups_s3(retry_count=0):
     try:
-        validate_file_size()
+        validate_file_size()    
         backup_to_s3()
     except JobTimeoutException:
         if retry_count < 2:
@@ -419,11 +433,7 @@ def verify_custom_domain(new_domain):
     except Exception as e:
         print(e)
         return[ "INVALID_DOMAIN",""]
-@frappe.whitelist(allow_guest=True)
-def hasActiveSubscription():
-    stripe = StripeSubscriptionManager()
-    return False
-    return stripe.has_valid_site_subscription(frappe.conf.customer_id)
+
 
 @frappe.whitelist(allow_guest=True)
 def createNewPurchaseSession(*args, **kwargs):
@@ -522,3 +532,31 @@ def getSiteStripeConfig():
                 }
         }
         }
+        
+# expire cache value  after 24 hr
+
+@frappe.whitelist(allow_guest=True)
+def hasRoleToManageOnehashPayments():
+    # check if user has role "OneHash Manager"
+    user = frappe.session.user
+    user_roles = frappe.get_roles(user)
+    print(user_roles)
+    if "OneHash Manager" in user_roles:
+        return True
+    return False
+    
+def createRole(role_name):
+    print("creating role " + role_name)
+    role = frappe.get_doc({
+        "doctype":"Role",
+        "role_name":role_name,
+        "desk_access":1,
+    })
+    role.insert(ignore_permissions=True)
+    return role.name
+
+    
+# errors 
+# no payment intent pi_1NUkW5CwmuPVDwVyYW3O8GUu
+# no subscription sub_1NUkW5CwmuPVDwVyY0Z0ZQ8Z
+# no customer cus_OHJ5B7EbxKNth5

@@ -1,5 +1,4 @@
 {
- "_user_tags": ",verifies,non",
  "actions": [],
  "allow_rename": 1,
  "creation": "2023-07-01 21:39:12.910854",
@@ -11,6 +10,8 @@
   "new_domain",
   "short_description",
   "verify",
+  "kjlkj",
+  "text",
   "verified"
  ],
  "fields": [
@@ -38,11 +39,23 @@
    "fieldname": "verified",
    "fieldtype": "Data",
    "label": "verified"
+  },
+  {
+   "fieldname": "kjlkj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Go to your DNS provider and create a CNAME record with target same as your current site name.\nfor example is your current site name is example.onehash.is and you want to add www.newdomain.com then follow these steps\n1. Open DNS settings\n2. Create CNAME record with subdomain as \"www\" and target as example.onehash.is\n3. Return to document and click on verify\n4. Once verified your newly added domain will be live",
+   "fieldname": "text",
+   "fieldtype": "HTML",
+   "label": "How to set Custom domain",
+   "options": "<strong>Steps to add custom subdomain</strong>\n<ol>\n<li> Open your DNS provider settings</li>\n<li> create a CNAME record with target to your current site name </li>\n</ol>\n",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2023-07-02 23:04:50.531028",
+ "modified": "2023-07-17 18:01:10.246010",
  "modified_by": "Administrator",
  "module": "Clientside",
  "name": "Custom domains",

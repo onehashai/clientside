@@ -6,7 +6,7 @@ frappe.pages["usage-info"].on_page_load = async function (wrapper) {
     );
   });
   $("#purchase").click(function () {
-    window.open("/pricing", "_blank");
+    window.open("/plans", "_blank");
   });
 
   var page = frappe.ui.make_app_page({
@@ -29,11 +29,16 @@ frappe.pages["usage-info"].on_page_load = async function (wrapper) {
     window.open(message.stripe_conf.customer_portal, "_blank");
   });
   document.getElementById("purchase").addEventListener("click", function () {
-    window.open("/pricing", "_blank");
+    window.open("/plans", "_blank");
   });
   init(message);
 };
 function fillEmailUsage(usage_info) {
+  $("#email_msg").text(
+    "You can send upto " +
+      usage_info.email_limit +
+      " emails with your current plan"
+  );
   const percent = (usage_info.emails / usage_info.email_limit) * 100;
   console.log("email perc", percent);
   setPercentage("emails", percent, usage_info.emails, usage_info.email_limit);
@@ -78,8 +83,20 @@ function init(usage_info) {
   });
 }
 function filUserUsage(usage_info) {
+  if (usage_info.plan == "OneHash Pro") {
+    $("#user_msg").text(
+      "You can add unlimited System users with your current plan"
+    );
+  } else {
+    $("#user_msg").text(
+      "You can add upto " +
+        usage_info.user_limit +
+        " System users with your current plan"
+    );
+  }
+
   const percent = (usage_info.users / usage_info.user_limit) * 100;
-  console.log("user perc", percent);
+  console.log("user perc", usage_info);
   setPercentage(
     "user",
     percent,
@@ -192,10 +209,12 @@ function convertToG(strinWithPrefix) {
 }
 
 function setPercentage(name, percentage, used, total, plan = "") {
+  console.log(plan);
   const getText = function (name, used, total, plan = "") {
+    console.log("get text", name, used, total, plan);
     if (name === "user") {
       console.log("plan", plan);
-      if (plan === "ONEHASH_PRO") {
+      if (plan === "OneHash Pro") {
         return used + " Created";
       }
       return used + " / " + total + " Created";
@@ -218,7 +237,8 @@ function setPercentage(name, percentage, used, total, plan = "") {
   progressEl.classList.add(getColor(100 - percentage));
   percentageEl.classList.add(getColor(100 - percentage));
   progressEl.style.width = percentage + "%";
-  percentageEl.innerText = getText(name, used, total);
+  console.log("plan", plan);
+  percentageEl.innerText = getText(name, used, total, plan);
   percentageEl.style.left = percentage + "%";
 }
 

@@ -1,4 +1,10 @@
-{% extends "templates/web.html" %} {% block page_content %}
+{% extends "templates/web.html" %} {% block page_content %} {% if not
+has_subscription %}
+<div class="alert alert-warning alert-dismissible fade show mb-0" role="alert">
+  <strong>You don't have any active subscription</strong> please subscribe to
+  one of the plans below.
+</div>
+{% endif %}
 <div
   class="is-flex spinner"
   style="justify-content: center; display: flex; margin-top: 40px"
@@ -7,15 +13,7 @@
     <span class="sr-only">Loading...</span>
   </div>
 </div>
-<div>
-  <button
-    type="button"
-    class="btn btn-outline-success btn-md payment"
-    id="payments_portal"
-  >
-    Payment portal
-  </button>
-</div>
+<div></div>
 {% block script %}
 <script src="https://js.stripe.com/v3/"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -95,6 +93,13 @@
 </style>
 {% endblock %}
 <div id="main" style="visibility: hidden">
+  <button
+    type="button"
+    class="btn btn-outline-success btn-md payment"
+    id="payments_portal"
+  >
+    Payment portal
+  </button>
   <section
     class="flex flex-col justify-center antialiased bg-gray-100 text-gray-600 min-h-screen p-4"
   >
@@ -267,7 +272,10 @@
                     />
                   </svg>
                 </div>
-                <h3 class="text-lg text-gray-800 font-semibold">
+                <h3
+                  class="text-lg text-gray-800 font-semibold plax-text"
+                  data-plan="ONEHASH_PLUS"
+                >
                   OneHash Plus
                 </h3>
               </header>
@@ -380,7 +388,12 @@
                     />
                   </svg>
                 </div>
-                <h3 class="text-lg text-gray-800 font-semibold">OneHash Pro</h3>
+                <h3
+                  class="text-lg text-gray-800 font-semibold plan-text"
+                  data-plan="ONEHASH_PRO"
+                >
+                  OneHash Pro
+                </h3>
               </header>
               <div class="text-sm mb-2">
                 Ideal for individuals that need a custom solution with custom

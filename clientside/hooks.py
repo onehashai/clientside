@@ -144,10 +144,11 @@ override_whitelisted_methods = {
 # 	"Task": "clientside.task.get_dashboard_data"
 # }
 boot_session = "clientside.api.boot_session"
+app_include_js = "assets/clientside/js/client.js"
 # exempt linked doctypes from being automatically cancelled
 #
 # auto_cancel_exempted_doctypes = ["Auto Repeat"]
-
+frappe.db.set_value("System Settings", None, "enable_chat", 0)
 # Ignore links to specified DocTypes when deleting documents
 # -----------------------------------------------------------
 

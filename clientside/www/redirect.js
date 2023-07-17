@@ -62,8 +62,13 @@ async function createNewUser(
 }
 function redirect() {
   console.log("redirecting to the new site..");
-  window.location.href =
-    window.location.protocol + "//" + window.location.host + "/app";
+  const url =
+    window.location.protocol +
+    "//" +
+    window.location.host +
+    "/app?onboard=true";
+  console.log(url);
+  window.location.href = url;
 }
 
 async function login(email, password) {
