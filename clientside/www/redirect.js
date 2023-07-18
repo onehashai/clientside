@@ -67,8 +67,20 @@ function redirect() {
     "//" +
     window.location.host +
     "/app?onboard=true";
-  console.log(url);
-  window.location.href = url;
+  const interval = setInterval(() => {
+    fetch(
+      "/api/method/clientside.stripe.hasActiveSubscription?invalidate_cache=true"
+    )
+      .then((r) => r.json())
+      .then((r) => {
+        if (r.message) {
+          console.log("redirecting to the app");
+          window.location.href = url;
+          clearInterval(interval);
+        }
+      });
+  }, 1000);
+  interval();
 }
 
 async function login(email, password) {
