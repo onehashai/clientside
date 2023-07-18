@@ -12,12 +12,13 @@ def hasActiveSubscription(*args,**kwargs):
     frappe.utils.execute_in_shell("bench --site {} clear-cache".format(site))
     frappe.utils.execute_in_shell("bench --site {} clear-website-cache".format(site))
     country = frappe.get_site_config(site_path=site)["country"]
+    customer_id = frappe.get_site_config(site_path=site)["customer_id"]
     print("country",country)
     stripe_manager = StripeSubscriptionManager(country=country)
     
     if invalidate_cache or (not frappe.conf.has_subscription):
         print("rechecking subscription")
-        hasSubscription = "yes" if   stripe_manager.has_valid_site_subscription(frappe.conf.customer_id)  else "no"
+        hasSubscription = "yes" if   stripe_manager.has_valid_site_subscription(customer_id)  else "no"
         print("hasSubscription",hasSubscription)
         command = "bench --site {} set-config has_subscription {}".format(site,hasSubscription)
         print("command",command)
@@ -131,6 +132,7 @@ class StripeSubscriptionManager():
         subscriptions = stripe.Subscription.list(customer=customer_id)
         product = None
         for subscription in subscriptions["data"]:
+            print(subscription["status"],subscription["id"])
             if subscription["status"] in ["active","trialing"] and subscription["plan"]["product"] and subscription["plan"]["product"] in self.onehas_subscription_product_ids:
                 product = subscription["plan"]["product"]
                 break
@@ -269,9 +271,11 @@ class StripeSubscriptionManager():
                 print("updating onehash subscription for site",site_name)
                 fulfilOneHashUpdate(self.onehas_subscription_product_ids,product_id,price_id,site_name)
                 # call payment success on that site
-                frappe.publish_realtime("payment_success",room=get_room(customer_id))
             command = "bench --site {} set-config has_subscription {}".format(site_name,"yes")
             frappe.utils.execute_in_shell(command)
+            print("payment success")
+            frappe.publish_realtime("payment_success",room=get_room(customer_id))
+            
     
         
 

@@ -3,7 +3,7 @@ async function checkIfUserHasActiveSubsciprion() {
   let url = new URL(window.location.href);
   const isOnboard = url.searchParams.get("onboard");
   let method = "/api/method/clientside.stripe.hasActiveSubscription";
-  if (isOnboard) {
+  if (true) {
     method += "?invalidate_cache=true";
     // frappe.ui.toolbar.clear_cache();
     // clear cache
@@ -48,13 +48,13 @@ function init() {
           if (hasRoleToManageOnehashPayments) {
             // show the plan page
             console.log("show the plan page");
-            window.location.href = "/plans";
+            // window.location.href = "/plans";
           } else {
             // redirect to "Please contact site administrator to upgrade your plan" page
             console.log(
               "redirect to Please contact site administrator to upgrade your plan page"
             );
-            window.location.href = "/no-plan";
+            // window.location.href = "/no-plan";
           }
         }
       );

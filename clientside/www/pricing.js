@@ -152,7 +152,7 @@ function realtimeListeners(stripeManager) {
         title: __("Success"),
         indicator: "green",
         message: __(
-          "Your plan has been updated successfully. Please refresh to see the changes."
+          "Your plan has been updated successfully. Changes might take a few minutes to reflect on your account"
         ),
       });
     } else if (current_process == "purchase") {
@@ -160,7 +160,7 @@ function realtimeListeners(stripeManager) {
         title: __("Success"),
         indicator: "green",
         message: __(
-          "Your have subscribed to the selected plan. Please refresh to see the changes."
+          "Your have subscribed to the selected plan.  Changes might take a few minutes to reflect on your account"
         ),
       });
     } else {
@@ -282,11 +282,11 @@ window.onload = async function () {
   const urlParams = new URLSearchParams(window.location.search);
   const payment_success = urlParams.get("payment_success");
   if (payment_success == "True") {
-    frappe.msgprint({
-      title: __("Success"),
-      indicator: "green",
-      message: __("Your plan has been updated successfully."),
-    });
+    // frappe.msgprint({
+    //   title: __("Success"),
+    //   indicator: "green",
+    //   message: __("Your plan has been updated successfully."),
+    // });
   }
   const getUsage = async () => {
     const { message } = await fetch(

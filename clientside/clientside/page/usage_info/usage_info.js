@@ -83,10 +83,11 @@ function init(usage_info) {
   });
 }
 function filUserUsage(usage_info) {
+  let percent = (usage_info.users / usage_info.user_limit) * 100;
+
   if (usage_info.plan == "OneHash Pro") {
-    $("#user_msg").text(
-      "You can add unlimited System users with your current plan"
-    );
+    percent = 100;
+    $("#user_msg").text("You can add unlimited System users ");
   } else {
     $("#user_msg").text(
       "You can add upto " +
@@ -95,7 +96,6 @@ function filUserUsage(usage_info) {
     );
   }
 
-  const percent = (usage_info.users / usage_info.user_limit) * 100;
   console.log("user perc", usage_info);
   setPercentage(
     "user",
@@ -110,8 +110,9 @@ function fillCurrentPlan(usage_info) {
   console.log(document.getElementById("current-plan"));
   $("#current-plan").text(usage_info.plan);
 }
-function getColor(percent) {
+function getColor(percent, plan = "") {
   console.log("get color", percent);
+
   if (percent < 30) {
     return "danger";
   }
@@ -233,9 +234,14 @@ function setPercentage(name, percentage, used, total, plan = "") {
   const progressEl = document.getElementById("progress-" + name);
   const percentageEl = document.getElementById("progress-" + name + "-perc");
   console.log(progressEl, percentageEl);
+  if (name == "user" && plan == "OneHash Pro") {
+    progressEl.classList.add("success");
+    percentageEl.classList.add("success");
+  } else {
+    progressEl.classList.add(getColor(100 - percentage));
+    percentageEl.classList.add(getColor(100 - percentage));
+  }
 
-  progressEl.classList.add(getColor(100 - percentage));
-  percentageEl.classList.add(getColor(100 - percentage));
   progressEl.style.width = percentage + "%";
   console.log("plan", plan);
   percentageEl.innerText = getText(name, used, total, plan);
