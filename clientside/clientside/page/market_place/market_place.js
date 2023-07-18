@@ -19,7 +19,6 @@ frappe.pages['market-place'].on_page_load = function(wrapper) {
 			frappe.call({
 				method:"clientside.clientside.utils.get_all_apps",	
 				callback:(res)=>{
-					console.log(res)
 					document.getElementById('app_div').innerHTML=''
 					Object.keys(res.message).forEach(function(key,index){
 						document.getElementById('app_div').innerHTML+=
