@@ -1,4 +1,6 @@
 import frappe
+import requests
+
 import subprocess
 import os
 from frappe.utils import cstr
@@ -369,6 +371,29 @@ def delete_site_from_server():
 
 @frappe.whitelist(allow_guest=True)
 def get_all_apps():
+    admin_url = frappe.conf.admin_url
+    url = 'http://{s_name}/api/method/bettersaas.bettersaas.doctype.available_apps.available_apps.get_apps'.format(s_name = admin_url)
+    try:
+        site_name=frappe.local.site
+        site_apps = subprocess.check_output('bench --site {s_name} list-apps'.format(s_name =site_name),shell=True).decode('utf-8').split('\n')
+        res = json.loads(requests.get(url).text)
+        for app in res['message']:
+            if app['app_name'] in site_apps:
+                app['installed']='true'
+            else:
+                app['installed']='false'
+
+        return res['message']
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+        return e
+
+
+
+
+
+@frappe.whitelist(allow_guest=True)
+def get_all_apps():
     site_name = cstr(frappe.local.site)
     all_apps = frappe.db.get_list('Available Apps',fields=['*'])
     site_apps = subprocess.check_output('bench --site {s_name} list-apps'.format(s_name = site_name),shell=True).decode('utf-8').split('\n')
@@ -386,15 +411,18 @@ def install_app(*args,**kwrgs):
     for key,value in kwrgs.items():
         arr.append((key,value))
     app_name = arr[0][1]
-    site_name = cstr(frappe.local.site)
+    site_name = frappe.local.site
     if app_name == 'india_compliance':
         os.system('bench --site {s_name} install-app india_compliance'.format(s_name=site_name))
     elif app_name =='posawesome':
         os.system('bench --site {s_name} install-app posawesome'.format(s_name=site_name))
+    elif app_name == 'whitelabel':
+        os.system('bench --site {s_name} install-app whitelabel'.format(s_name=site_name))
     else:
         return "Failure"
     return 'Success'
     
+
 
 @frappe.whitelist()
 def uninstall_app(*args,**kwrgs):
@@ -402,7 +430,7 @@ def uninstall_app(*args,**kwrgs):
     for key,value in kwrgs.items():
         arr.append((key,value))
     app_name = arr[0][1]
-    site_name = cstr(frappe.local.site) 
+    site_name = frappe.local.site
     check = os.system('bench --site {s_name} uninstall-app {a_name} --yes --no-backup'.format(s_name = site_name,a_name=app_name))  
     if check:
         return 'Success'
