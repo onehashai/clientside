@@ -230,6 +230,7 @@ def installApps(*args, **kwargs):
 def post_install():
     createRole("OneHash Manager")
     changeERPNames()
+    add_usage_info() 
 @frappe.whitelist()
 def take_backups_s3(retry_count=0):
     try:
@@ -557,6 +558,21 @@ def createRole(role_name):
 
     
 # errors 
-# no payment intent pi_1NUkW5CwmuPVDwVyYW3O8GUu
-# no subscription sub_1NUkW5CwmuPVDwVyY0Z0ZQ8Z
-# no customer cus_OHJ5B7EbxKNth5
+
+def add_usage_info():
+    navbar_settings = frappe.get_single("Navbar Settings")
+    # if frappe.db.exists("Navbar Item", {"item_label": "Usage Infooo"}):
+    #     return
+ 
+
+    navbar_settings.append(
+		"settings_dropdown",
+		{
+			"item_label": "Usage Infooo",
+			"item_type": "Action",
+			"action": "frappe.set_route('Form','Usage Info')",
+			"is_standard": 1,
+			"idx": 5,
+		},
+	)
+    navbar_settings.save()

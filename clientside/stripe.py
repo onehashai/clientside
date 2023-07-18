@@ -36,7 +36,6 @@ def get_site(customer_id):
     print("getting site")
     return frappe.db.get_list('SaaS sites', filters={'cus_id': customer_id},fields=["site_name"],ignore_permissions=True)[0]["site_name"]
 
-print("hi")
 class StripeSubscriptionManager():
     def __init__(self,country=""):
         self.api_key = frappe.conf.STRIPE_SECRET_KEY
