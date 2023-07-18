@@ -1,6 +1,6 @@
 import frappe
 import requests
-
+import json
 import subprocess
 import os
 from frappe.utils import cstr
@@ -232,7 +232,7 @@ def installApps(*args, **kwargs):
 def post_install():
     createRole("OneHash Manager")
     changeERPNames()
-    add_usage_info() 
+    add_options() 
 @frappe.whitelist()
 def take_backups_s3(retry_count=0):
     try:
@@ -359,14 +359,7 @@ def upload_file_to_s3(filename, folder, conn, bucket):
         frappe.log_error()
         print("Error uploading: %s" % (e))
     return True
-@frappe.whitelist()
-def delete_site_from_server():
-    import requests
-    import time
-    command = "bench drop-site {} --db-root-password {}".format(frappe.local.site, frappe.conf.db_pass)
-    os.system(command)
-    time.sleep(3)
-    return "OK"
+
 
 
 @frappe.whitelist(allow_guest=True)
@@ -374,16 +367,20 @@ def get_all_apps():
     admin_url = frappe.conf.admin_url
     url = 'http://{s_name}/api/method/bettersaas.bettersaas.doctype.available_apps.available_apps.get_apps'.format(s_name = admin_url)
     try:
-        site_name=frappe.local.site
-        site_apps = subprocess.check_output('bench --site {s_name} list-apps'.format(s_name =site_name),shell=True).decode('utf-8').split('\n')
+        site_apps = [x["app_name"] for x in frappe.utils.get_installed_apps_info()]
         res = json.loads(requests.get(url).text)
+      #  print("res",res["message"])
+        apps_to_return = []
         for app in res['message']:
+            if app['app_name']  == "whitelabel":
+                continue
+         
             if app['app_name'] in site_apps:
                 app['installed']='true'
             else:
                 app['installed']='false'
-
-        return res['message']
+            apps_to_return.append(app)
+        return apps_to_return
     except requests.exceptions.RequestException as e:
         print(f"An error occurred: {e}")
         return e
@@ -392,18 +389,7 @@ def get_all_apps():
 
 
 
-@frappe.whitelist(allow_guest=True)
-def get_all_apps():
-    site_name = cstr(frappe.local.site)
-    all_apps = frappe.db.get_list('Available Apps',fields=['*'])
-    site_apps = subprocess.check_output('bench --site {s_name} list-apps'.format(s_name = site_name),shell=True).decode('utf-8').split('\n')
-    for app in all_apps:
-        if app.app_name in site_apps:
-            app['installed']='true'
-        else:
-            app['installed']='false'
 
-    return all_apps
 
 @frappe.whitelist()
 def install_app(*args,**kwrgs):
@@ -412,14 +398,7 @@ def install_app(*args,**kwrgs):
         arr.append((key,value))
     app_name = arr[0][1]
     site_name = frappe.local.site
-    if app_name == 'india_compliance':
-        os.system('bench --site {s_name} install-app india_compliance'.format(s_name=site_name))
-    elif app_name =='posawesome':
-        os.system('bench --site {s_name} install-app posawesome'.format(s_name=site_name))
-    elif app_name == 'whitelabel':
-        os.system('bench --site {s_name} install-app whitelabel'.format(s_name=site_name))
-    else:
-        return "Failure"
+    frappe.utils.execute_in_shell('bench --site {s_name} install-app {app_name}'.format(s_name=site_name,app_name=app_name))
     return 'Success'
     
 
@@ -431,11 +410,9 @@ def uninstall_app(*args,**kwrgs):
         arr.append((key,value))
     app_name = arr[0][1]
     site_name = frappe.local.site
-    check = os.system('bench --site {s_name} uninstall-app {a_name} --yes --no-backup'.format(s_name = site_name,a_name=app_name))  
-    if check:
-        return 'Success'
-    else:
-        return 'Failure'
+    command = 'bench --site {s_name} uninstall-app {a_name} --yes --no-backup'.format(s_name = site_name,a_name=app_name)
+    frappe.utils.execute_in_shell(command)
+    return 'Success'
 
 @frappe.whitelist()
 def verify_custom_domain(new_domain):
@@ -587,7 +564,7 @@ def createRole(role_name):
     
 # errors 
 
-def add_usage_info():
+def add_options():
     navbar_settings = frappe.get_single("Navbar Settings")
     # if frappe.db.exists("Navbar Item", {"item_label": "Usage Infooo"}):
     #     return
@@ -596,11 +573,28 @@ def add_usage_info():
     navbar_settings.append(
 		"settings_dropdown",
 		{
-			"item_label": "Usage Infooo",
+			"item_label": "Usage Info",
 			"item_type": "Action",
-			"action": "frappe.set_route('Form','Usage Info')",
+			"action": "frappe.set_route('Form','Usage-Info')",
 			"is_standard": 1,
 			"idx": 5,
-		},
+		}
 	)
+    navbar_settings.append (
+        "settings_dropdown",
+        {
+            "item_label": "OneHash Marketplace",
+            "item_type": "Action",
+			"action": "frappe.set_route('Form','market-place')",
+			"is_standard": 1,
+			"idx": 6,
+        }
+            
+    )
     navbar_settings.save()
+
+def update_last_active():
+    time = frappe.utils.now_datetime().strftime("%Y-%m-%d")
+    command = "bench --site {site} set-config last_active '{time}'".format(site=frappe.local.site,time=time)
+    frappe.utils.execute_in_shell(command)
+    print("updated last active")
