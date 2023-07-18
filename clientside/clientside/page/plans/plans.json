@@ -1,15 +1,15 @@
 {
  "content": null,
- "creation": "2023-06-26 11:31:16.057512",
+ "creation": "2023-07-16 13:25:30.655444",
  "docstatus": 0,
  "doctype": "Page",
  "idx": 0,
- "modified": "2023-07-16 11:18:59.033856",
+ "modified": "2023-07-16 13:28:11.992207",
  "modified_by": "Administrator",
  "module": "Clientside",
- "name": "usage-info",
+ "name": "plans",
  "owner": "Administrator",
- "page_name": "usage-info",
+ "page_name": "plans",
  "roles": [
   {
    "role": "OneHash Manager"
@@ -18,6 +18,5 @@
  "script": null,
  "standard": "Yes",
  "style": null,
- "system_page": 1,
- "title": "Usage info"
+ "system_page": 1
 }

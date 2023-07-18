@@ -106,7 +106,6 @@ override_doctype_class = {
     "LoginManager": "clientside.clientside.utils.test",
     "Communication": "clientside.clientside.overrides.communication.CommunicationOverride",
 }
-
 # Document Events
 # ---------------
 # Hook on document methods and events
@@ -122,11 +121,7 @@ override_doctype_class = {
 # Scheduled Tasks
 # ---------------
 
-scheduler_events = {
-    "all": [
-        "clientside.clientside.utils.pri",
-    ],
-}
+
 
 # Testing
 # -------
@@ -148,11 +143,11 @@ override_whitelisted_methods = {
 # override_doctype_dashboards = {
 # 	"Task": "clientside.task.get_dashboard_data"
 # }
-
+boot_session = "clientside.api.boot_session"
+app_include_js = "assets/clientside/js/client.js"
 # exempt linked doctypes from being automatically cancelled
 #
 # auto_cancel_exempted_doctypes = ["Auto Repeat"]
-
 # Ignore links to specified DocTypes when deleting documents
 # -----------------------------------------------------------
 
@@ -195,7 +190,6 @@ override_whitelisted_methods = {
 # Authentication and authorization
 # --------------------------------
 
-on_login = ["clientside.clientside.utils.alertForUpgrade"]
 
 doc_events = {}
 # on_session_creation = "clientside.clientside.utils.alertForUpgrade"
