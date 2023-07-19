@@ -251,6 +251,7 @@ def create_zip_with_files(zip_file_path, files_to_zip):
             zipf.write(file_path, os.path.basename(file_path))
 @frappe.whitelist()
 def take_backups_s3(retry_count=0,is_manual=0):
+    
     try:
         validate_file_size()    
         backup_to_s3(is_manual=is_manual)
@@ -263,6 +264,7 @@ def take_backups_s3(retry_count=0,is_manual=0):
 
 
 def backup_to_s3(is_manual=0):
+    backup_size = checkDiskSize("./" + frappe.local.site + "/private/backups")
     from frappe.utils import get_backups_path
     from frappe.utils.backups import new_backup
 
@@ -361,7 +363,6 @@ def backup_to_s3(is_manual=0):
         conn.upload_file(on_server_zip_key, bucket, aws_key)
     except Exception as e:
         print("error in uploading files to s3",e)
-    backup_size = checkDiskSize("./" + frappe.local.site + "/private/backups")
     command = "bench --site {} execute bettersaas.bettersaas.doctype.saas_sites.saas_sites.insert_backup_record --args \"'{}','{}','{}','{}'\"".format(
         frappe.conf.admin_subdomain + "." + frappe.conf.domain ,frappe.local.site,backup_size,"onehash/"+aws_key,is_manual)
     try:
@@ -637,6 +638,11 @@ def schedule_files_backup():
     # calculate number of backups to do
     # fire the backup function for each backup
     # store the keys in a doctype
+    backup_size = checkDiskSize("./" + frappe.local.site + "/private/backups")
+    limit = int(frappe.conf.max_space) * 1024
+    current_usage = convertToMB(backup_size) + convertToMB(checkDiskSize("./" + frappe.local.site + "/public")) + convertToMB(checkDiskSize("./" + frappe.local.site + "/private/files")) + getDataBaseSizeOfSite()[1][1]
+    if current_usage > limit:
+        frappe.throw("Storage Limit Exceeded")
     if frappe.conf.backup_in_progress and frappe.conf.backup_in_progress == "yes":
         frappe.throw("Backup is already in progress")
     frappe.msgprint("Backup is in progress , please wait for the backup to complete")
