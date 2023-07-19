@@ -233,20 +233,36 @@ def post_install():
     createRole("OneHash Manager")
     changeERPNames()
     add_options() 
+def create_zip_with_files(zip_file_path, files_to_zip):
+    import zipfile
+    """
+    Create a zip file containing the specified files.
+
+    Parameters:
+        - zip_file_path (str): The path of the output zip file.
+        - files_to_zip (list): An array of file paths to include in the zip.
+
+    Returns:
+        - None
+    """
+    with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for file_path in files_to_zip:
+            # Add each file to the zip, using its base name as the file name in the zip
+            zipf.write(file_path, os.path.basename(file_path))
 @frappe.whitelist()
-def take_backups_s3(retry_count=0):
+def take_backups_s3(retry_count=0,is_manual=0):
     try:
         validate_file_size()    
-        backup_to_s3()
+        backup_to_s3(is_manual=is_manual)
     except JobTimeoutException:
         if retry_count < 2:
-            take_backups_s3(retry_count=retry_count + 1)
+            take_backups_s3(retry_count=retry_count + 1,is_manual=is_manual)
 
     except Exception:
         print(frappe.get_traceback())
 
 
-def backup_to_s3():
+def backup_to_s3(is_manual=0):
     from frappe.utils import get_backups_path
     from frappe.utils.backups import new_backup
 
@@ -308,7 +324,8 @@ def backup_to_s3():
 
         else:
             db_filename, site_config = get_latest_backup_file()
-
+    
+    print(db_filename,site_config,files_filename,private_files)
     folder = os.path.basename(db_filename)[:15] + "/"
     print("folder name in s3", folder)
     # for adding datetime to folder name
@@ -329,36 +346,49 @@ def backup_to_s3():
 
         if files_filename:
             to_upload_config.append([files_filename, folder])
-    upload_keys = [ os.path.join(x[1],os.path.basename(x[0]))  for x in to_upload_config]
+   # upload_keys = [ os.path.join"site_backups/"+ frappe.local.site + "/" + target_zip_file_name(x[1],os.path.basename(x[0]))  for x in to_upload_config]
+    server_keys = [x[0] for x in to_upload_config]
+    replaced_site_name = frappe.local.site.replace(".", "_")
+    target_zip_file_name = to_upload_config[0][1][:-1] + "-"+replaced_site_name+".zip"
+    print("target zip file name",target_zip_file_name)
+    on_server_zip_key = frappe.local.site + "/private/"+target_zip_file_name
+    create_zip_with_files(on_server_zip_key,server_keys)
     print("uploading files to s3",len(to_upload_config))
-    backup_size = checkDiskSize("./" + frappe.local.site + "/private/backups")
-    command = "bench --site {} execute bettersaas.bettersaas.doctype.saas_sites.saas_sites.insert_backup_record --args \"'{}','{}','{}','{}','{}','{}'\"".format(
-        frappe.conf.admin_subdomain + "." + frappe.conf.domain,upload_keys[0],upload_keys[2],upload_keys[3],upload_keys[1] ,frappe.local.site,backup_size)
+    aws_key ="site_backups/"+ frappe.local.site + "/" + target_zip_file_name
+    print(target_zip_file_name)
+    print(aws_key)
     try:
-        p =frappe.utils.execute_in_shell(command)
-        print(p)
+        conn.upload_file(on_server_zip_key, bucket, aws_key)
+    except Exception as e:
+        print("error in uploading files to s3",e)
+    backup_size = checkDiskSize("./" + frappe.local.site + "/private/backups")
+    command = "bench --site {} execute bettersaas.bettersaas.doctype.saas_sites.saas_sites.insert_backup_record --args \"'{}','{}','{}','{}'\"".format(
+        frappe.conf.admin_subdomain + "." + frappe.conf.domain ,frappe.local.site,backup_size,"onehash/"+aws_key,is_manual)
+    try:
+        frappe.utils.execute_in_shell(command)
+        backup_limit = frappe.db.get_single_value("System Settings", "backup_limit")
+        print("we have to maintain only {} backups".format(backup_limit))
+        command_1 = "bench --site {} execute bettersaas.bettersaas.doctype.saas_sites.saas_sites.delete_old_backups --args \"'{}','{}'\"".format(
+            frappe.conf.admin_subdomain + "." + frappe.conf.domain,backup_limit,frappe.local.site )
+        frappe.utils.execute_in_shell(command_1)
+        for key in server_keys:
+            os.remove(key)
+        os.remove(on_server_zip_key)
     except Exception as e:
         print(e)
-    for file in to_upload_config:
-        import threading
-
-       # t = threading.Timer(120.0, os.remove, args=[file[0]])
-       # t.start()
-        upload_file_to_s3(file[0], file[1], conn, bucket)
+    frappe.utils.execute_in_shell("bench --site {} set-config backup_in_progress no".format(frappe.local.site))
 
 
-def upload_file_to_s3(filename, folder, conn, bucket):
-    destpath = os.path.join(folder, os.path.basename(filename))
-    try:
-        conn.upload_file(filename, bucket, "site_backups/"+ frappe.local.site + "/" + destpath)  # Requires PutObject permission
+# def upload_file_to_s3(filename, folder, conn, bucket):
+#     destpath = os.path.join(folder, os.path.basename(filename))
+#     try:
         
-        # delete the file after uploading
-        os.remove(filename)
+#         # delete the file after uploading
         
-    except Exception as e:
-        frappe.log_error()
-        print("Error uploading: %s" % (e))
-    return True
+        
+#     except Exception as e:
+#         frappe.log_error()
+#         print("Error uploading: %s" % (e))
 
 
 
@@ -598,3 +628,37 @@ def update_last_active():
     command = "bench --site {site} set-config last_active '{time}'".format(site=frappe.local.site,time=time)
     frappe.utils.execute_in_shell(command)
     print("updated last active")
+    
+    
+    
+    
+@frappe.whitelist()
+def schedule_files_backup():
+    # calculate number of backups to do
+    # fire the backup function for each backup
+    # store the keys in a doctype
+    if frappe.conf.backup_in_progress and frappe.conf.backup_in_progress == "yes":
+        frappe.throw("Backup is already in progress")
+    frappe.msgprint("Backup is in progress , please wait for the backup to complete")
+    frappe.utils.execute_in_shell("bench --site {} set-config backup_in_progress yes".format(frappe.local.site))
+    take_backups_s3(is_manual=1)
+    
+    # delete the oldbest backup if current number of manual backups is equal to the limit 
+def make_object_public(bucket_name, object_name):
+    print(bucket_name,object_name,"making public")
+    conn = boto3.client('s3',aws_access_key_id=frappe.conf.aws_access_key_id,aws_secret_access_key=frappe.conf.aws_secret_access_key)
+    conn.put_object_acl(ACL='public-read', Bucket=bucket_name, Key=object_name)
+    
+@frappe.whitelist(allow_guest=True)
+def get_download_link(s3key):
+    from botocore.client import Config
+    bucket_name = frappe.conf.aws_bucket_name
+    make_object_public(bucket_name, s3key)
+    conn = boto3.client('s3',aws_access_key_id=frappe.conf.aws_access_key_id,aws_secret_access_key=frappe.conf.aws_secret_access_key, config=Config(signature_version='s3v4',region_name = 'ap-south-1'))
+    url = conn.generate_presigned_url('get_object', Params = {'Bucket': bucket_name, 'Key': s3key}, ExpiresIn = 3600)
+    return url
+@frappe.whitelist()
+def getBackups():
+    import requests
+    r = requests.get("http://" + frappe.conf.admin_url + "/api/method/bettersaas.bettersaas.doctype.saas_site_backups.saas_site_backups.getBackups?site=" + frappe.local.site).json()
+    return r["message"]

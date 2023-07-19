@@ -3,7 +3,7 @@ async function checkIfUserHasActiveSubsciprion() {
   let url = new URL(window.location.href);
   const isOnboard = url.searchParams.get("onboard");
   let method = "/api/method/clientside.stripe.hasActiveSubscription";
-  if (true) {
+  if (isOnboard) {
     method += "?invalidate_cache=true";
     // frappe.ui.toolbar.clear_cache();
     // clear cache

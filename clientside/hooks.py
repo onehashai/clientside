@@ -135,6 +135,7 @@ override_whitelisted_methods = {
     "frappe.frappe.core.doctype.user.user.sign_up": "clientside.clientside.overrides.sign_up",
     "frappe.client.save": "clientside.clientside.overrides.globals.saveOverride",
     "frappe.desk.form.save.savedocs": "clientside.clientside.overrides.globals.savedocsoverride",
+    "frappe.desk.page.backups.backups.schedule_files_backup": "clientside.clientside.overrides.globals.schedule_files_backup",
 }
 #
 # each overriding function accepts a `data` argument;
@@ -186,7 +187,9 @@ app_include_js = "assets/clientside/js/client.js"
 # 		"doctype": "{doctype_4}"
 # 	}
 # ]
-
+website_redirects = [
+    {"source": "/app/backups", "target": "/app/onehash-backups"}
+]
 # Authentication and authorization
 # --------------------------------
 auth_hooks = ["clientside.clientside.utils.update_last_active"]

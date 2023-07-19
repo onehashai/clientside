@@ -27,3 +27,7 @@ def saveOverride(doc):
 def savedocsoverride(doc, action):
     # isUserCreationAllowed(doc)
     return savedocs(doc, action)
+
+@frappe.whitelist()
+def schedule_files_backup():
+    frappe.msgprint("This page is not available in this version of OneHash. Please visit OneHash-backups page from awesomebar")
