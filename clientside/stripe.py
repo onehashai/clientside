@@ -51,25 +51,15 @@ class StripeSubscriptionManager():
             self.api_key = frappe.conf.STRIPE_SECRET_KEY_IN
             
             self.endpoint_secret = frappe.conf.STRIPE_ENDPOINT_SECRET_IN
-        self.plan_to_product_id = {
-            "25GB":"prod_OE6JgL1X5whRBm",
-            "ONEHASH_PRO":"prod_ODy9z0LH7AwXD6",
-            "ONEHASH_PLUS":"prod_OE6JgL1X5whRBm",
-            "ONEHASH_STARTER":"prod_OF3nxhfb3JpKeR"
-        }
+        self.plan_to_product_id = frappe.conf.stripe_prices["US"]["products"]
         self.onehas_subscription_product_ids = ["prod_OE6JgL1X5whRBm","prod_ODy9z0LH7AwXD6","prod_OF3nxhfb3JpKeR"]
-        self.trial_price_id = "price_1NTKzREwPMdYWOILklDKorqG"
+        self.trial_price_id = frappe.conf.stripe_prices["US"]["trial_price_id"]
         self.trial_product = "ONEHASH_PRO"
 
         if(self.region == "IN"):
-            self.plan_to_product_id = {
-            "25GB":"prod_OE6JgL1X5whRBm",
-            "ONEHASH_PRO":"prod_OFowmBYUz738j9",
-            "ONEHASH_PLUS":"prod_OFovQrq6UPfouo",
-            "ONEHASH_STARTER":"prod_OFotftDB5owt2r"
-            }
-            self.trial_price_id = "price_1NTJIZCwmuPVDwVyGNdlnJsl"
-            self.onehas_subscription_product_ids = ["prod_OFovQrq6UPfouo","prod_OFowmBYUz738j9","prod_OFotftDB5owt2r"]
+            self.plan_to_product_id = frappe.conf.stripe_prices["IN"]["products"]
+            self.trial_price_id = frappe.conf.stripe_prices["IN"]["trial_price_id"]
+        self.onehas_subscription_product_ids = [x for x in self.plan_to_product_id.values()]
         stripe.api_key = self.api_key
         print("setting stripe api key",stripe.api_key)
     def getSession(self,session_id,expand=[]):
