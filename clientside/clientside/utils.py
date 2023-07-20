@@ -496,79 +496,14 @@ def getSiteStripeConfig():
             "publishable_key":frappe.conf.publishable_key_in,
             "customer_portal":frappe.conf.customer_portal_in,
             "country":frappe.conf.country,
-            "pricing":{
-                        "ONEHASH_PRO":{
-                            "monthly":{
-                                "price_id":"price_1NTJIZCwmuPVDwVyrKuQqnUY",
-                                "price":"16,250",
-                            },
-                            "yearly":{
-                                "price_id":"price_1NTJIZCwmuPVDwVyGNdlnJsl",
-                                "price":"195,000"
-                            }
-                            
-                        },
-                        "ONEHASH_STARTER":{
-                            "monthly":{
-                                "price_id":"price_1NTJGHCwmuPVDwVyLgzRNKRI",
-                                "price":"5,500",
-                            },
-                            "yearly":{
-                                "price_id":"price_1NTJFOCwmuPVDwVyqPnGUQ6L",
-                                "price":"48,000"
-                            }
-                            
-                        },
-                        "ONEHASH_PLUS":{
-                            "monthly":{
-                                "price_id":"price_1NTJHECwmuPVDwVywGmFiC0m",
-                                "price":"10,300",
-                            },
-                            "yearly":{
-                                "price_id":"price_1NTJHECwmuPVDwVyplRDnjow",
-                                "price":"96,000"
-                            }
-                        }
-            }
+            "pricing": frappe.conf.stripe_prices["IN"]["prices"]
         }
     else :
         return {
             "publishable_key":frappe.conf.publishable_key,
             "customer_portal":frappe.conf.customer_portal,
             "country":frappe.conf.country,
-            "pricing":{
-                "ONEHASH_PRO":{
-                        "monthly":{
-                            "price_id":"price_1NTKzuEwPMdYWOIL1UBnXt9r",
-                            "price":"649",
-                        },
-                        "yearly":{
-                            "price_id":"price_1NTKzREwPMdYWOILklDKorqG",
-                            "price":"6,588"
-                        }
-                    },
-                "ONEHASH_STARTER":{
-                    "monthly":{
-                        "price_id":"price_1NTKs4EwPMdYWOILQ8TBJ5Mi",
-                        "price":"129",
-                    },
-                    "yearly":{
-                        "price_id":"price_1NTKxvEwPMdYWOILymCB3hWr",
-                        "price":"1,188"
-                    }
-    
-                },
-                "ONEHASH_PLUS":{
-                    "monthly":{
-                        "price_id":"price_1NTKs4EwPMdYWOILQ8TBJ5Mi",
-                        "price":"299"
-                    },
-                    "yearly":{
-                        "price_id":"price_1NTKypEwPMdYWOILdybQnp2W",
-                        "price":"2,988"
-                    }
-                }
-        }
+            "pricing":frappe.conf.stripe_prices["US"]["prices"]
         }
         
 # expire cache value  after 24 hr
