@@ -1,11 +1,7 @@
 import frappe
 from clientside.stripe import StripeSubscriptionManager
 def get_context(context):
-    plan_id_to_product = {
-        "prod_OFovQrq6UPfouo":"ONEHASH_PLUS",
-        "prod_OFowmBYUz738j9":"ONEHASH_PRO",
-        "prod_OFotftDB5owt2r":"ONEHASH_STARTER"
-    }
+   
     stripe_subscription_manager = StripeSubscriptionManager()
     print("customer id",frappe.conf.customer_id)
     onehash_sub = stripe_subscription_manager.get_onehash_subscription(frappe.conf.customer_id)
@@ -19,7 +15,7 @@ def get_context(context):
         isTrial = onehash_sub["status"] == "trialing"
         current_price = stripe_subscription_manager.get_current_onehash_price(frappe.conf.customer_id)
         print(onehash_sub["plan"]["product"])
-        current_product = plan_id_to_product[onehash_sub["plan"]["product"]]
+        current_product = stripe_subscription_manager.plan_id_to_product[onehash_sub["plan"]["product"]]
         
    # print(onehash_sub)
     context.update({
