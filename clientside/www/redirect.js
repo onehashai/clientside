@@ -4,6 +4,7 @@ var getQueryString = function (field, url) {
   var string = reg.exec(href);
   return string ? string[1] : null;
 };
+
 let domain = "." + window.location.hostname.split(".").splice(1, 2).join(".");
 if (window.location.port) {
   domain += ":" + window.location.port;
@@ -45,12 +46,6 @@ async function createNewUser(
   password,
   country
 ) {
-  const country_name = (
-    await (
-      await fetch("https://restcountries.com/v3.1/alpha/" + country)
-    ).json()
-  )[0]["name"]["common"];
-  console.log(country_name);
   frappe
     .call({
       method: "clientside.clientside.utils.createUserOnTargetSite",
@@ -61,45 +56,45 @@ async function createNewUser(
         companyname: companyname,
         password: password,
         company_name: companyname,
-        country: country_name,
+        country: country,
       },
       async: true,
     })
     .then((r) => {
-      console.log(r);
       if (r.message.status == "OK") {
-        console.log("User created", email);
         login(email, password).then(() => {
           redirect();
         });
       } else {
-        console.log(r.message);
-        if (r.message == errorMessages.EMAIL_ALREADY_REGISTERED) {
-          console.log("User already exists, logging in");
-          login(email, password).then(() => {
-            redirect();
-          });
-        } else if (
-          r.message == errorMessages.EMAIL_ALREADY_REGISTERED_BUT_DISABLED
-        ) {
-          console.log("User already exists, logging in");
-          login(email, password).then(() => {
-            redirect();
-          });
-        } else {
-          frappe.msgprint(r.message);
-        }
+        frappe.msgprint(r.message);
       }
     });
 }
-function redirect() {
-  console.log("redirecting to the new site");
-  window.location.href = `http://${
-    window.location.hostname.split(".")[0]
-  }${domain}/app`;
+async function redirect() {
+  return;
+  console.log("redirecting to the new site..");
+  const url =
+    window.location.protocol +
+    "//" +
+    window.location.host +
+    "/app?onboard=true";
+  const poll_url =
+    "/api/method/clientside.stripe.hasActiveSubscription?invalidate_cache=true";
+  // poll until the cache is updated
+  const subPoll = await fetch(poll_url, {
+    method: "GET",
+  }).then((r) => r.json());
+  if (subPoll.message) {
+    window.location.href = url;
+  } else {
+    setTimeout(() => {
+      redirect();
+    }, 2000);
+  }
 }
 
 async function login(email, password) {
+  console.log("trying to login", email, password);
   try {
     await $.ajax({
       url: "/api/method/login",
@@ -118,21 +113,16 @@ async function login(email, password) {
     console.log(error);
     frappe.msgprint("Some Internal error , please try again later");
   }
-
-  console.log("User logged in", email);
 }
 window.onload = function () {
   init();
 };
-async function test() {
-  init();
-}
 async function init() {
   const url = new URL(window.location.href);
   const email =
     url.searchParams.get("email") ||
     Math.random().toString(36).substring(7) + "@onehash.ai";
-  let password = url.searchParams.get("password") || "admin";
+  let password = url.searchParams.get("utm_id") || "admin";
   if (password == null) {
     password = "admin";
   }
@@ -141,11 +131,12 @@ async function init() {
   const lastname = url.searchParams.get("lastname") || "User";
   const companyname = url.searchParams.get("companyname") || "OneHash";
   const country = url.searchParams.get("country") || "India";
+  console.log(password);
   const decryptedPassword = CryptoJS.enc.Base64.parse(password).toString(
     CryptoJS.enc.Utf8
   );
+  console.log(decryptedPassword);
   const createUser = url.searchParams.get("createUser") || false;
-  console.log("decryptedPassword", decryptedPassword);
   password = decryptedPassword;
   password = password.replaceAll(/%23/g, "#");
   if (createUser) {
@@ -159,7 +150,7 @@ async function init() {
       country
     );
   } else {
-    // just login and redirect
+    console.log("logging in");
     await login(email, password);
     redirect();
   }

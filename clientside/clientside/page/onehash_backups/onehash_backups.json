@@ -1,23 +1,23 @@
 {
  "content": null,
- "creation": "2023-06-26 11:31:16.057512",
+ "creation": "2023-07-19 11:12:43.419570",
  "docstatus": 0,
  "doctype": "Page",
  "idx": 0,
- "modified": "2023-07-16 11:18:59.033856",
+ "modified": "2023-07-19 11:26:02.033381",
  "modified_by": "Administrator",
  "module": "Clientside",
- "name": "usage-info",
+ "name": "onehash-backups",
  "owner": "Administrator",
- "page_name": "usage-info",
+ "page_name": "onehash-backups",
  "roles": [
   {
-   "role": "OneHash Manager"
+   "role": "System Manager"
   }
  ],
  "script": null,
  "standard": "Yes",
  "style": null,
- "system_page": 1,
- "title": "Usage info"
+ "system_page": 0,
+ "title": "OneHash Backups"
 }

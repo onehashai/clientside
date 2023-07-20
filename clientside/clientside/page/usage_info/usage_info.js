@@ -1,4 +1,14 @@
 frappe.pages["usage-info"].on_page_load = async function (wrapper) {
+  $("#manage").click(function () {
+    window.open(
+      "https://billing.stripe.com/p/login/test_3cs3du4oRe4P5yMaEE",
+      "_blank"
+    );
+  });
+  $("#purchase").click(function () {
+    window.open("/plans", "_blank");
+  });
+
   var page = frappe.ui.make_app_page({
     parent: wrapper,
     title: __("Usage Info"),
@@ -7,12 +17,28 @@ frappe.pages["usage-info"].on_page_load = async function (wrapper) {
   $(frappe.render_template("usage_info")).appendTo(
     page.body.addClass("no-border")
   );
+  $("#loading").show();
+  $("#content").hide();
   const r = await fetch("/api/method/clientside.clientside.utils.getUsage");
   const { message } = await r.json();
   console.log(message);
+  $("#loading").hide();
+  $("#content").show();
+
+  document.getElementById("manage").addEventListener("click", function () {
+    window.open(message.stripe_conf.customer_portal, "_blank");
+  });
+  document.getElementById("purchase").addEventListener("click", function () {
+    window.open("/plans", "_blank");
+  });
   init(message);
 };
 function fillEmailUsage(usage_info) {
+  $("#email_msg").text(
+    "You can send upto " +
+      usage_info.email_limit +
+      " emails with your current plan"
+  );
   const percent = (usage_info.emails / usage_info.email_limit) * 100;
   console.log("email perc", percent);
   setPercentage("emails", percent, usage_info.emails, usage_info.email_limit);
@@ -30,6 +56,7 @@ async function addNumberOfDays(usage_info) {
 function init(usage_info) {
   addNumberOfDays(usage_info);
   filUserUsage(usage_info);
+  fillCurrentPlan(usage_info);
   fillEmailUsage(usage_info);
   fillStorageUsage(usage_info);
   $("#delete-site").click(async function () {
@@ -56,12 +83,35 @@ function init(usage_info) {
   });
 }
 function filUserUsage(usage_info) {
-  const percent = (usage_info.users / usage_info.user_limit) * 100;
-  console.log("user perc", percent);
-  setPercentage("user", percent, usage_info.users, usage_info.user_limit);
+  let percent = (usage_info.users / usage_info.user_limit) * 100;
+
+  if (usage_info.plan == "OneHash Pro") {
+    percent = 100;
+    $("#user_msg").text("You can add unlimited System users ");
+  } else {
+    $("#user_msg").text(
+      "You can add upto " +
+        usage_info.user_limit +
+        " System users with your current plan"
+    );
+  }
+  console.log("user perc", usage_info);
+  setPercentage(
+    "user",
+    percent,
+    usage_info.users,
+    usage_info.user_limit,
+    usage_info.plan
+  );
 }
-function getColor(percent) {
+function fillCurrentPlan(usage_info) {
+  console.log($("#current-plan"));
+  console.log(document.getElementById("current-plan"));
+  $("#current-plan").text(usage_info.plan);
+}
+function getColor(percent, plan = "") {
   console.log("get color", percent);
+
   if (percent < 30) {
     return "danger";
   }
@@ -113,7 +163,7 @@ function fillStorageUsage(usage_info) {
   // we then calculate the percentage of each and fill the progress bar
   const total_storage = Number(convertToG(usage_info.storage_limit));
   const backup = convertToG(usage_info.storage.backup_size);
-  const site_files = convertToG(usage_info.storage.site_size) - backup;
+  const site_files = convertToG(usage_info.storage.site_size);
   const db = convertToG(usage_info.storage.database_size);
   console.log("total storage", total_storage);
   console.log("backup", backup);
@@ -122,7 +172,13 @@ function fillStorageUsage(usage_info) {
   const used_storage = Number(backup) + Number(site_files) + Number(db);
 
   console.log("used storage", used_storage);
-
+  $("#upgrade").click(function () {
+    window.open(fra);
+  });
+  $("#storage-info").text(
+    `Database: ${usage_info.storage.database_size}  | Site Files: ${usage_info.storage.site_size} | Backup: ${usage_info.storage.backup_size}`
+  );
+  // Database size: 40MB | Backup size: 20MB
   const used_percentage = (used_storage / total_storage) * 100;
   setPercentage(
     "storage",
@@ -152,15 +208,24 @@ function convertToG(strinWithPrefix) {
   }
 }
 
-function setPercentage(name, percentage, used, total) {
-  const getText = function (name, used, total) {
+function setPercentage(name, percentage, used, total, plan = "") {
+  console.log(plan);
+  const getText = function (name, used, total, plan = "") {
+    console.log("get text", name, used, total, plan);
     if (name === "user") {
+      console.log("plan", plan);
+      if (plan === "OneHash Pro") {
+        return used + " Created";
+      }
       return used + " / " + total + " Created";
     }
     if (name === "storage") {
       return used + " / " + total + " GB";
     }
     if (name === "emails") {
+      if (used > total) {
+        return used + " Sent";
+      }
       return used + " / " + total + " Sent";
     }
   };
@@ -168,11 +233,18 @@ function setPercentage(name, percentage, used, total) {
   const progressEl = document.getElementById("progress-" + name);
   const percentageEl = document.getElementById("progress-" + name + "-perc");
   console.log(progressEl, percentageEl);
+  if (name == "user" && plan == "OneHash Pro") {
+    progressEl.classList.add("success");
+    percentageEl.classList.add("success");
+    percentageEl.style.display = "none";
+  } else {
+    progressEl.classList.add(getColor(100 - percentage));
+    percentageEl.classList.add(getColor(100 - percentage));
+  }
 
-  progressEl.classList.add(getColor(100 - percentage));
-  percentageEl.classList.add(getColor(100 - percentage));
   progressEl.style.width = percentage + "%";
-  percentageEl.innerText = getText(name, used, total);
+  console.log("plan", plan);
+  percentageEl.innerText = getText(name, used, total, plan);
   percentageEl.style.left = percentage + "%";
 }
 

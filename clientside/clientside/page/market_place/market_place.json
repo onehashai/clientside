@@ -1,23 +1,22 @@
 {
  "content": null,
- "creation": "2023-06-26 11:31:16.057512",
+ "creation": "2023-06-30 15:31:37.039310",
  "docstatus": 0,
  "doctype": "Page",
  "idx": 0,
- "modified": "2023-07-16 11:18:59.033856",
+ "modified": "2023-07-03 10:56:47.629237",
  "modified_by": "Administrator",
  "module": "Clientside",
- "name": "usage-info",
+ "name": "market-place",
  "owner": "Administrator",
- "page_name": "usage-info",
+ "page_name": "market-place",
  "roles": [
   {
-   "role": "OneHash Manager"
+   "role": "All"
   }
  ],
  "script": null,
  "standard": "Yes",
  "style": null,
- "system_page": 1,
- "title": "Usage info"
+ "system_page": 1
 }
