@@ -5,6 +5,21 @@ var getQueryString = function (field, url) {
   return string ? string[1] : null;
 };
 
+let domain = "." + window.location.hostname.split(".").splice(1, 2).join(".");
+if (window.location.port) {
+  domain += ":" + window.location.port;
+}
+const http_protocol = window.location.protocol;
+const errorMessages = {
+  EMAIL_ALREADY_REGISTERED: "Email already registered",
+  INVALID_EMAIL_FORMAT: "Invalid email format",
+  PASSWORD_NOT_STRONG: "Password not strong",
+  FIRST_NAME_NOT_PROVIDED: "First name not provided",
+  LAST_NAME_NOT_PROVIDED: "Last name not provided",
+  EMAIL_ALREADY_REGISTERED: "Email already registered",
+  EMAIL_ALREADY_REGISTERED_BUT_DISABLED:
+    "Email already registered but disabled",
+};
 async function logout() {
   await $.ajax({
     url: "/api/method/logout",
