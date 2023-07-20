@@ -15,7 +15,7 @@ def get_context(context):
         isTrial = onehash_sub["status"] == "trialing"
         current_price = stripe_subscription_manager.get_current_onehash_price(frappe.conf.customer_id)
         print(onehash_sub["plan"]["product"])
-        current_product = stripe_subscription_manager.plan_id_to_product[onehash_sub["plan"]["product"]]
+        current_product = stripe_subscription_manager.plan_id_to_product()[onehash_sub["plan"]["product"]]
         
    # print(onehash_sub)
     context.update({
