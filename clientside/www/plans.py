@@ -1,5 +1,5 @@
 import frappe
-from whitelabel.api import StripeSubscriptionManager
+from clientside.stripe import StripeSubscriptionManager
 def get_context(context):
     plan_id_to_product = {
         "prod_OFovQrq6UPfouo":"ONEHASH_PLUS",
