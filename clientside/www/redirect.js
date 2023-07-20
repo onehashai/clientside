@@ -56,6 +56,7 @@ async function createNewUser(
     });
 }
 async function redirect() {
+  return;
   console.log("redirecting to the new site..");
   const url =
     window.location.protocol +
