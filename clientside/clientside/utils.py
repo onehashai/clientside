@@ -53,6 +53,9 @@ def changeERPNames():
 
 @frappe.whitelist(allow_guest=True)
 def createUserOnTargetSite(*args, **kwargs):
+    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "country_currency.json")
+    file = open(file_path, "r")
+    f = json.loads(file.read())
     email = kwargs["email"]
     password = kwargs["password"]
     firstname = kwargs["firstname"]
@@ -81,20 +84,18 @@ def createUserOnTargetSite(*args, **kwargs):
     print(frappe.db.a_row_exists("Company"))
     if True:
         current_year = now_datetime().year
-
-        country_info = get_country_timezone_info()["country_info"][country]
-        print(country_info)
+        # open the country_currency.json file and get the currency code for the country
         setup_complete(
             {
-                "currency": country_info["currency"],
+                "currency": f[country]["currency"],
                 "full_name": firstname + " " + lastname,
                 "first_name": firstname,
                 "last_name": lastname,
                 "email": email,
                 "password": password,
                 "company_name": company_name,
-                "timezone": country_info["timezones"][0],
-                "country": country,
+                "timezone": get_country_timezone_info()["country_info"][f[country]["common"]]["timezones"][0],
+                "country": f[country]["common"],
                 "fy_start_date": f"{current_year}-01-01",
                 "fy_end_date": f"{current_year}-12-31",
                 "language": "english",
@@ -668,3 +669,6 @@ def getBackups():
     import requests
     r = requests.get("http://" + frappe.conf.admin_url + "/api/method/bettersaas.bettersaas.doctype.saas_site_backups.saas_site_backups.getBackups?site=" + frappe.local.site).json()
     return r["message"]
+
+# def getCountry(country):
+    

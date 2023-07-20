@@ -31,11 +31,6 @@ async function createNewUser(
   password,
   country
 ) {
-  const country_name = (
-    await (
-      await fetch("https://restcountries.com/v3.1/alpha/" + country)
-    ).json()
-  )[0]["name"]["common"];
   frappe
     .call({
       method: "clientside.clientside.utils.createUserOnTargetSite",
@@ -46,7 +41,7 @@ async function createNewUser(
         companyname: companyname,
         password: password,
         company_name: companyname,
-        country: country_name,
+        country: country,
       },
       async: true,
     })
@@ -60,27 +55,26 @@ async function createNewUser(
       }
     });
 }
-function redirect() {
+async function redirect() {
   console.log("redirecting to the new site..");
   const url =
     window.location.protocol +
     "//" +
     window.location.host +
     "/app?onboard=true";
-  const interval = setInterval(() => {
-    fetch(
-      "/api/method/clientside.stripe.hasActiveSubscription?invalidate_cache=true"
-    )
-      .then((r) => r.json())
-      .then((r) => {
-        if (r.message) {
-          console.log("redirecting to the app");
-          window.location.href = url;
-          clearInterval(interval);
-        }
-      });
-  }, 1000);
-  interval();
+  const poll_url =
+    "/api/method/clientside.stripe.hasActiveSubscription?invalidate_cache=true";
+  // poll until the cache is updated
+  const subPoll = await fetch(poll_url, {
+    method: "GET",
+  }).then((r) => r.json());
+  if (subPoll.message) {
+    window.location.href = url;
+  } else {
+    setTimeout(() => {
+      redirect();
+    }, 2000);
+  }
 }
 
 async function login(email, password) {

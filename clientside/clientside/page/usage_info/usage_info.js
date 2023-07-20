@@ -95,7 +95,6 @@ function filUserUsage(usage_info) {
         " System users with your current plan"
     );
   }
-
   console.log("user perc", usage_info);
   setPercentage(
     "user",
@@ -237,6 +236,7 @@ function setPercentage(name, percentage, used, total, plan = "") {
   if (name == "user" && plan == "OneHash Pro") {
     progressEl.classList.add("success");
     percentageEl.classList.add("success");
+    percentageEl.style.display = "none";
   } else {
     progressEl.classList.add(getColor(100 - percentage));
     percentageEl.classList.add(getColor(100 - percentage));
