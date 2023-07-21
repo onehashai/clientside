@@ -14,6 +14,13 @@ frappe.pages["onehash-backups"].on_page_load = function (wrapper) {
       method: "clientside.clientside.utils.schedule_files_backup",
       args: { user_email: frappe.session.user_email },
     });
+    frappe.msgprint({
+      title: __("Backup Scheduled"),
+      message: __(
+        "Backup scheduled successfully. Please visit this page after some time to view or download the backup."
+      ),
+      indicator: "green",
+    });
   });
 
   frappe.breadcrumbs.add("Setup");
@@ -34,7 +41,7 @@ async function init() {
 								<div class="card-body">
 									<p><strong>Backup Date:</strong> ${new Date(backup.creation).toDateString()}</p>
 									<p><strong>Backup Time:</strong> ${backup.time}</p>
-									<p><strong>Backup Size:</strong> ${backup.backup_size}</p>
+									<p><strong>Backup Size:</strong> ${backup.backup_size}M</p>
 									<button data-key=${backup.site_files} class="btn btn-primary download"
 									>Download Backup</button
 									>
