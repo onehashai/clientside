@@ -53,7 +53,7 @@ async function init() {
   document.querySelectorAll(".download").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       let key = e.target.dataset.key;
-      key = key.replace("onehash/", "");
+      if (!window.dev_server) key = key.replace("onehash/", "");
       const { message } = await fetch(
         `/api/method/clientside.clientside.utils.get_download_link?s3key=${key}`
       ).then((r) => r.json());
