@@ -120,7 +120,23 @@ override_doctype_class = {
 
 # Scheduled Tasks
 # ---------------
-
+# scheduler_events = {
+# # 	"all": [
+# # 		"whitelabel.tasks.all"
+# # 	],
+# # 	"daily": [
+# # 		"whitelabel.tasks.daily"
+# # 	],
+# # 	"hourly": [
+# # 		"whitelabel.tasks.hourly"
+# # 	],
+# # 	"weekly": [
+# # 		"whitelabel.tasks.weekly"
+# # 	]
+# 	"monthly": [
+# 		"whitelabel.tasks.monthly"
+# 	]
+# }
 
 
 # Testing

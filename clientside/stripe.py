@@ -62,6 +62,8 @@ class StripeSubscriptionManager():
         self.onehas_subscription_product_ids = [x for x in self.plan_to_product_id.values()]
         stripe.api_key = self.api_key
         print("setting stripe api key",stripe.api_key)
+    def plan_id_to_product(self):
+        return  {v: k for k, v in self.plan_to_product_id.items()}
     def getSession(self,session_id,expand=[]):
         return stripe.checkout.Session.retrieve(session_id,expand=expand)
     def create_customer(self, site_name,email,fname,lname,phone):
