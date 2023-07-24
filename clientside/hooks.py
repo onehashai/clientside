@@ -138,7 +138,6 @@ override_doctype_class = {
 # 	]
 # }
 
-
 # Testing
 # -------
 
@@ -161,7 +160,7 @@ override_whitelisted_methods = {
 # 	"Task": "clientside.task.get_dashboard_data"
 # }
 boot_session = "clientside.api.boot_session"
-app_include_js = "assets/clientside/js/client.js"
+app_include_js = ["assets/clientside/js/client.js", "assets/clientside/js/file.js"]
 # exempt linked doctypes from being automatically cancelled
 #
 # auto_cancel_exempted_doctypes = ["Auto Repeat"]
