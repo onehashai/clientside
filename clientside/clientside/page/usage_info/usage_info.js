@@ -96,6 +96,7 @@ function filUserUsage(usage_info) {
     );
   }
   console.log("user perc", usage_info);
+  // name , percentage, used, total, plan = ""
   setPercentage(
     "user",
     percent,
@@ -161,10 +162,10 @@ function fillStorageUsage(usage_info) {
   // we have total limit of storage_limit
   // we convert all to GB
   // we then calculate the percentage of each and fill the progress bar
-  const total_storage = Number(convertToG(usage_info.storage_limit));
-  const backup = convertToG(usage_info.storage.backup_size);
-  const site_files = convertToG(usage_info.storage.site_size);
-  const db = convertToG(usage_info.storage.database_size);
+  const total_storage = Number(usage_info.storage_limit);
+  const backup = usage_info.storage.backup_size;
+  const site_files = usage_info.storage.site_size;
+  const db = usage_info.storage.database_size;
   console.log("total storage", total_storage);
   console.log("backup", backup);
   console.log("site files", site_files);
@@ -176,7 +177,11 @@ function fillStorageUsage(usage_info) {
     window.open(fra);
   });
   $("#storage-info").text(
-    `Database: ${usage_info.storage.database_size}  | Site Files: ${usage_info.storage.site_size} | Backup: ${usage_info.storage.backup_size}`
+    `Database: ${window.filesize(
+      usage_info.storage.database_size
+    )}  | Site Files: ${window.filesize(
+      usage_info.storage.site_size
+    )} | Backup: ${window.filesize(usage_info.storage.backup_size)}`
   );
   // Database size: 40MB | Backup size: 20MB
   const used_percentage = (used_storage / total_storage) * 100;
@@ -220,7 +225,7 @@ function setPercentage(name, percentage, used, total, plan = "") {
       return used + " / " + total + " Created";
     }
     if (name === "storage") {
-      return used + " / " + total + " GB";
+      return window.filesize(used) + " / " + window.filesize(total);
     }
     if (name === "emails") {
       if (used > total) {

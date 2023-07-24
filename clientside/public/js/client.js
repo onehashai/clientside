@@ -1,4 +1,5 @@
 // clear cache
+
 async function checkIfUserHasActiveSubsciprion() {
   let url = new URL(window.location.href);
   const isOnboard = url.searchParams.get("onboard");
@@ -64,3 +65,5 @@ function init() {
   });
 }
 init();
+
+// disable right click

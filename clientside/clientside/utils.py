@@ -2,7 +2,10 @@ import frappe
 import requests
 import json
 import subprocess
+from frappe_s3_attachment.controller import get_total_file_sizes
+
 import os
+
 from frappe.utils import cstr
 from frappe.core.doctype.user.user import test_password_strength
 import boto3
@@ -134,7 +137,7 @@ def getDataBaseSizeOfSite():
     return frappe.db.sql(
         "SELECT table_schema "
         + frappe.conf.db_name
-        + ", SUM(data_length + index_length) / (1024 * 1024) 'Database Size in MB' FROM information_schema.TABLES GROUP BY table_schema;"
+        + ", SUM(data_length + index_length)  'Database Size in B' FROM information_schema.TABLES GROUP BY table_schema;"
     )
 
 
@@ -144,25 +147,26 @@ def checkDiskSize(path):
     return subprocess.check_output(["du", "-hs", path]).decode("utf-8").split("\t")[0]
 
 
-def convertToMB(sizeInStringWithPrefix):
+def convertToB(sizeInStringWithPrefix):
     if sizeInStringWithPrefix == "0":
         return 0
-    print("converting to MB", sizeInStringWithPrefix)
     prefix = sizeInStringWithPrefix[-1]
+    if prefix == "G":
+        return float(sizeInStringWithPrefix[:-1]) * 1024 * 1024 * 1024
     if prefix == "M":
-        return float(sizeInStringWithPrefix[:-1])
-    elif prefix == "G":
+        return float(sizeInStringWithPrefix[:-1]) * 1024 * 1024
+    if prefix == "K":
         return float(sizeInStringWithPrefix[:-1]) * 1024
-    elif prefix == "K":
-        return float(sizeInStringWithPrefix[:-1]) / 1024
-    return 0
+    return float(sizeInStringWithPrefix)
 def get_number_of_emails_sent(sender = frappe.conf.email):
     return frappe.conf.onehash_mail_usage or 0
-@frappe.whitelist(allow_guest=True)
-def getUsage():
-    import requests
+def get_backup_size_of_site():
     url = "http://"+frappe.conf.admin_url+ "/api/method/bettersaas.bettersaas.doctype.saas_sites.saas_sites.get_site_backup_size?sitename=" + frappe.local.site
     resp = requests.get(url)
+    print("backup size",resp.json()["message"])
+    return resp.json()["message"]
+@frappe.whitelist(allow_guest=True)
+def getUsage():
     import datetime
     site = frappe.local.site
     subscription = StripeSubscriptionManager()
@@ -187,13 +191,13 @@ def getUsage():
         "total_days": total_days,
         "plan": current_product["name"],
         "storage": {
-            "database_size": str(getDataBaseSizeOfSite()[1][1]) + "M",
-            "site_size": str(0.0045 + convertToMB(checkDiskSize("./" + site + "/public")) + convertToMB(checkDiskSize("./" + site + "/private/files")) ) + "M",
-            "backup_size": str(resp.json()["message"]) + "M",
+            "database_size": getDataBaseSizeOfSite()[1][1],
+            "site_size": get_total_file_sizes(),
+            "backup_size": get_backup_size_of_site(),
         },
         "user_limit":frappe.conf.max_users,
         "email_limit":frappe.conf.max_email,
-        "storage_limit":str(frappe.conf.max_space) + 'G',
+        "storage_limit":int(frappe.conf.max_space)*1024*1024*1024 ,
         "stripe_conf": getSiteStripeConfig()
     }
 
@@ -328,8 +332,7 @@ def backup_to_s3(is_manual=0,backup_limit=3,site=frappe.local.site):
             db_filename, site_config = get_latest_backup_file()
     
     print(db_filename,site_config,files_filename,private_files)
-    backup_size = checkDiskSize("./" + site + "/private/backups")
-    print("backup size", convertToMB(backup_size))
+    backup_size = checkDiskSize("./" + site + "/private/backups") 
     folder = os.path.basename(db_filename)[:15] + "/"
     print("folder name in s3", folder)
     # for adding datetime to folder name
@@ -354,8 +357,10 @@ def backup_to_s3(is_manual=0,backup_limit=3,site=frappe.local.site):
     server_keys = [x[0] for x in to_upload_config]
     site_config_util = frappe.get_site_config(site_path=site)
     limit = int(site_config_util["max_space"]) * 1024
-    current_usage = convertToMB(backup_size) + convertToMB(checkDiskSize("./" + site + "/public")) + convertToMB(checkDiskSize("./" + site + "/private/files")) + getDataBaseSizeOfSite()[1][1]
-    if current_usage > limit:
+    current_usage = get_total_file_sizes()  + getDataBaseSizeOfSite()[1][1]  + get_backup_size_of_site()
+    print(get_total_file_sizes(),getDataBaseSizeOfSite()[1][1],get_backup_size_of_site())
+    print(limit)
+    if current_usage > convertToB(str(limit) + "G"):
         frappe.throw("Storage Limit Exceeded")
         for x in server_keys:
             os.remove(x)
@@ -373,7 +378,7 @@ def backup_to_s3(is_manual=0,backup_limit=3,site=frappe.local.site):
     except Exception as e:
         print("error in uploading files to s3",e)
     command = "bench --site {} execute bettersaas.bettersaas.doctype.saas_sites.saas_sites.insert_backup_record --args \"'{}','{}','{}','{}'\"".format(
-        frappe.conf.admin_subdomain + "." + frappe.conf.domain ,site,convertToMB(backup_size),"onehash/"+aws_key,is_manual)
+        frappe.conf.admin_subdomain + "." + frappe.conf.domain ,site,backup_size,"onehash/"+aws_key,is_manual)
     try:
         frappe.utils.execute_in_shell(command)
         print("we have to maintain only {} backups".format(backup_limit))
@@ -606,5 +611,4 @@ def getBackups():
     r = requests.get("http://" + frappe.conf.admin_url + "/api/method/bettersaas.bettersaas.doctype.saas_site_backups.saas_site_backups.getBackups?site=" + frappe.local.site).json()
     return r["message"]
 
-# def getCountry(country):
     
