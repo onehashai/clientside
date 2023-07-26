@@ -587,8 +587,13 @@ def verify_custom_domain(new_domain):
             # after adding the domain, reload nginx after 4 seconds async task
             from subprocess import Popen
 
-            Popen(
-                "sleep 4 && bench setup nginx --yes && echo {} | sudo -S service nginx reload".format(
+            import time
+
+            time.sleep(4)
+            # setup nginx
+            frappe.utils.execute_in_shell("bench setup nginx --yes")
+            frappe.utils.execute_in_shell(
+                "echo {} | sudo -S service nginx reload".format(
                     frappe.conf.root_password
                 )
             )
