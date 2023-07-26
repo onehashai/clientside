@@ -553,6 +553,11 @@ def verify_custom_domain(new_domain):
     try:
         cname = frappe.utils.execute_in_shell(command)[1].decode("utf-8").strip()[:-1]
         if cname == frappe.local.site and new_domain != frappe.local.site:
+            # setup nginx
+            command = "bench setup nginx --yes"
+            frappe.utils.execute_in_shell(command)
+            command = "sudo service nginx reload"
+            frappe.utils.execute_in_shell(command)
             command = "bench setup add-domain {} --site {}".format(
                 new_domain, frappe.local.site
             )
