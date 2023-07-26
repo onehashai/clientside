@@ -584,8 +584,8 @@ def verify_custom_domain(new_domain):
                 }
             )
             frappe.installer.update_site_config("domains", new_domains, validate=True)
-            command = "echo {} | sudo -S service nginx reload"
-            m = frappe.utils.execute_in_shell(command)
+            frappe.utils.execute_in_shell("bench setup nginx --yes")
+            m = frappe.utils.execute_in_shell("echo {} | sudo -S  service nginx reload")
             print("m", m)
             return ["VERIFIED", cname]
         if new_domain == frappe.local.site:
