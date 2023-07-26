@@ -558,11 +558,12 @@ def verify_custom_domain(new_domain):
             )
             frappe.utils.execute_in_shell(command)
             # add SSL certificate
-            resp = frappe.utils.execute_in_shell(
-                "echo {} | sudo -S certbot certonly --nginx -d {}".format(
-                    frappe.conf.root_password, new_domain
-                )
+            command = "echo {} | sudo -S certbot certonly --nginx -d {}".format(
+                frappe.conf.root_password, new_domain
             )
+            print(command)
+            resp = frappe.utils.execute_in_shell(command)
+            print(resp)
             frappe.msgprint("SSL certificate added" + str(resp))
             ## insret the ssl certificate as new domain
             new_domains = frappe.conf.domains
