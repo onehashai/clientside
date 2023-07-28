@@ -150,7 +150,12 @@ async function init() {
     );
   } else {
     console.log("logging in");
-    await login(email, password);
+    try {
+      await login(email, password);
+    } catch (error) {
+      console.log("error logging in");
+      console.log(error);
+    }
     redirect();
   }
 }

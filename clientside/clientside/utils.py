@@ -533,6 +533,15 @@ def uninstall_app(*args, **kwrgs):
 
 
 @frappe.whitelist()
+def delete_site_from_server():
+    frappe.utils.execute_in_shell(
+        "bench   drop-site {site} --root-password {db_root_password} --force --no-backup".format(
+            site=frappe.local.site, db_root_password=frappe.conf.db_pass
+        )
+    )
+
+
+@frappe.whitelist()
 def verify_custom_domain(new_domain):
     current_domains = []
     for key in frappe.conf.domains:
