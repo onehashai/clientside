@@ -49,13 +49,13 @@ function init() {
           if (hasRoleToManageOnehashPayments) {
             // show the plan page
             console.log("show the plan page");
-            // window.location.href = "/plans";
+            window.location.href = "/plans";
           } else {
             // redirect to "Please contact site administrator to upgrade your plan" page
             console.log(
               "redirect to Please contact site administrator to upgrade your plan page"
             );
-            // window.location.href = "/no-plan";
+            window.location.href = "/no-plan";
           }
         }
       );
