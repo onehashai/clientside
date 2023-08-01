@@ -66,27 +66,26 @@ class StripeSubscriptionManager:
 
             self.endpoint_secret = frappe.conf.STRIPE_ENDPOINT_SECRET_IN
         self.plan_to_product_id = frappe.conf.stripe_prices["US"]["products"]
-        self.onehas_subscription_product_ids = [
-            "prod_OE6JgL1X5whRBm",
-            "prod_ODy9z0LH7AwXD6",
-            "prod_OF3nxhfb3JpKeR",
-        ]
+
         self.trial_price_id = frappe.conf.stripe_prices["US"]["trial_price_id"]
         self.trial_product = "ONEHASH_PRO"
-
+        print("region", self.region)
         if self.region == "IN":
+            print("setting plan to product id for IN")
             self.plan_to_product_id = frappe.conf.stripe_prices["IN"]["products"]
             self.trial_price_id = frappe.conf.stripe_prices["IN"]["trial_price_id"]
+        print("plan to product id", self.plan_to_product_id)
         self.onehas_subscription_product_ids = [
             x for x in self.plan_to_product_id.values()
         ]
+        print("stripe api key", self.api_key)
         stripe.api_key = self.api_key
 
     def plan_id_to_product(self):
         return {v: k for k, v in self.plan_to_product_id.items()}
 
     def get_subscriptions(self, customer_id):
-        return stripe.Subscription.list(customer_id=customer_id)
+        return stripe.Subscription.list(customer=customer_id)
 
     def getSession(self, session_id, expand=[]):
         return stripe.checkout.Session.retrieve(session_id, expand=expand)
@@ -218,15 +217,25 @@ class StripeSubscriptionManager:
             return False
 
     def get_onehash_subscription(self, customer_id):
+        print("getting onehash subscription for customer", customer_id)
         if not customer_id:
             return "NONE"
         subscriptions = stripe.Subscription.list(customer=customer_id)
         for subscription in subscriptions["data"]:
+            print("subscription status", subscription["status"])
+            print("subscription plan", subscription["plan"]["product"])
+            print("product ids", self.onehas_subscription_product_ids)
+            print(
+                "subscription in onehash",
+                subscription["plan"]["product"] in self.onehas_subscription_product_ids,
+            )
             if (
                 subscription["status"] in ["active", "trialing"]
                 and subscription["plan"]["product"]
-                and subscription["plan"]["product"]
-                in self.onehas_subscription_product_ids
+                and (
+                    subscription["plan"]["product"]
+                    in self.onehas_subscription_product_ids
+                )
             ):
                 return subscription
         return "NONE"
@@ -400,3 +409,18 @@ def fulfilOneHashUpdate(pids, product_id, price_id, site_name):
 
 
 # test if new signups are being made - site has a trial subscription and  correspnding user limits are being setpayment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+
+
+def checkCorrectEmailAddressWithRegex(email):
+    if email == "":
+        return False
+    import re
+
+    return re.match(r"[^@]+@[^@]+\.[^@]+", email)
+
+
+def updateDoctypeWithDocs(new_doc, doctype_name):
+    doc = frappe.get_doc(doctype_name, new_doc.name)
+    doc.update(new_doc)
+    doc.save()
+    return doc

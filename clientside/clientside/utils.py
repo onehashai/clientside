@@ -75,6 +75,15 @@ def changeERPNames():
         )
 
 
+# steps are
+# validating input
+# creating user
+# creating company
+# Setting up required roles
+# wrapping things up with final changes
+# redirecting to your login page
+
+
 @frappe.whitelist(allow_guest=True)
 def createUserOnTargetSite(*args, **kwargs):
     file_path = os.path.join(
