@@ -722,7 +722,7 @@ def add_options():
     navbar_settings.append(
         "settings_dropdown",
         {
-            "item_label": "OneHash Marketplace",
+            "item_label": "Marketplace",
             "item_type": "Action",
             "action": "frappe.set_route('Form','market-place')",
             "is_standard": 1,
