@@ -9,7 +9,7 @@
  "module": "Clientside",
  "name": "market-place",
  "owner": "Administrator",
- "page_name": "market-place",
+ "page_name": "Marketplace",
  "roles": [
   {
    "role": "All"
