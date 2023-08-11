@@ -50,7 +50,7 @@ def checkEmailFormatWithRegex(email):
 
 def changeERPNames():
     try:
-        update_page("ERPNext Settings", "OneHash Settings", "setting", "", 1)
+        update_page("ERPNext Settings", "OneHash Settings", "setting", "", 0)
     except:
         print(
             "error updating page",
@@ -62,7 +62,7 @@ def changeERPNames():
         )
     try:
         update_page(
-            "ERPNext Integrations", "OneHash Integrations", "integration", "", 1
+            "ERPNext Integrations", "OneHash Integrations", "integration", "", 0
         )
     except:
         print(
