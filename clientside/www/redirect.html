@@ -1,28 +1,115 @@
-{% extends "templates/web.html" %} {% block style %}
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+  integrity="sha512-QmAnm1lDQ7neEL+jGSswX8YPLq6b2nRdkWbL9UNs0df3LW0tn6kDZp91XrlgQuU7obuGd6HV1h62zqzTTj+DvQ=="
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+/>
+{% extends "templates/web.html" %}
+{% block style %}
 <style>
-  .navbar,
-  .web-footer {
-    display: none;
+  .loader-container {
+    text-align: center;
+    animation: fadeIn 2s ease-in-out, moveUp 4s infinite alternate;
   }
-  .main {
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  .loading-dots {
+    display: inline-block;
+    font-size: 32px;
+    color: #333;
+    animation: blink 1.5s infinite;
+  }
+  .loading-text {
+    margin-top: -270px;
+    font-size: 15px;
+    color: #333;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes moveUp {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-20px);
+    }
+  }
+  
+  @keyframes blink {
+    0%, 100% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  .fade-in-animation {
+    animation: fadeIn 2s ease-in-out, moveUp 4s infinite alternate;
   }
 </style>
-{% endblock %} {% block page_content %}
+{% endblock %}
+{% block page_content %}
+<script>
+  const loadingPhrases = [
+    'Creating Dependencies ...',
+    'Loading ...',
+    'Good Things Take Time',
+    'Just a moment while we work our magic',
+    'Hold on, Almost There',
+    'Logging into your Account ...',
+    'Redirecting to your Site ...',
+    'Just a Movement',
+    'Welcome'
+  ];
+  
+  let currentPhraseIndex = 0;
+  
+  function updateLoadingText() {
+    document.querySelector('.loading-text').textContent =
+      loadingPhrases[currentPhraseIndex];
+    currentPhraseIndex = (currentPhraseIndex + 1) % loadingPhrases.length;
+  }
+  
+  setInterval(updateLoadingText, 4500);
+</script>
+
 <div class="main">
-  <div>
-    <img
-      height="420px"
-      src="https://wregegwr.s3.amazonaws.com/loader-finale02+(1).gif"
-      alt=""
-      srcset=""
-    />
+  <div class="container">
+    <center>
+      <img
+        class="image"
+        src="https://miro.medium.com/v2/resize:fit:4800/1*9m-WDdL_ji01bGbjEnutEw.gif"
+        alt=""
+        style="padding-top: 5%;"
+        width="50%"
+        height="20%"
+      />
+      <hr>
+      <img
+        class="image"
+        src="https://wregegwr.s3.amazonaws.com/loader-finale02+(1).gif"
+        alt=""
+        width="50%"
+        height="30%"
+      />
+      </center>
+      
+    <div class="loader-container fade-in-animation"> 
+      <div class="loading-text animate__animated animate__fadeIn">
+        Seat back and relax while we creating your site
+      </div>
+    </div>
   </div>
 </div>
-{% endblock %} {% block script %}
+{% endblock %}
+{% block script %}
 <script
   src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"
   integrity="sha512-E8QSvWZ0eCLGk4km3hxSsNmGWbLtSCSUcewDQPQWZF6pEU8GlT8a5fF32wOl1i8ftdMhssTrF/OhyGWwonTcXA=="
@@ -31,3 +118,4 @@
 ></script>
 <script src="./redirect.js"></script>
 {% endblock %}
+
