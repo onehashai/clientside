@@ -36,7 +36,7 @@ async function checkIfUserHasRoleToManageOnehashPayments() {
 function init() {
   const url = new URL(window.location.href);
   const isOnboard = url.searchParams.get("oneboard");
- 
+
   checkIfUserHasActiveSubsciprion().then((hasActiveSubscription) => {
     console.log("hasActiveSubscription", hasActiveSubscription);
     if (!hasActiveSubscription) {
