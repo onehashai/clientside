@@ -407,7 +407,6 @@ async function getSites(email){
  async function appendSiteOptions(sites){
     
     // append to select options
-    sites.append('app.onehash.is');
     console.log(sites)
     if(document.getElementById("siteSelectList")){
         document.getElementById("siteSelectList").remove();
