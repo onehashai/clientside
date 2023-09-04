@@ -84,7 +84,16 @@ frappe.ui.form.on('Notification', {
 					counter += 1
 					if (counter == 1) {
 						cur_frm.broadcast_name = data.broadcast_name
-						document.getElementsByClassName("modal-body ui-front").forEach((e) => { e.addEventListener("click", function () { verify(cur_frm.dialog_d, cur_frm.dialog_context, cur_frm.dialog_data, cur_frm.dialog_header_html, cur_frm.data_dict); }); })
+						// document.getElementsByClassName("modal-body ui-front").forEach((e) => 
+						// 	{ e.addEventListener("click", function () { verify(cur_frm.dialog_d, cur_frm.dialog_context, cur_frm.dialog_data, cur_frm.dialog_header_html, cur_frm.data_dict); }); })
+						const elements = document.getElementsByClassName("modal-body ui-front");
+						const elementArray = Array.from(elements);
+						
+						elementArray.forEach((e) => {
+						  e.addEventListener("click", function () {
+						    verify(cur_frm.dialog_d, cur_frm.dialog_context, cur_frm.dialog_data, cur_frm.dialog_header_html, cur_frm.data_dict);
+						  });
+						});
 
 						cur_frm.fields_list = data.whatsapp_map
 						let option_list = ["Attachment"]
