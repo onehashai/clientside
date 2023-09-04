@@ -263,7 +263,16 @@ function verify(d, context, data, header_html, data_dict) {
 			} else {
 				context[key] = ("https://" + frappe.boot.sitename + d.get_field(key + "_attachment").value)
 			}
-		} else {
+		}else if ((d.get_field(key).input.value).replace(", ", "") == "Print Format") {
+			frappe.call({
+				method: "wati.users.get_attach_link",
+				args: { "doc": { "doctype": cur_frm.doc.doctype, "docname": cur_frm.doc.name }, "print_format": d.get_field(key + "_print_format").value },
+				callback: (r) => {
+					context[key] = r.message
+				}
+			})
+		}
+		else {
 			context[key] = (d.get_field(key).input.value).replace(", ", "");
 			for (const [k, value] of Object.entries(data_dict)) {
 				if((d.get_field(key).input.value).replace(", ", "") == value){
