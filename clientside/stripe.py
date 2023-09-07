@@ -10,8 +10,8 @@ def hasActiveSubscription(*args, **kwargs):
     site = kwargs.get("site", frappe.local.site)
     if not site:
         return False
-    frappe.utils.execute_in_shell("bench --site {} clear-cache".format(site))
-    frappe.utils.execute_in_shell("bench --site {} clear-website-cache".format(site))
+    # frappe.utils.execute_in_shell("bench --site {} clear-cache".format(site))
+    # frappe.utils.execute_in_shell("bench --site {} clear-website-cache".format(site))
     country = frappe.get_site_config(site_path=site)["country"]
     customer_id = frappe.get_site_config(site_path=site)["customer_id"]
     stripe_manager = StripeSubscriptionManager(country=country)
