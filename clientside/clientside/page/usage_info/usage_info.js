@@ -60,8 +60,6 @@ function init(usage_info) {
   fillEmailUsage(usage_info);
   fillStorageUsage(usage_info);
   $("#delete-site").click(async function () {
-    if(frappe.session.user=="Administrator")
-    {
     frappe.warn(
       "Are you sure you want to proceed?",
       " This action is not reversible.",
@@ -78,7 +76,6 @@ function init(usage_info) {
             window.location.reload();
           },
         });
-      }
       },
       "Continue",
       true
