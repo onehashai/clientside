@@ -59,6 +59,8 @@ function init(usage_info) {
   fillCurrentPlan(usage_info);
   fillEmailUsage(usage_info);
   fillStorageUsage(usage_info);
+  if(frappe.session.user=='Administrator')
+  {
   $("#delete-site").click(async function () {
     frappe.warn(
       "Are you sure you want to proceed?",
@@ -81,6 +83,7 @@ function init(usage_info) {
       true
     );
   });
+  }
 }
 function filUserUsage(usage_info) {
   let percent = (usage_info.users / usage_info.user_limit) * 100;
