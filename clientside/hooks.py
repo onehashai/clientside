@@ -160,7 +160,7 @@ override_whitelisted_methods = {
 # 	"Task": "clientside.task.get_dashboard_data"
 # }
 boot_session = "clientside.api.boot_session"
-app_include_js = ["assets/clientside/js/client.js", "assets/clientside/js/file.js","assets/clientside/js/notification.js","assets/clientside/js/web_form.js"]
+app_include_js = ["assets/clientside/js/client.js", "assets/clientside/js/file.js","assets/clientside/js/notification.js","assets/clientside/js/web_form.js","assets/clientside/js/user.js"]
 # exempt linked doctypes from being automatically cancelled
 #
 # auto_cancel_exempted_doctypes = ["Auto Repeat"]
