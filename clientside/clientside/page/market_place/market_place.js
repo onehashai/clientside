@@ -28,10 +28,13 @@ frappe.pages["market-place"].on_page_load = function (wrapper) {
 						<div class="card-body" id="div${index}">
 							<div class="col-2 col-sm-2 col-md-4 px-0 mb-3">
 							</div>
+              <div style="width: 40px; height: 40px; overflow: hidden; border-radius: 10%">
+                  <img class="card-title" src="https://app.onehash.is${res.message[key].icon}" style="width: 100%; height: auto;" />
+              </div><br>
 							<h4 class="card-title" >${res.message[key].name}</h4>
 							<p class="card-text">${res.message[key].description}</p>
 							</div>
-							</div>
+							</div> 
 						</div>`;
           if (res.message[key].installed == "true") {
             document.getElementById(
