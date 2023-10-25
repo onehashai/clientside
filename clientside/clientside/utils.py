@@ -133,8 +133,8 @@ def createUserOnTargetSite(*args, **kwargs):
                     f[country]["common"]
                 ]["timezones"][0],
                 "country": f[country]["common"],
-                "fy_start_date": f"{current_year}-01-01",
-                "fy_end_date": f"{current_year}-12-31",
+                "fy_start_date": f"{current_year}-04-01",
+                "fy_end_date": f"{current_year+1}-03-31",
                 "language": "english",
                 "chart_of_accounts": "Standard",
             }
