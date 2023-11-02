@@ -534,10 +534,11 @@ def uninstall_app(*args, **kwrgs):
         arr.append((key, value))
     app_name = arr[0][1]
     site_name = frappe.local.site
-    command = "bench --site {s_name} uninstall-app {a_name} --yes --no-backup".format(
-        s_name=site_name, a_name=app_name
+    frappe.utils.execute_in_shell(
+        "bench --site {s_name} uninstall-app {a_name} --yes --no-backup".format(
+            s_name=site_name, a_name=app_name
+        )
     )
-    frappe.utils.execute_in_shell(command)
     return "Success"
 
 
