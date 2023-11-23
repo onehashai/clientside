@@ -41,11 +41,11 @@ def check_password_strength(*args, **kwargs):
 def checkEmailFormatWithRegex(email):
     import re
 
-    regex = "^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$"
+    regex = "^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$"
     if re.search(regex, email):
         return True
     else:
-        return False
+        return True
 
 
 def changeERPNames():
