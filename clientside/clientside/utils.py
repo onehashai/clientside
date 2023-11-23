@@ -117,28 +117,28 @@ def createUserOnTargetSite(*args, **kwargs):
 
     frappe.delete_doc_if_exists("Page", "welcome-to-erpnext", force=1)
     print(frappe.db.a_row_exists("Company"))
-    if True:
-        current_year = now_datetime().year
-        # open the country_currency.json file and get the currency code for the country
-        setup_complete(
-            {
-                "currency": f[country]["currency"],
-                "full_name": firstname + " " + lastname,
-                "first_name": firstname,
-                "last_name": lastname,
-                "email": email,
-                "password": password,
-                "company_name": company_name,
-                "timezone": get_country_timezone_info()["country_info"][
-                    f[country]["common"]
-                ]["timezones"][0],
-                "country": f[country]["common"],
-                "fy_start_date": f"{current_year}-04-01",
-                "fy_end_date": f"{current_year+1}-03-31",
-                "language": "english",
-                "chart_of_accounts": "Standard",
-            }
-        )
+    # if True:
+    current_year = now_datetime().year
+    # open the country_currency.json file and get the currency code for the country
+    setup_complete(
+        {
+            "currency": f[country]["currency"],
+            "full_name": firstname + " " + lastname,
+            "first_name": firstname,
+            "last_name": lastname,
+            "email": email,
+            "password": password,
+            "company_name": company_name,
+            "timezone": get_country_timezone_info()["country_info"][
+                f[country]["common"]
+            ]["timezones"][0],
+            "country": f[country]["common"],
+            "fy_start_date": f"{current_year}-04-01",
+            "fy_end_date": f"{current_year+1}-03-31",
+            "language": "english",
+            "chart_of_accounts": "Standard",
+        }
+    )
     # get the newly created user and add the role  "OneHash Manager"
     # print
     #  changeERPNames()

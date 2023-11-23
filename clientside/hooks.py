@@ -207,7 +207,7 @@ website_redirects = [
 ]
 # Authentication and authorization
 # --------------------------------
-auth_hooks = ["clientside.clientside.utils.update_last_active"]
+# auth_hooks = ["clientside.clientside.utils.update_last_active"]
 
 doc_events = {}
 # on_session_creation = "clientside.clientside.utils.alertForUpgrade"
