@@ -8,6 +8,7 @@ frappe.pages["market-place"].on_page_load = function (wrapper) {
     page.body.addClass("no-border")
   );
   $(document).ready(function () {
+    
     document.getElementById(
       "app_div"
     ).innerHTML = `	<div class='d-flex justify-content-center w-100'>
@@ -28,19 +29,37 @@ frappe.pages["market-place"].on_page_load = function (wrapper) {
 						<div class="card-body" id="div${index}">
 							<div class="col-2 col-sm-2 col-md-4 px-0 mb-3">
 							</div>
-							<h4 class="card-title" >${res.message[key].name}</h4>
-							<p class="card-text">${res.message[key].description}</p>
+              <div style="width: 40px; height: 40px; overflow: hidden; border-radius: 10%">
+                  <img class="card-title" src="https://app.onehash.is${res.message[key].icon}" style="width: 100%; height: auto;" />
+              </div><br>
+							<h4 class="card-title text-dark">${res.message[key].name}</h4>
+							<p class="card-text text-dark">${res.message[key].description}</p>
 							</div>
-							</div>
+							</div> 
 						</div>`;
-          if (res.message[key].installed == "true") {
+          if(res.message[key].enabled==1)
+          {
+            var userRoles = frappe.user_roles;
+            
+            
+            if (userRoles.includes('OneHash Manager'))
+            {
+              if (res.message[key].installed == "true") {
+                document.getElementById(
+                  `div${index}`
+                ).innerHTML += `<button type="button" class="btn btn-danger" id="btn${index} " name='${res.message[key].app_name}' value="uninstall" >Uninstall <i class="fa fa-remove" aria-hidden="true"></i></button>`;
+              } else {
+                document.getElementById(
+                  `div${index}`
+                ).innerHTML += `<button type="button" class="btn btn-primary" id="btn${index} " name=${res.message[key].app_name} value="install" >Install <i class="fa fa-download" aria-hidden="true"></i></button>`;
+              }
+            }
+          }
+          else
+          {
             document.getElementById(
               `div${index}`
-            ).innerHTML += `<button type="button" class="btn btn-danger" id="btn${index} " name='${res.message[key].app_name}' value="uninstall" >Uninstall</button>`;
-          } else {
-            document.getElementById(
-              `div${index}`
-            ).innerHTML += `<button type="button" class="btn btn-primary" id="btn${index} " name=${res.message[key].app_name} value="install" >Install</button>`;
+            ).innerHTML += `<button type="button" class="btn btn-success" id=" " name='comming_soon' disabled>Comming Soon  ; )</button>`;
           }
         });
       },

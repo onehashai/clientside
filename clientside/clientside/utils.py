@@ -41,11 +41,11 @@ def check_password_strength(*args, **kwargs):
 def checkEmailFormatWithRegex(email):
     import re
 
-    regex = "^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$"
+    regex = "^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$"
     if re.search(regex, email):
         return True
     else:
-        return False
+        return True
 
 
 def changeERPNames():
@@ -133,8 +133,8 @@ def createUserOnTargetSite(*args, **kwargs):
                     f[country]["common"]
                 ]["timezones"][0],
                 "country": f[country]["common"],
-                "fy_start_date": f"{current_year}-01-01",
-                "fy_end_date": f"{current_year}-12-31",
+                "fy_start_date": f"{current_year}-04-01",
+                "fy_end_date": f"{current_year+1}-03-31",
                 "language": "english",
                 "chart_of_accounts": "Standard",
             }
@@ -534,10 +534,11 @@ def uninstall_app(*args, **kwrgs):
         arr.append((key, value))
     app_name = arr[0][1]
     site_name = frappe.local.site
-    command = "bench --site {s_name} uninstall-app {a_name} --yes --no-backup".format(
-        s_name=site_name, a_name=app_name
+    frappe.utils.execute_in_shell(
+        "bench --site {s_name} uninstall-app {a_name} --yes --no-backup".format(
+            s_name=site_name, a_name=app_name
+        )
     )
-    frappe.utils.execute_in_shell(command)
     return "Success"
 
 
