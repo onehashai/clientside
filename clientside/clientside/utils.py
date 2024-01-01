@@ -592,15 +592,16 @@ def verify_custom_domain(new_domain):
             ## insret the ssl certificate as new domain
             new_domains = frappe.conf.domains
             new_domains.append(
-                {
-                    "ssl_certificate": "/etc/letsencrypt/live/{}/fullchain.pem".format(
-                        new_domain
-                    ),
-                    "ssl_certificate_key": "/etc/letsencrypt/live/{}/privkey.pem".format(
-                        new_domain
-                    ),
-                    "domain": new_domain,
-                }
+                new_domain
+                # {
+                #     "ssl_certificate": "/etc/letsencrypt/live/{}/fullchain.pem".format(
+                #         new_domain
+                #     ),
+                #     "ssl_certificate_key": "/etc/letsencrypt/live/{}/privkey.pem".format(
+                #         new_domain
+                #     ),
+                #     "domain": new_domain,
+                # }
             )
             frappe.installer.update_site_config("domains", new_domains, validate=True)
             # after adding the domain, reload nginx after 4 seconds async task
@@ -730,6 +731,17 @@ def add_options():
             "idx": 6,
         },
     )
+    navbar_settings.append(
+        "settings_dropdown",
+        {
+            "item_label": "Background Jobs",
+            "item_type": "Action",
+            "action": "frappe.set_route('Form','background_jobs')",
+            "is_standard": 1,
+            "idx": 7,
+        },
+    )
+
     navbar_settings.save()
 
 
