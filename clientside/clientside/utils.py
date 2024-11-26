@@ -36,29 +36,14 @@ def check_password_strength(*args, **kwargs):
 
 def change_erp_to_onehash():
     try:
-        update_page("ERPNext Settings", "OneHash Settings", "setting", "", 0)
-    except:
-        print(
-            "error updating page",
-            "ERPNext Settings",
-            "OneHash Settings",
-            "setting",
-            "",
-            1,
-        )
+        update_page("ERPNext Settings", "OneHash Settings", "setting", "" , "", 1)
+    except Exception as e:
+        print("Error updating ERPNext Settings Page", e)
+
     try:
-        update_page(
-            "ERPNext Integrations", "OneHash Integrations", "integration", "", 0
-        )
-    except:
-        print(
-            "error updating page",
-            "ERPNext Integrations",
-            "OneHash Integrations",
-            "integration",
-            "",
-            1,
-        )
+        update_page("ERPNext Integrations", "OneHash Integrations", "integration", "", "", 1)
+    except Exception as e:
+        print("Error updating ERPNext Integrations Page", e)
 
 @frappe.whitelist(allow_guest=True)
 def create_user_on_target_site(*args, **kwargs):
@@ -90,7 +75,6 @@ def create_user_on_target_site(*args, **kwargs):
     if not lastname:
         return "LAST_NAME_NOT_PROVIDED"
     frappe.clear_cache()
-    frappe.delete_doc_if_exists("Page", "welcome-to-erpnext", force=1)
     current_year = now_datetime().year
     setup_complete(
         {
@@ -572,7 +556,7 @@ def add_options():
         {
             "item_label": "Usage Info",
             "item_type": "Action",
-            "action": "frappe.set_route('Form','Usage-Info')",
+            "action": "frappe.set_route('Form','Usage Info')",
             "is_standard": 1,
             "idx": 5,
         },
@@ -582,7 +566,7 @@ def add_options():
         {
             "item_label": "Marketplace",
             "item_type": "Action",
-            "action": "frappe.set_route('Form','market-place')",
+            "action": "frappe.set_route('Form','Market Place')",
             "is_standard": 1,
             "idx": 6,
         },
@@ -592,7 +576,7 @@ def add_options():
         {
             "item_label": "Background Jobs",
             "item_type": "Action",
-            "action": "frappe.set_route('Form','background_jobs')",
+            "action": "frappe.set_route('Form','Background Jobs')",
             "is_standard": 1,
             "idx": 7,
         },

@@ -67,13 +67,6 @@ app_include_css = ["/assets/clientside/css/usage_info.css","/assets/clientside/c
 after_install = "clientside.clientside.utils.post_install"
 import frappe
 
-
-def tps():
-    frappe.db.set_default("desktop:home_page", "workspace")
-    frappe.db.set_single_value("System Settings", "setup_complete", 1)
-    frappe.db.set_single_value("System Settings", "enable_onboarding", 1)
-
-
 # Uninstallation
 # ------------
 
@@ -103,7 +96,6 @@ def tps():
 # Override standard doctype classes
 
 override_doctype_class = {
-    "LoginManager": "clientside.clientside.utils.test",
     "Communication": "clientside.clientside.overrides.communication.CommunicationOverride",
 }
 # Document Events
