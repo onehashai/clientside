@@ -4,7 +4,7 @@ app_name = "clientside"
 app_title = "Clientside"
 app_publisher = "OneHash"
 app_description = "An app to handle customer facing view"
-app_email = "digital@onehash.ai"
+app_email = "support@onehash.ai"
 app_license = "MIT"
 
 # Includes in <head>

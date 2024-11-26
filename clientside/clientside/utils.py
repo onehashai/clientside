@@ -1,25 +1,22 @@
 import frappe
 import requests
 import json
-import subprocess
-from frappe_s3_attachment.controller import get_total_file_sizes
-
 import os
-
-from frappe.utils import cstr
-from frappe.core.doctype.user.user import test_password_strength
+import subprocess
 import boto3
+from clientside.stripe import StripeSubscriptionManager
+from frappe.utils import validate_email_address
+# from frappe_s3_attachment.controller import get_total_file_sizes
+from frappe.core.doctype.user.user import test_password_strength
 from frappe.integrations.offsite_backup_utils import (
     generate_files_backup,
     get_latest_backup_file,
     validate_file_size,
 )
-from clientside.stripe import StripeSubscriptionManager
 from frappe.core.doctype.user.user import get_system_users
-from rq.timeouts import JobTimeoutException
 from frappe.geo.country_info import get_country_timezone_info
 from frappe.desk.doctype.workspace.workspace import update_page
-
+from rq.timeouts import JobTimeoutException
 
 @frappe.whitelist(allow_guest=True)
 def check_password_strength(*args, **kwargs):
@@ -37,18 +34,7 @@ def check_password_strength(*args, **kwargs):
         }
     return test_password_strength(passphrase, user_data=user_data)
 
-
-def checkEmailFormatWithRegex(email):
-    import re
-
-    regex = "^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$"
-    if re.search(regex, email):
-        return True
-    else:
-        return True
-
-
-def changeERPNames():
+def change_erp_to_onehash():
     try:
         update_page("ERPNext Settings", "OneHash Settings", "setting", "", 0)
     except:
@@ -74,18 +60,11 @@ def changeERPNames():
             1,
         )
 
-
-# steps are
-# validating input
-# creating user
-# creating company
-# Setting up required roles
-# wrapping things up with final changes
-# redirecting to your login page
-
-
 @frappe.whitelist(allow_guest=True)
-def createUserOnTargetSite(*args, **kwargs):
+def create_user_on_target_site(*args, **kwargs):
+    from frappe.utils.data import now_datetime
+    from frappe.desk.page.setup_wizard.setup_wizard import setup_complete
+
     file_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "country_currency.json"
     )
@@ -97,8 +76,7 @@ def createUserOnTargetSite(*args, **kwargs):
     lastname = kwargs["lastname"]
     company_name = kwargs["company_name"]
     country = kwargs["country"]
-    print("input", email, password, firstname, lastname, company_name, country)
-    if not checkEmailFormatWithRegex(email):
+    if validate_email_address(email) == '':
         return "INVALID_EMAIL_FORMAT"
     if (
         check_password_strength(
@@ -112,14 +90,8 @@ def createUserOnTargetSite(*args, **kwargs):
     if not lastname:
         return "LAST_NAME_NOT_PROVIDED"
     frappe.clear_cache()
-    from frappe.utils.data import now_datetime
-    from frappe.desk.page.setup_wizard.setup_wizard import setup_complete
-
     frappe.delete_doc_if_exists("Page", "welcome-to-erpnext", force=1)
-    print(frappe.db.a_row_exists("Company"))
-    # if True:
     current_year = now_datetime().year
-    # open the country_currency.json file and get the currency code for the country
     setup_complete(
         {
             "currency": f[country]["currency"],
@@ -139,9 +111,6 @@ def createUserOnTargetSite(*args, **kwargs):
             "chart_of_accounts": "Standard",
         }
     )
-    # get the newly created user and add the role  "OneHash Manager"
-    # print
-    #  changeERPNames()
     user = frappe.get_doc("User", email)
     user.add_roles("OneHash Manager")
     user.save(ignore_permissions=True)
@@ -151,41 +120,31 @@ def createUserOnTargetSite(*args, **kwargs):
     frappe.utils.execute_in_shell(
         "bench --site {} clear-website-cache".format(frappe.local.site)
     )
-
-    return {
-        "status": "OK",
-    }
-
+    return {"status": "OK"}
 
 @frappe.whitelist()
-def getNumberOfUsers():
+def get_number_of_users():
     return frappe.db.count("User")
 
-
 @frappe.whitelist()
-def getNumberOfEmailSent():
+def get_number_of_emails_sent():
     return frappe.db.count(
         "Communication",
         {"communication_type": "Communication", "sent_or_received": "Sent"},
     )
 
-
 @frappe.whitelist()
-def getDataBaseSizeOfSite():
+def get_database_size_of_site():
     return frappe.db.sql(
         "SELECT table_schema "
         + frappe.conf.db_name
         + ", SUM(data_length + index_length)  'Database Size in B' FROM information_schema.TABLES GROUP BY table_schema;"
     )
 
-
-def checkDiskSize(path):
-    import subprocess
-
+def check_disk_size(path):
     return subprocess.check_output(["du", "-hs", path]).decode("utf-8").split("\t")[0]
 
-
-def convertToB(sizeInStringWithPrefix):
+def convert_to_bytes(sizeInStringWithPrefix):
     if sizeInStringWithPrefix == "0":
         return 0
     prefix = sizeInStringWithPrefix[-1]
@@ -197,25 +156,22 @@ def convertToB(sizeInStringWithPrefix):
         return float(sizeInStringWithPrefix[:-1]) * 1024
     return float(sizeInStringWithPrefix)
 
-
 def get_number_of_emails_sent(sender=frappe.conf.email):
     return frappe.conf.onehash_mail_usage or 0
-
 
 def get_backup_size_of_site():
     url = (
         "http://"
         + frappe.conf.admin_url
-        + "/api/method/bettersaas.bettersaas.doctype.saas_sites.saas_sites.get_site_backup_size?sitename="
+        + "/api/method/bettersaas.bettersaas.doctype.saas_sites.saas_sites.get_site_backup_size?site_name="
         + frappe.local.site
     )
     resp = requests.get(url)
     print("backup size", resp.json()["message"])
     return resp.json()["message"]
 
-
 @frappe.whitelist(allow_guest=True)
-def getUsage():
+def get_usage():
     import datetime
 
     site = frappe.local.site
@@ -243,20 +199,17 @@ def getUsage():
         "total_days": total_days,
         "plan": current_product["name"],
         "storage": {
-            "database_size": getDataBaseSizeOfSite()[1][1],
-            "site_size": get_total_file_sizes(),
+            "database_size": get_database_size_of_site()[1][1],
+            # "site_size": get_total_file_sizes(),
             "backup_size": get_backup_size_of_site(),
         },
         "user_limit": frappe.conf.max_users,
         "email_limit": frappe.conf.max_email,
-        "storage_limit": int(frappe.conf.max_space) * 1024 * 1024 * 1024,
-        "stripe_conf": getSiteStripeConfig(),
+        "storage_limit": int(frappe.conf.max_storage) * 1024 * 1024 * 1024,
+        "stripe_conf": get_site_stripe_config(),
     }
 
-
-def getInstalledApps(site):
-    import subprocess
-
+def get_installed_apps(site):
     output = (
         subprocess.check_output(
             " bench --site {} list-apps --format text".format(site),
@@ -268,30 +221,24 @@ def getInstalledApps(site):
     output = [x for x in output if x != ""]
     return output
 
-
 @frappe.whitelist()
-def installApp(app):
+def install_app(app):
     frappe.utils.execute_in_shell(
         "bench --site {} install-app {}".format(frappe.local.site, app)
     )
 
-
 @frappe.whitelist()
-def installApps(*args, **kwargs):
-    installedApps = getInstalledApps(frappe.local.site)
+def install_apps(*args, **kwargs):
+    installed_apps = get_installed_apps(frappe.local.site)
     apps_to_install = kwargs["apps"][1:-1].split(",")
-    print(apps_to_install)
     for app in apps_to_install:
-        if app not in installedApps:
-            installApp(app)
+        if app not in installed_apps:
+            install_app(app)
     return "OK"
 
-
 def post_install():
-    createRole("OneHash Manager")
-    changeERPNames()
+    change_erp_to_onehash()
     add_options()
-
 
 def create_zip_with_files(zip_file_path, files_to_zip):
     import zipfile
@@ -308,9 +255,7 @@ def create_zip_with_files(zip_file_path, files_to_zip):
     """
     with zipfile.ZipFile(zip_file_path, "w", zipfile.ZIP_DEFLATED) as zipf:
         for file_path in files_to_zip:
-            # Add each file to the zip, using its base name as the file name in the zip
             zipf.write(file_path, os.path.basename(file_path))
-
 
 @frappe.whitelist()
 def take_backups_s3(retry_count=0, is_manual=0, backup_limit=3, site=frappe.local.site):
@@ -325,10 +270,8 @@ def take_backups_s3(retry_count=0, is_manual=0, backup_limit=3, site=frappe.loca
                 backup_limit=backup_limit,
                 site=site,
             )
-
     except Exception:
         print(frappe.get_traceback())
-
 
 def backup_to_s3(is_manual=0, backup_limit=3, site=frappe.local.site):
     from frappe.utils import get_backups_path
@@ -352,13 +295,6 @@ def backup_to_s3(is_manual=0, backup_limit=3, site=frappe.local.site):
             backup_path_private_files=None,
             force=True,
         )
-        print(
-            backup.backup_path_db,
-            backup.backup_path_files,
-            backup.backup_path_private_files,
-            backup.backup_path_conf,
-        )
-        print(get_backups_path())
         db_filename = os.path.join(
             get_backups_path(), os.path.basename(backup.backup_path_db)
         )
@@ -393,21 +329,11 @@ def backup_to_s3(is_manual=0, backup_limit=3, site=frappe.local.site):
         else:
             db_filename, site_config = get_latest_backup_file()
 
-    print(db_filename, site_config, files_filename, private_files)
-    backup_size = checkDiskSize("./" + site + "/private/backups")
+    backup_size = check_disk_size("./" + site + "/private/backups")
     folder = os.path.basename(db_filename)[:15] + "/"
-    print("folder name in s3", folder)
-    # for adding datetime to folder name
-    print(
-        db_filename,
-        folder,
-    )
     to_upload_config = []
     to_upload_config.append([db_filename, folder])
     to_upload_config.append([site_config, folder])
-
-    # TODO: delete the files after uploading
-    # call function on site fresh.localhost to save details of backup
 
     if backup_files:
         if private_files:
@@ -415,20 +341,15 @@ def backup_to_s3(is_manual=0, backup_limit=3, site=frappe.local.site):
 
         if files_filename:
             to_upload_config.append([files_filename, folder])
-    # upload_keys = [ os.path.join"site_backups/"+ frappe.local.site + "/" + target_zip_file_name(x[1],os.path.basename(x[0]))  for x in to_upload_config]
     server_keys = [x[0] for x in to_upload_config]
     site_config_util = frappe.get_site_config(site_path=site)
-    limit = int(site_config_util["max_space"]) * 1024
+    limit = int(site_config_util["max_storage"]) * 1024
     current_usage = (
-        get_total_file_sizes()
-        + getDataBaseSizeOfSite()[1][1]
+        # get_total_file_sizes()
+        get_database_size_of_site()[1][1]
         + get_backup_size_of_site()
     )
-    print(
-        get_total_file_sizes(), getDataBaseSizeOfSite()[1][1], get_backup_size_of_site()
-    )
-    print(limit)
-    if current_usage > convertToB(str(limit) + "G"):
+    if current_usage > convert_to_bytes(str(limit) + "G"):
         frappe.throw("Storage Limit Exceeded")
         for x in server_keys:
             os.remove(x)
@@ -436,17 +357,13 @@ def backup_to_s3(is_manual=0, backup_limit=3, site=frappe.local.site):
     target_zip_file_name = (
         to_upload_config[0][1][:-1] + "-" + replaced_site_name + ".zip"
     )
-    print("target zip file name", target_zip_file_name)
     on_server_zip_key = site + "/private/" + target_zip_file_name
     create_zip_with_files(on_server_zip_key, server_keys)
-    print("uploading files to s3", len(to_upload_config))
     aws_key = "site_backups/" + site + "/" + target_zip_file_name
-    print(target_zip_file_name)
-    print(aws_key)
     try:
         conn.upload_file(on_server_zip_key, bucket, aws_key)
     except Exception as e:
-        print("error in uploading files to s3", e)
+        print("Error uploading files to s3", e)
     command = "bench --site {} execute bettersaas.bettersaas.doctype.saas_sites.saas_sites.insert_backup_record --args \"'{}','{}','{}','{}'\"".format(
         frappe.conf.admin_subdomain + "." + frappe.conf.domain,
         site,
@@ -456,7 +373,6 @@ def backup_to_s3(is_manual=0, backup_limit=3, site=frappe.local.site):
     )
     try:
         frappe.utils.execute_in_shell(command)
-        print("we have to maintain only {} backups".format(backup_limit))
         command_1 = "bench --site {} execute bettersaas.bettersaas.doctype.saas_sites.saas_sites.delete_old_backups --args \"'{}','{}'\"".format(
             frappe.conf.admin_subdomain + "." + frappe.conf.domain,
             backup_limit,
@@ -473,29 +389,14 @@ def backup_to_s3(is_manual=0, backup_limit=3, site=frappe.local.site):
         "bench --site {} set-config backup_in_progress no".format(site)
     )
 
-
-# def upload_file_to_s3(filename, folder, conn, bucket):
-#     destpath = os.path.join(folder, os.path.basename(filename))
-#     try:
-
-#         # delete the file after uploading
-
-
-#     except Exception as e:
-#         frappe.log_error()
-#         print("Error uploading: %s" % (e))
-
-
 @frappe.whitelist(allow_guest=True)
 def get_all_apps():
-    admin_url = frappe.conf.admin_url
-    url = "http://{s_name}/api/method/bettersaas.bettersaas.doctype.available_apps.available_apps.get_apps".format(
-        s_name=admin_url
+    url = "http://{site_name}/api/method/bettersaas.bettersaas.doctype.available_apps.available_apps.get_apps".format(
+        site_name=frappe.conf.admin_url
     )
     try:
         site_apps = [x["app_name"] for x in frappe.utils.get_installed_apps_info()]
         res = json.loads(requests.get(url).text)
-        #  print("res",res["message"])
         apps_to_return = []
         for app in res["message"]:
             if app["app_name"] == "whitelabel":
@@ -511,7 +412,6 @@ def get_all_apps():
         print(f"An error occurred: {e}")
         return e
 
-
 @frappe.whitelist()
 def install_app(*args, **kwrgs):
     arr = []
@@ -525,7 +425,6 @@ def install_app(*args, **kwrgs):
         )
     )
     return "Success"
-
 
 @frappe.whitelist()
 def uninstall_app(*args, **kwrgs):
@@ -541,26 +440,22 @@ def uninstall_app(*args, **kwrgs):
     )
     return "Success"
 
-
 @frappe.whitelist()
 def delete_site_from_server():
     frappe.utils.execute_in_shell(
-        "bench   drop-site {site} --root-password {db_root_password} --force --no-backup".format(
-            site=frappe.local.site, db_root_password=frappe.conf.db_pass
+        "bench drop-site {site} --root-password {db_root_password} --force --no-backup".format(
+            site=frappe.local.site, db_root_password=frappe.conf.root_password
         )
     )
-
 
 @frappe.whitelist()
 def verify_custom_domain(new_domain):
     current_domains = []
     for key in frappe.conf.domains:
-        print(key)
         if type(key) == dict:
             current_domains.append(key["domain"])
         else:
             current_domains.append(key)
-    print(current_domains)
     if new_domain in current_domains:
         return ["VERIFIED", new_domain]
     parts = new_domain.split(".")
@@ -570,9 +465,10 @@ def verify_custom_domain(new_domain):
         new_domain = "www." + new_domain
     command = "dig {} CNAME +short".format(new_domain)
     try:
+        import time
+
         cname = frappe.utils.execute_in_shell(command)[1].decode("utf-8").strip()[:-1]
         if cname == frappe.local.site and new_domain != frappe.local.site:
-            # setup nginx
             command = "bench setup nginx --yes"
             frappe.utils.execute_in_shell(command)
             command = "echo {} | sudo -S service nginx reload"
@@ -581,15 +477,11 @@ def verify_custom_domain(new_domain):
                 new_domain, frappe.local.site
             )
             frappe.utils.execute_in_shell(command)
-            # add SSL certificate
             command = "echo {} | sudo -S certbot certonly --nginx -d {}".format(
                 frappe.conf.root_password, new_domain
             )
-            print("command", command)
             resp = frappe.utils.execute_in_shell(command)
-            print("rsp", resp)
             frappe.msgprint("SSL certificate added" + str(resp))
-            ## insret the ssl certificate as new domain
             new_domains = frappe.conf.domains
             new_domains.append(
                 new_domain
@@ -605,12 +497,7 @@ def verify_custom_domain(new_domain):
             )
             frappe.installer.update_site_config("domains", new_domains, validate=True)
             # after adding the domain, reload nginx after 4 seconds async task
-            from subprocess import Popen
-
-            import time
-
             time.sleep(4)
-            # setup nginx
             frappe.utils.execute_in_shell("bench setup nginx --yes")
             frappe.utils.execute_in_shell(
                 "echo {} | sudo -S service nginx reload".format(
@@ -620,29 +507,25 @@ def verify_custom_domain(new_domain):
         if new_domain == frappe.local.site:
             return ["ALREADY_REGISTERED", cname]
         return ["INVALID_RECORD", cname]
-
     except Exception as e:
         print(e)
         return ["INVALID_DOMAIN", ""]
 
-
 @frappe.whitelist(allow_guest=True)
-def createNewPurchaseSession(*args, **kwargs):
+def create_new_purchase_session(*args, **kwargs):
     stripe = StripeSubscriptionManager()
     resp = stripe.create_new_purchase_session(
         frappe.conf.customer_id, kwargs["price_id"], frappe.local.site.split(".")[0]
     )
     return {"url": resp}
 
-
 @frappe.whitelist(allow_guest=True)
-def upgradeOneHashPlan(*args, **kwargs):
+def upgrade_onehash_plan(*args, **kwargs):
     stripe = StripeSubscriptionManager(country=frappe.conf.country or "US")
     res = stripe.upgrade_subscription(
         frappe.conf.customer_id, kwargs["price_id"], frappe.local.site.split(".")[0]
     )
     if res != "SUCCESS" and res != "PENDING_UPDATE":
-        print("upgrade failed")
         frappe.publish_realtime(
             "upgrade_failed",
             room=f"{frappe.local.site}:website",
@@ -656,9 +539,8 @@ def upgradeOneHashPlan(*args, **kwargs):
         )
     return {"url": "response"}
 
-
 @frappe.whitelist(allow_guest=True)
-def getSiteStripeConfig():
+def get_site_stripe_config():
     country = frappe.conf.country or "US"
     if country == "IN":
         return {
@@ -675,42 +557,16 @@ def getSiteStripeConfig():
             "pricing": frappe.conf.stripe_prices["US"]["prices"],
         }
 
-
-# expire cache value  after 24 hr
-
-
 @frappe.whitelist(allow_guest=True)
-def hasRoleToManageOnehashPayments():
-    # check if user has role "OneHash Manager"
+def has_role_to_manage_onehash_payments():
     user = frappe.session.user
     user_roles = frappe.get_roles(user)
-    print(user_roles)
     if "OneHash Manager" in user_roles:
         return True
     return False
 
-
-def createRole(role_name):
-    print("creating role " + role_name)
-    role = frappe.get_doc(
-        {
-            "doctype": "Role",
-            "role_name": role_name,
-            "desk_access": 1,
-        }
-    )
-    role.insert(ignore_permissions=True)
-    return role.name
-
-
-# errors
-
-
 def add_options():
     navbar_settings = frappe.get_single("Navbar Settings")
-    # if frappe.db.exists("Navbar Item", {"item_label": "Usage Infooo"}):
-    #     return
-
     navbar_settings.append(
         "settings_dropdown",
         {
@@ -741,9 +597,7 @@ def add_options():
             "idx": 7,
         },
     )
-
     navbar_settings.save()
-
 
 def update_last_active():
     time = frappe.utils.now_datetime().strftime("%Y-%m-%d")
@@ -751,8 +605,6 @@ def update_last_active():
         site=frappe.local.site, time=time
     )
     frappe.utils.execute_in_shell(command)
-    print("updated last active")
-
 
 @frappe.whitelist()
 def schedule_files_backup():
@@ -770,18 +622,14 @@ def schedule_files_backup():
         queue="long",
         now=1,
     )
-    # delete the oldbest backup if current number of manual backups is equal to the limit
-
 
 def make_object_public(bucket_name, object_name):
-    print(bucket_name, object_name, "making public")
     conn = boto3.client(
         "s3",
         aws_access_key_id=frappe.conf.aws_access_key_id,
         aws_secret_access_key=frappe.conf.aws_secret_access_key,
     )
     conn.put_object_acl(ACL="public-read", Bucket=bucket_name, Key=object_name)
-
 
 @frappe.whitelist(allow_guest=True)
 def get_download_link(s3key):
@@ -802,15 +650,12 @@ def get_download_link(s3key):
     )
     return url
 
-
 @frappe.whitelist()
-def getBackups():
-    import requests
-
+def get_backups():
     r = requests.get(
         "http://"
         + frappe.conf.admin_url
-        + "/api/method/bettersaas.bettersaas.doctype.saas_site_backups.saas_site_backups.getBackups?site="
+        + "/api/method/bettersaas.bettersaas.doctype.saas_site_backups.saas_site_backups.get_backups?site="
         + frappe.local.site
     ).json()
     return r["message"]

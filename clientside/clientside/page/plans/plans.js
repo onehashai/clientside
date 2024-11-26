@@ -16,7 +16,7 @@ class StripeManager {
   async upgrade(price_id) {
     this.current_process = "upgrade";
     await fetch(
-      "/api/method/clientside.clientside.utils.upgradeOneHashPlan?price_id=" +
+      "/api/method/clientside.clientside.utils.upgrade_onehash_plan?price_id=" +
         price_id,
       {
         method: "GET",
@@ -28,7 +28,7 @@ class StripeManager {
   }
   async purcahse(price_id) {
     const { message } = await fetch(
-      "/api/method/clientside.clientside.utils.createNewPurchaseSession?price_id=" +
+      "/api/method/clientside.clientside.utils.create_new_purchase_session?price_id=" +
         price_id,
       {
         method: "GET",

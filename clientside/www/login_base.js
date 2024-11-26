@@ -112,7 +112,6 @@ login.bind_events = function () {
 	{% endif %}
 }
 
-
 login.route = function () {
 	var route = window.location.hash.slice(1);
 	if (!route) route = "login";
@@ -174,7 +173,6 @@ login.signup = function () {
 	$(".for-signup").toggle(true);
 	$("#signup_fullname").focus();
 }
-
 
 // Login
 login.call = function (args, callback) {

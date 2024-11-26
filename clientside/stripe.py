@@ -1,7 +1,5 @@
 import stripe
 import frappe
-import datetime
-
 
 # price IDS
 @frappe.whitelist(allow_guest=True)

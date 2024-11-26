@@ -11,7 +11,7 @@ setup(
 	version=version,
 	description="An app to handle customer facing view",
 	author="OneHash",
-	author_email="digital@onehash.ai",
+	author_email="support@onehash.ai",
 	packages=find_packages(),
 	zip_safe=False,
 	include_package_data=True,

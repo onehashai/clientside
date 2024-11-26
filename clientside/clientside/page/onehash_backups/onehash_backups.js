@@ -34,7 +34,7 @@ frappe.pages["onehash-backups"].on_page_load = function (wrapper) {
 async function init() {
   // working
   const { message } = await fetch(
-    "/api/method/clientside.clientside.utils.getBackups"
+    "/api/method/clientside.clientside.utils.get_backups"
   ).then((r) => r.json());
   message.forEach((backup) => {
     const backup_card_html = `<div class="frappe-card m-3" style="flex-basis: 342px">

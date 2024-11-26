@@ -19,11 +19,11 @@
 //   }
 //   return false;
 // }
-// async function checkIfUserHasRoleToManageOnehashPayments() {
-//   const hasRoleToManageOnehashPayments = await fetch(
-//     "/api/method/clientside.clientside.utils.hasRoleToManageOnehashPayments"
+// async function checkIfUserhas_role_to_manage_onehash_payments() {
+//   const has_role_to_manage_onehash_payments = await fetch(
+//     "/api/method/clientside.clientside.utils.has_role_to_manage_onehash_payments"
 //   ).then((r) => r.json());
-//   if (hasRoleToManageOnehashPayments.message) {
+//   if (has_role_to_manage_onehash_payments.message) {
 //     return true;
 //   }
 //   return false;
@@ -41,13 +41,13 @@
 //   checkIfUserHasActiveSubsciprion().then((hasActiveSubscription) => {
 //     console.log("hasActiveSubscription", hasActiveSubscription);
 //     if (!hasActiveSubscription) {
-//       checkIfUserHasRoleToManageOnehashPayments().then(
-//         (hasRoleToManageOnehashPayments) => {
+//       checkIfUserhas_role_to_manage_onehash_payments().then(
+//         (has_role_to_manage_onehash_payments) => {
 //           console.log(
-//             "hasRoleToManageOnehashPayments",
-//             hasRoleToManageOnehashPayments
+//             "has_role_to_manage_onehash_payments",
+//             has_role_to_manage_onehash_payments
 //           );
-//           if (hasRoleToManageOnehashPayments) {
+//           if (has_role_to_manage_onehash_payments) {
 //             // show the plan page
 //             console.log("show the plan page");
 //             window.location.href = "/plans";
