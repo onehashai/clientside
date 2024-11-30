@@ -1,7 +1,6 @@
 import stripe
 import frappe
 
-# price IDS
 @frappe.whitelist(allow_guest=True)
 def hasActiveSubscription(*args, **kwargs):
     invalidate_cache = True if "invalidate_cache" in kwargs else False
@@ -67,16 +66,12 @@ class StripeSubscriptionManager:
 
         self.trial_price_id = frappe.conf.stripe_prices["US"]["trial_price_id"]
         self.trial_product = "ONEHASH_PRO"
-        print("region", self.region)
         if self.region == "IN":
-            print("setting plan to product id for IN")
             self.plan_to_product_id = frappe.conf.stripe_prices["IN"]["products"]
             self.trial_price_id = frappe.conf.stripe_prices["IN"]["trial_price_id"]
-        print("plan to product id", self.plan_to_product_id)
-        self.onehas_subscription_product_ids = [
+        self.onehash_subscription_product_ids = [
             x for x in self.plan_to_product_id.values()
         ]
-        print("stripe api key", self.api_key)
         stripe.api_key = self.api_key
 
     def plan_id_to_product(self):
@@ -118,7 +113,7 @@ class StripeSubscriptionManager:
         )
 
     def has_valid_site_subscription(self, cus_id):
-        return self.get_onehash_subscription(cus_id) != "NONE"
+        return self.get_onehash_subscription(cus_id)
 
     def create_new_purchase_session(self, customer_id, price_id, subdomain):
         success_url = (
@@ -160,7 +155,7 @@ class StripeSubscriptionManager:
                 subscription["status"] in ["active", "trialing"]
                 and subscription["plan"]["product"]
                 and subscription["plan"]["product"]
-                in self.onehas_subscription_product_ids
+                in self.onehash_subscription_product_ids
             ):
                 product_id = subscription["plan"]["product"]
                 break
@@ -174,7 +169,7 @@ class StripeSubscriptionManager:
                 subscription["status"] in ["active", "trialing"]
                 and subscription["plan"]["product"]
                 and subscription["plan"]["product"]
-                in self.onehas_subscription_product_ids
+                in self.onehash_subscription_product_ids
             ):
                 product = subscription["plan"]["product"]
                 break
@@ -200,7 +195,7 @@ class StripeSubscriptionManager:
                     subscription["status"] in ["active", "trialing"]
                     and subscription["plan"]["product"]
                     and subscription["plan"]["product"]
-                    in self.onehas_subscription_product_ids
+                    in self.onehash_subscription_product_ids
                 ):
                     return True
             return False
@@ -215,24 +210,16 @@ class StripeSubscriptionManager:
             return False
 
     def get_onehash_subscription(self, customer_id):
-        print("getting onehash subscription for customer", customer_id)
         if not customer_id:
-            return "NONE"
+            return False
         subscriptions = stripe.Subscription.list(customer=customer_id)
         for subscription in subscriptions["data"]:
-            print("subscription status", subscription["status"])
-            print("subscription plan", subscription["plan"]["product"])
-            print("product ids", self.onehas_subscription_product_ids)
-            print(
-                "subscription in onehash",
-                subscription["plan"]["product"] in self.onehas_subscription_product_ids,
-            )
             if (
                 subscription["status"] in ["active", "trialing"]
                 and subscription["plan"]["product"]
                 and (
                     subscription["plan"]["product"]
-                    in self.onehas_subscription_product_ids
+                    in self.onehash_subscription_product_ids
                 )
             ):
                 return subscription
@@ -343,7 +330,7 @@ class StripeSubscriptionManager:
         product_id = subscription["items"]["data"][0]["price"]["product"]
         price_id = subscription["items"]["data"][0]["price"]["id"]
         # invoice paid
-        if product_id in self.onehas_subscription_product_ids:
+        if product_id in self.onehash_subscription_product_ids:
             site_name = get_site(customer_id)
             if not site_name:
                 return
@@ -352,7 +339,7 @@ class StripeSubscriptionManager:
                 # fetch the site_name from the database - saved payment intent id
                 print("updating onehash subscription for site", site_name)
                 fulfilOneHashUpdate(
-                    self.onehas_subscription_product_ids,
+                    self.onehash_subscription_product_ids,
                     product_id,
                     price_id,
                     site_name,

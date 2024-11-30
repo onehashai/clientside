@@ -12,17 +12,13 @@ login.bind_events = function () {
 		login.route();
 	});
     
-	$("#manage").click(function () {
-		window.open("https://billing.stripe.com/p/login/test_3cs3du4oRe4P5yMaEE", "_blank");
-	});
+	// $("#manage").click(function () {
+	// 	window.open("https://billing.stripe.com/p/login/test_3cs3du4oRe4P5yMaEE", "_blank");
+	// });
 	$("#purchase").click(function () {
 		window.open("/pricing", "_blank");
 	});
 	$(".form-login").on("submit", async function (event) {
-        console.log(document.getElementById("subscriptionDialog"))
-        if(document.getElementById("subscriptionDialog")){
-            return false;
-        }
 		event.preventDefault();
 		var args = {};
 		args.cmd = "login";
@@ -276,7 +272,6 @@ login.login_handlers = (function () {
 					login.set_status('{{ _("Success") }}', 'green');
 					frappe.msgprint(data.message[1])
 				}
-				//login.set_status(__(data.message), 'green');
 			}
 
 			//OTP verification
@@ -346,7 +341,6 @@ var request_otp = function (r) {
 			</form>
 		</div>`
 	);
-	// add event handler for submit button
 	verify_token();
 }
 
@@ -403,9 +397,6 @@ async function getSites(email){
     });
 }
  async function appendSiteOptions(sites){
-    
-    // append to select options
-    console.log(sites)
     if(document.getElementById("siteSelectList")){
         document.getElementById("siteSelectList").remove();
     }

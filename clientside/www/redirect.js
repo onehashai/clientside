@@ -71,29 +71,29 @@ async function createNewUser(
     });
 }
 async function redirect() {
-  console.log("redirecting to the new site..");
   const url =
     window.location.protocol +
     "//" +
     window.location.host +
     "/app?onboard=true";
-  const poll_url =
-    "/api/method/clientside.stripe.hasActiveSubscription?invalidate_cache=true";
+  window.location.href = url;
+
+  // const poll_url =
+  //   "/api/method/clientside.stripe.hasActiveSubscription?invalidate_cache=true";
   // poll until the cache is updated
-  const subPoll = await fetch(poll_url, {
-    method: "GET",
-  }).then((r) => r.json());
-  if (subPoll.message) {
-    window.location.href = url;
-  } else {
-    setTimeout(() => {
-      redirect();
-    }, 2000);
-  }
+  // const subPoll = await fetch(poll_url, {
+  //   method: "GET",
+  // }).then((r) => r.json());
+  // if (subPoll.message) {
+  //   window.location.href = url;
+  // } else {
+  //   setTimeout(() => {
+  //     redirect();
+  //   }, 2000);
+  // }
 }
 
 async function login(email, password) {
-  console.log("trying to login", email, password);
   try {
     await $.ajax({
       url: "/api/method/login",
@@ -109,7 +109,6 @@ async function login(email, password) {
       dataType: "json",
     });
   } catch (error) {
-    console.log(error);
     frappe.msgprint("Some Internal error , please try again later");
   }
 }
@@ -130,11 +129,9 @@ async function init() {
   const lastname = url.searchParams.get("lastname") || "User";
   const companyname = url.searchParams.get("companyname") || "OneHash";
   const country = url.searchParams.get("country") || "India";
-  console.log(password);
   const decryptedPassword = CryptoJS.enc.Base64.parse(password).toString(
     CryptoJS.enc.Utf8
   );
-  console.log(decryptedPassword);
   const createUser = url.searchParams.get("createUser") || false;
   password = decryptedPassword;
   password = password.replaceAll(/%23/g, "#");
@@ -149,11 +146,9 @@ async function init() {
       country
     );
   } else {
-    console.log("logging in");
     try {
       await login(email, password);
     } catch (error) {
-      console.log("error logging in");
       console.log(error);
     }
     redirect();

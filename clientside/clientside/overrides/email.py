@@ -13,7 +13,6 @@ can_send_email_from_default_admin_email_address = True
 
 
 def send(self, sender, recipient, msg):
-    print("send() override")
     # this function checks if  the sender has permission to send email from the default admin email address
     # if not, it will send the email from the default email account from set on frappe
     # this is useful when you have a multi-tenant setup and you want to send emails from the default admin email address

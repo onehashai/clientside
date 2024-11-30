@@ -5,12 +5,8 @@ import json
 def webhook_listener():
     try:
         raw_data = frappe.request.get_data(as_text=True)
-        print("Received raw data:", raw_data)
-
         if raw_data:
             data = json.loads(raw_data)
-            print("Parsed data:", data)
-
             if isinstance(data, dict):
                 sender = data.get('waId')
                 content = data.get('text')

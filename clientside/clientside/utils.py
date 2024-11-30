@@ -383,9 +383,6 @@ def get_all_apps():
         res = json.loads(requests.get(url).text)
         apps_to_return = []
         for app in res["message"]:
-            if app["app_name"] == "whitelabel":
-                continue
-
             if app["app_name"] in site_apps:
                 app["installed"] = "true"
             else:
@@ -540,14 +537,6 @@ def get_site_stripe_config():
             "country": frappe.conf.country,
             "pricing": frappe.conf.stripe_prices["US"]["prices"],
         }
-
-@frappe.whitelist(allow_guest=True)
-def has_role_to_manage_onehash_payments():
-    user = frappe.session.user
-    user_roles = frappe.get_roles(user)
-    if "OneHash Manager" in user_roles:
-        return True
-    return False
 
 def add_options():
     navbar_settings = frappe.get_single("Navbar Settings")

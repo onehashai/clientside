@@ -26,7 +26,8 @@ app_include_css = ["/assets/clientside/css/usage_info.css","/assets/clientside/c
 # webform_include_css = {"doctype": "public/css/doctype.css"}
 
 # include js in page
-# page_js = {"page" : "public/js/file.js"}
+page_js = {"/": "public/js/file.js"}
+
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
@@ -95,20 +96,14 @@ import frappe
 # ---------------
 # Override standard doctype classes
 
-override_doctype_class = {
-    "Communication": "clientside.clientside.overrides.communication.CommunicationOverride",
-}
+# override_doctype_class = {
+#     "Communication": "clientside.clientside.overrides.communication.CommunicationOverride",
+# }
 # Document Events
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {}
 
 # Scheduled Tasks
 # ---------------
@@ -139,10 +134,8 @@ override_doctype_class = {
 # ------------------------------
 #
 override_whitelisted_methods = {
-    "frappe.frappe.core.doctype.user.user.sign_up": "clientside.clientside.overrides.sign_up",
-    "frappe.client.save": "clientside.clientside.overrides.globals.saveOverride",
-    "frappe.desk.form.save.savedocs": "clientside.clientside.overrides.globals.savedocsoverride",
-    "frappe.desk.page.backups.backups.schedule_files_backup": "clientside.clientside.overrides.globals.schedule_files_backup",
+    "frappe.client.save": "clientside.clientside.overrides.globals.save_method",
+    "frappe.desk.form.save.savedocs": "clientside.clientside.overrides.globals.save_docs",
 }
 #
 # each overriding function accepts a `data` argument;
@@ -194,13 +187,11 @@ app_include_js = ["assets/clientside/js/client.js", "assets/clientside/js/file.j
 # 		"doctype": "{doctype_4}"
 # 	}
 # ]
-website_redirects = [
-    {"source": "/app/backups", "target": "/app/onehash-backups"}
-]
+# website_redirects = [
+#     {"source": "/app/backups", "target": "/app/onehash-backups"}
+# ]
 # Authentication and authorization
 # --------------------------------
 # auth_hooks = ["clientside.clientside.utils.update_last_active"]
 
-doc_events = {}
 # on_session_creation = "clientside.clientside.utils.alertForUpgrade"
-page_js = {"/": "public/js/file.js"}

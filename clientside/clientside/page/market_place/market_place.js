@@ -8,7 +8,6 @@ frappe.pages["market-place"].on_page_load = function (wrapper) {
     page.body.addClass("no-border")
   );
   $(document).ready(function () {
-    
     document.getElementById(
       "app_div"
     ).innerHTML = `	<div class='d-flex justify-content-center w-100'>
@@ -16,7 +15,6 @@ frappe.pages["market-place"].on_page_load = function (wrapper) {
     			<span class="visually-hidden"></span>
  		 	</div>
  		 	</div>
-
 		`;
     frappe.call({
       method: "clientside.clientside.utils.get_all_apps",
@@ -40,27 +38,26 @@ frappe.pages["market-place"].on_page_load = function (wrapper) {
           if(res.message[key].enabled==1)
           {
             var userRoles = frappe.user_roles;
-            
-            
+            console.log(userRoles);
             if (userRoles.includes('OneHash Manager'))
-            {
-              if (res.message[key].installed == "true") {
-                document.getElementById(
-                  `div${index}`
-                ).innerHTML += `<button type="button" class="btn btn-danger" id="btn${index} " name='${res.message[key].app_name}' value="uninstall" >Uninstall <i class="fa fa-remove" aria-hidden="true"></i></button>`;
-              } else {
-                document.getElementById(
-                  `div${index}`
-                ).innerHTML += `<button type="button" class="btn btn-primary" id="btn${index} " name=${res.message[key].app_name} value="install" >Install <i class="fa fa-download" aria-hidden="true"></i></button>`;
+              {
+                if (res.message[key].installed == "true") {
+                  document.getElementById(
+                    `div${index}`
+                  ).innerHTML += `<button type="button" class="btn btn-danger" id="btn${index} " name='${res.message[key].app_name}' value="uninstall" >Uninstall <i class="fa fa-remove" aria-hidden="true"></i></button>`;
+                } else {
+                  document.getElementById(
+                    `div${index}`
+                  ).innerHTML += `<button type="button" class="btn btn-primary" id="btn${index} " name=${res.message[key].app_name} value="install" >Install <i class="fa fa-download" aria-hidden="true"></i></button>`;
+                }
               }
-            }
           }
           else
-          {
-            document.getElementById(
-              `div${index}`
-            ).innerHTML += `<button type="button" class="btn btn-success" id=" " name='comming_soon' disabled>Comming Soon  ; )</button>`;
-          }
+            {
+              document.getElementById(
+                `div${index}`
+              ).innerHTML += `<button type="button" class="btn btn-success" id=" " name='comming_soon' disabled>Comming Soon  ; )</button>`;
+            }
         });
       },
       error: (err) => {
