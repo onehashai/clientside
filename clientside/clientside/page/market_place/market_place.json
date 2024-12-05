@@ -1,20 +1,16 @@
 {
  "content": null,
- "creation": "2023-06-30 15:31:37.039310",
+ "creation": "2024-12-01 12:46:10.768307",
  "docstatus": 0,
  "doctype": "Page",
  "idx": 0,
- "modified": "2023-08-11 17:00:47.629237",
+ "modified": "2024-12-01 12:46:17.687518",
  "modified_by": "Administrator",
  "module": "Clientside",
  "name": "market-place",
  "owner": "Administrator",
- "page_name": "Marketplace",
- "roles": [
-  {
-   "role": "All"
-  }
- ],
+ "page_name": "market-place",
+ "roles": [],
  "script": null,
  "standard": "Yes",
  "style": null,

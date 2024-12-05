@@ -1,23 +1,19 @@
 {
  "content": null,
- "creation": "2023-06-26 11:31:16.057512",
+ "creation": "2024-12-01 12:36:29.114468",
  "docstatus": 0,
  "doctype": "Page",
  "idx": 0,
- "modified": "2023-07-16 11:18:59.033856",
+ "modified": "2024-12-01 12:44:35.365813",
  "modified_by": "Administrator",
  "module": "Clientside",
  "name": "usage-info",
  "owner": "Administrator",
  "page_name": "usage-info",
- "roles": [
-  {
-   "role": "OneHash Manager"
-  }
- ],
+ "roles": [],
  "script": null,
  "standard": "Yes",
  "style": null,
- "system_page": 1,
- "title": "Usage info"
+ "system_page": 0,
+ "title": "Usage Info"
 }

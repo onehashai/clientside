@@ -12,7 +12,7 @@ app_license = "MIT"
 
 # include js, css files in header of desk.html
 app_include_css = ["/assets/clientside/css/usage_info.css","/assets/clientside/css/clientside.css"]
-# app_include_js = "/assets/clientside/js/clientside.js"
+app_include_js = ["assets/clientside/js/client.js", "assets/clientside/js/file.js","assets/clientside/js/notification.js","assets/clientside/js/web_form.js","assets/clientside/js/user.js"]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/clientside/css/clientside.css"
@@ -66,7 +66,6 @@ page_js = {"/": "public/js/file.js"}
 
 # before_install = "clientside.install.before_install"
 after_install = "clientside.clientside.utils.post_install"
-import frappe
 
 # Uninstallation
 # ------------
@@ -107,23 +106,28 @@ doc_events = {}
 
 # Scheduled Tasks
 # ---------------
-# scheduler_events = {
-# # 	"all": [
-# # 		"whitelabel.tasks.all"
-# # 	],
-# # 	"daily": [
-# # 		"whitelabel.tasks.daily"
-# # 	],
-# # 	"hourly": [
-# # 		"whitelabel.tasks.hourly"
-# # 	],
-# # 	"weekly": [
-# # 		"whitelabel.tasks.weekly"
-# # 	]
-# 	"monthly": [
-# 		"whitelabel.tasks.monthly"
+scheduler_events = {
+# 	"all": [
+# 		"whitelabel.tasks.all"
+# 	],
+# 	"daily": [
+# 		"whitelabel.tasks.daily"
+# 	],
+# 	"hourly": [
+# 		"whitelabel.tasks.hourly"
+# 	],
+# 	"weekly": [
+# 		"whitelabel.tasks.weekly"
 # 	]
-# }
+#   "monthly": [
+# 	    "whitelabel.tasks.monthly"
+#   ]
+    "cron": {
+        "*/6 * * * *": [
+            "clientside.clientside.utils.schedule_files_backup"
+        ]
+    }
+}
 
 # Testing
 # -------
@@ -136,6 +140,7 @@ doc_events = {}
 override_whitelisted_methods = {
     "frappe.client.save": "clientside.clientside.overrides.globals.save_method",
     "frappe.desk.form.save.savedocs": "clientside.clientside.overrides.globals.save_docs",
+    "frappe.desk.page.backups.backups.schedule_files_backup": "clientside.clientside.utils.schedule_files_backup",
 }
 #
 # each overriding function accepts a `data` argument;
@@ -145,7 +150,6 @@ override_whitelisted_methods = {
 # 	"Task": "clientside.task.get_dashboard_data"
 # }
 boot_session = "clientside.api.boot_session"
-app_include_js = ["assets/clientside/js/client.js", "assets/clientside/js/file.js","assets/clientside/js/notification.js","assets/clientside/js/web_form.js","assets/clientside/js/user.js"]
 # exempt linked doctypes from being automatically cancelled
 #
 # auto_cancel_exempted_doctypes = ["Auto Repeat"]
@@ -187,9 +191,9 @@ app_include_js = ["assets/clientside/js/client.js", "assets/clientside/js/file.j
 # 		"doctype": "{doctype_4}"
 # 	}
 # ]
-# website_redirects = [
-#     {"source": "/app/backups", "target": "/app/onehash-backups"}
-# ]
+website_redirects = [
+    {"source": "/app/backups", "target": "/app/onehash-backups"}
+]
 # Authentication and authorization
 # --------------------------------
 # auth_hooks = ["clientside.clientside.utils.update_last_active"]

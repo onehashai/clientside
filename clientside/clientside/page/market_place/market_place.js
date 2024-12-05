@@ -38,7 +38,6 @@ frappe.pages["market-place"].on_page_load = function (wrapper) {
           if(res.message[key].enabled==1)
           {
             var userRoles = frappe.user_roles;
-            console.log(userRoles);
             if (userRoles.includes('OneHash Manager'))
               {
                 if (res.message[key].installed == "true") {
