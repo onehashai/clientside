@@ -4,7 +4,6 @@ import json
 import os
 import sys
 import click
-from shutil import which
 import subprocess
 from clientside.stripe import StripeSubscriptionManager
 from frappe import _
@@ -15,10 +14,11 @@ from frappe.integrations.offsite_backup_utils import (
     get_latest_backup_file,
     validate_file_size,
 )
-from frappe.core.doctype.user.user import get_system_users
 from frappe.geo.country_info import get_country_timezone_info
-from frappe.desk.doctype.workspace.workspace import update_page
 from rq.timeouts import JobTimeoutException
+
+frappe.utils.logger.set_log_level("DEBUG")
+logger = frappe.logger("api", allow_site=True, file_count=50)
 
 @frappe.whitelist(allow_guest=True)
 def check_password_strength(*args, **kwargs):
@@ -35,17 +35,6 @@ def check_password_strength(*args, **kwargs):
             }
         }
     return test_password_strength(passphrase, user_data=user_data)
-
-def change_erp_to_onehash():
-    try:
-        update_page("ERPNext Settings", "OneHash Settings", "setting", "" , "", 1)
-    except Exception as e:
-        print("Error updating ERPNext Settings Page", e)
-
-    try:
-        update_page("ERPNext Integrations", "OneHash Integrations", "integration", "", "", 1)
-    except Exception as e:
-        print("Error updating ERPNext Integrations Page", e)
 
 @frappe.whitelist(allow_guest=True)
 def create_user_on_target_site(*args, **kwargs):
@@ -106,18 +95,21 @@ def create_user_on_target_site(*args, **kwargs):
     frappe.utils.execute_in_shell(
         "bench --site {} clear-website-cache".format(frappe.local.site)
     )
+    subscription_manager = StripeSubscriptionManager(country)
+    customer = subscription_manager.create_customer(frappe.local.site, email, firstname, lastname)
+    # TODO: Insert Customer Id to SaaS Sites
+    frappe.utils.execute_in_shell(
+        "bench --site {} set-config customer_id {}".format(frappe.local.site, customer.id)
+    )
+    subscription = subscription_manager.create_subscription(customer.id)
+    frappe.utils.execute_in_shell(
+        "bench --site {} set-config subscription_id {}".format(frappe.local.site, subscription.id)
+    )
     return {"status": "OK"}
 
 @frappe.whitelist()
 def get_number_of_users():
     return frappe.db.count("User")
-
-@frappe.whitelist()
-def get_number_of_emails_sent():
-    return frappe.db.count(
-        "Communication",
-        {"communication_type": "Communication", "sent_or_received": "Sent"},
-    )
 
 @frappe.whitelist()
 def get_database_size_of_site():
@@ -147,9 +139,6 @@ def convert_to_bytes(sizeInStringWithPrefix):
         return float(sizeInStringWithPrefix[:-1]) * 1024
     return float(sizeInStringWithPrefix)
 
-def get_number_of_emails_sent(sender=frappe.conf.email):
-    return frappe.conf.onehash_mail_usage or 0
-
 def get_backup_size_of_site():
     url = (
         "http://"
@@ -160,56 +149,11 @@ def get_backup_size_of_site():
     resp = requests.get(url)
     return resp.json()["message"]
 
-@frappe.whitelist(allow_guest=True)
-def get_usage():
-    import datetime
-
-    site = frappe.local.conf.get("db_name")
-    print(site)
-    return {"yo": site}
-    # subscription = StripeSubscriptionManager()
-    # sub = subscription.get_onehash_subscription(frappe.conf.customer_id)
-    # if sub != "NONE":
-    #     start_date = datetime.datetime.fromtimestamp(sub["current_period_start"])
-    #     end_date = datetime.datetime.fromtimestamp(sub["current_period_end"])
-
-    #     days_left = (end_date - datetime.datetime.now()).days
-    #     total_days = (end_date - start_date).days
-    #     current_product = subscription.get_current_onehash_product(
-    #         frappe.conf.customer_id
-    #     )
-    # else:
-    #     days_left = 0
-    #     total_days = 0
-    #     current_product = {
-    #         "name": "NO_PRODUCT",
-    #     }
-    # return {
-    #     "users": len(get_system_users()),
-    #     "emails": get_number_of_emails_sent(),
-    #     "days_left": days_left,
-    #     "total_days": total_days,
-    #     "plan": current_product["name"],
-    #     "storage": {
-    #         "database_size": get_database_size_of_site()[1][1],
-    #         # "site_size": get_total_files_size(),
-    #         "backup_size": get_backup_size_of_site(),
-    #     },
-    #     "user_limit": frappe.conf.max_users,
-    #     "email_limit": frappe.conf.max_email,
-    #     "storage_limit": int(frappe.conf.max_storage) * 1024 * 1024 * 1024,
-    #     "stripe_conf": get_site_stripe_config(),
-    # }
-
-def post_install():
-    create_role("OneHash Manager")
-    change_erp_to_onehash()
-    update_navbar_settings()
-
 def encrypt_backup():
     return frappe.get_system_settings("encrypt_backup")
 
 def backup_encryption(site_path):
+    from shutil import which
     from frappe.utils.backups import get_or_generate_backup_encryption_key
 
     if which("gpg") is None:
@@ -238,16 +182,6 @@ def backup_encryption(site_path):
 def create_zip_with_files(zip_file_path, files_to_zip):
     import zipfile
 
-    """
-    Create a zip file containing the specified files.
-
-    Parameters:
-        - zip_file_path (str): The path of the output zip file.
-        - files_to_zip (list): An array of file paths to include in the zip.
-
-    Returns:
-        - None
-    """
     with zipfile.ZipFile(zip_file_path, "w", zipfile.ZIP_DEFLATED) as zipf:
         for file_path in files_to_zip:
             zipf.write(file_path, os.path.basename(file_path))
@@ -340,13 +274,14 @@ def backup_to_s3(backup_limit=3, site=frappe.local.site):
 
     server_keys = [x[0] for x in to_upload_config]
     site_config_util = frappe.get_site_config(site_path=site)
-    limit = int(site_config_util["max_storage"]) * 1024
-    # current_usage = (get_total_files_size() + get_database_size_of_site()[1][1] + get_backup_size_of_site())
-    # print(f"baby: {current_usage}")
-    # if current_usage > convert_to_bytes(str(limit) + "G"):
-    #     frappe.throw("Storage Limit Exceeded")
-    #     for x in server_keys:
-    #         os.remove(x)
+    storage_limit = int(site_config_util["max_storage"]) * 1024
+    current_usage = (get_total_files_size() + get_database_size_of_site()[1][1] + get_backup_size_of_site())
+
+    if current_usage > convert_to_bytes(str(storage_limit) + "G"):
+        frappe.throw("Storage Limit Exceeded")
+        for x in server_keys:
+            os.remove(x)
+            
     replaced_site_name = site.replace(".", "_")
     target_zip_file_name = (
         to_upload_config[0][1][:-1] + "-" + replaced_site_name + ".zip"
@@ -356,7 +291,10 @@ def backup_to_s3(backup_limit=3, site=frappe.local.site):
         backup_encryption(get_backups_path())
         
     create_zip_with_files(on_server_zip_key, server_keys)
-    dest_path = "site_backups/" + site + "/" + target_zip_file_name
+    if frappe.conf.domain == "onehash.ai":
+        dest_path = "production/site_backups/" + site + "/" + target_zip_file_name
+    else:
+        dest_path = "staging/site_backups/" + site + "/" + target_zip_file_name
     try:
         conn.upload_file(on_server_zip_key, bucket, dest_path)
         backup_size = check_disk_size("./" + site + "/private/" + target_zip_file_name) 
@@ -541,41 +479,6 @@ def get_site_stripe_config():
             "country": frappe.conf.country,
             "pricing": frappe.conf.stripe_prices["US"]["prices"],
         }
-
-def create_role(role_name):
-    role = frappe.get_doc(
-        {
-            "doctype": "Role",
-            "role_name": role_name,
-            "desk_access": 1,
-        }
-    )
-    role.insert(ignore_permissions=True)
-    return role.name
-
-def update_navbar_settings():
-    navbar_settings = frappe.get_single("Navbar Settings")
-    navbar_settings.append(
-        "settings_dropdown",
-        {
-            "item_label": "Usage Info",
-            "item_type": "Action",
-            "action": "frappe.set_route('Form','Usage Info')",
-            "is_standard": 1,
-            "idx": 5,
-        },
-    )
-    navbar_settings.append(
-        "settings_dropdown",
-        {
-            "item_label": "Marketplace",
-            "item_type": "Action",
-            "action": "frappe.set_route('Form','Market Place')",
-            "is_standard": 1,
-            "idx": 6,
-        },
-    )
-    navbar_settings.save()
 
 def update_last_active():
     time = frappe.utils.now_datetime().strftime("%Y-%m-%d")

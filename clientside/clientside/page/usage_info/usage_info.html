@@ -1,111 +1,68 @@
 <!-- jinja -->
-<div id="loading">
-    <div
-      class="spinner-bg"
-      id="spinner-bg spinner-primary"
-      style="display: flex; justify-content: center"
-    >
-      <div class="spinner-border" role="status">
-        <span class="sr-only">Loading...</span>
+<div>
+  <div class="row mt-4">
+    <div class="col-12">
+        <div class="frappe-card card-body h-100">
+          <h4 class="card-title">Subscription</h4>
+          <div>
+            <p>
+              Manage your Subscription Settings and Billing Information.
+            </p>
+            <button 
+              class="btn btn-primary" 
+              id="customer-portal" 
+              data-customer-id="{{ usage_info.customer_id }}"
+              onclick="open_customer_portal()">
+              <i class="fa fa-money"></i>
+              Billing Portal
+            </button>
+          </div>
       </div>
     </div>
   </div>
-  <div id="content">
-    <div class="row">
-      <div class="col-md-12">
-        <div class="row">
-          <div class="col-md-12">
-            <div class="frappe-card card-body">
-              <h4 class="card-title">
-                Subscription
-  
-                <span class="current_plan" id="current-plan"></span>
-              </h4>
-              <div class="mt-4">
-                <div class="is-flex">
-                  <div class="ml-4">
-                    <p>
-                      Upgrade to a premium plan with more users, storage and
-                      priority support.
-                    </p>
-                    <p>
-                      <button
-                        type="button"
-                        class="btn btn-outline-info btn-sm"
-                        id="manage"
-                      >
-                        Manage Subscription
-                      </button>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+  <div class="row mt-4">
+    <div class="col-md-4">
+      <div class="frappe-card frappe-body">
+        <p class="h4 mt-2 mb-1"><i class="fa fa-user"></i> Users</p>
+        <p>
+          Currently, your account has {{ usage_info.users }} 
+          {{ 'user' if usage_info.users == 1 else 'users' }}
+        </p>
+        <p class="h5 mt-2">Current Limit - {{ usage_info.user_limit }} users</p>
       </div>
     </div>
-    <div class="row mt-4">
-      <div class="col-md-4">
-        <div class="frappe-card frappe-body">
-          <p class="h4 mt-2"><i class="fa fa-user"></i> Users</p>
-          <span id="user_msg"></span>
-          <div class="usage-card">
-            <div class="mt-3">
-              <div class="hprogress-container" id="progress-container-user">
-                <div class="hprogress" id="progress-user"></div>
-                <div class="percentage" id="progress-user-perc">70%</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="frappe-card frappe-body">
-          <p class="h4 mt-2">Emails</p>
-          <span id="email_msg"></span>
-          <div class="usage-card">
-            <div class="mt-3">
-              <div class="hprogress-container" id="progress-container-emails">
-                <div class="hprogress" id="progress-emails"></div>
-                <div class="percentage" id="progress-emails-perc">70%</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="frappe-card frappe-body">
-          <p class="h4 mt-2">Storage</p>
-          <span id="storage-info"></span>
-  
-          <div class="usage-card">
-            <div class="mt-3">
-              <div class="hprogress-container" id="progress-container-storage">
-                <div class="hprogress" id="progress-storage"></div>
-                <div class="percentage" id="progress-storage-perc">70%</div>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div class="col-md-4">
+      <div class="frappe-card frappe-body">
+        <p class="h4 mt-2 mb-1"><i class="fa fa-envelope"></i> Emails</p>
+        <p>
+          You have sended {{ usage_info.emails }} 
+          {{ 'email' if usage_info.emails == 1 else 'emails' }}
+        </p>
+        <p class="h5 mt-2">Current Limit - {{ usage_info.email_limit }} emails</p>
       </div>
     </div>
-  
-    <div class="col-md-12" style="margin-top: 40px">
-      <div class="row">
-        <div class="col-md-8"></div>
-        <div class="col-md-4">
-          <div class="frappe-card card-body h-100">
-            <h4 class="card-title">Delete site</h4>
-            <div class="mt-4">
-              <p>
-                Please note that this action is irreversible. This will wipe all
-                data from our servers and you will not be able to recover it.
-              </p>
-              <button class="btn btn-danger" id="delete-site">Delete site</button>
-            </div>
-          </div>
-        </div>
+    <div class="col-md-4">
+      <div class="frappe-card frappe-body">
+        <p class="h4 mt-2 mb-1"><i class="fa fa-archive"></i> Storage</p>
+        <p>Database: {{ usage_info.database_size }} | Files: {{ usage_info.files_size }} | Backup: {{ usage_info.backup_size }}</p>
+        <p class="h5 mt-2">Current Limit - {{ usage_info.storage_limit }}</p>
       </div>
     </div>
   </div>
+  <div class="row mt-4">
+    <div class="col-12">
+        <div class="frappe-card card-body h-100">
+          <h4 class="card-title">Delete site</h4>
+          <div>
+            <p>
+              Please note that this action is irreversible. This will wipe all
+              data from our servers and you will not be able to recover it.
+            </p>
+            <button class="btn btn-danger" id="delete-site"> 
+              <i class="fa fa-trash"></i> Delete site
+            </button>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>

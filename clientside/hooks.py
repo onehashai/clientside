@@ -65,7 +65,7 @@ page_js = {"/": "public/js/file.js"}
 # ------------
 
 # before_install = "clientside.install.before_install"
-after_install = "clientside.clientside.utils.post_install"
+after_install = "clientside.install.after_install"
 
 # Uninstallation
 # ------------
@@ -95,9 +95,9 @@ after_install = "clientside.clientside.utils.post_install"
 # ---------------
 # Override standard doctype classes
 
-# override_doctype_class = {
-#     "Communication": "clientside.clientside.overrides.communication.CommunicationOverride",
-# }
+override_doctype_class = {
+    "Communication": "clientside.clientside.overrides.communication.CommunicationOverride",
+}
 # Document Events
 # ---------------
 # Hook on document methods and events
@@ -140,7 +140,8 @@ scheduler_events = {
 override_whitelisted_methods = {
     "frappe.client.save": "clientside.clientside.overrides.globals.save_method",
     "frappe.desk.form.save.savedocs": "clientside.clientside.overrides.globals.save_docs",
-    "frappe.desk.page.backups.backups.schedule_files_backup": "clientside.clientside.utils.schedule_files_backup",
+    "frappe.client.delete": "clientside.clientside.overrides.globals.delete_method",
+    "frappe.desk.page.backups.backups.schedule_files_backup": "clientside.clientside.overrides.globals.schedule_files_backup",
 }
 #
 # each overriding function accepts a `data` argument;

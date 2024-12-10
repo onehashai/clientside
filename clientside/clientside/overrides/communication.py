@@ -1,24 +1,18 @@
-from frappe.core.doctype.communication.communication import Communication
 import frappe
 from frappe import _
+from frappe.core.doctype.communication.communication import Communication
 
-
-def checkIfUserCanSendEmailsFromOneHashEmailAccount():
+def can_send_from_onehash_email_account():
     current_usage = int(frappe.conf.get("onehash_mail_usage") or 0)
-    if current_usage >= int(frappe.conf.get("max_email")) or 0:
+    max_email = int(frappe.conf.get("max_email") or 0)
+    if current_usage >= max_email:
         return False
     else:
         return True
-
-
+    
 class CommunicationOverride(Communication):
     def get_outgoing_email_account(self):
-        can_send_from_admin_email_account = (
-            checkIfUserCanSendEmailsFromOneHashEmailAccount()
-        )
-
-        if can_send_from_admin_email_account:
-            print("send from default account")
+        if can_send_from_onehash_email_account():
             email_account = super().get_outgoing_email_account()
             if email_account.as_dict().login_id == frappe.conf.get("mail_login"):
                 current_usage = int(frappe.conf.get("onehash_mail_usage") or 0)
@@ -29,9 +23,8 @@ class CommunicationOverride(Communication):
 
             return email_account
         else:
-            # check if user has Email account set
-            comm = super().get_outgoing_email_account()
-            if comm.as_dict().login_id == frappe.conf.get("mail_login"):
+            email_account = super().get_outgoing_email_account()
+            if email_account.as_dict().login_id == frappe.conf.get("mail_login"):
                 frappe.throw(
                     _(
                         "Please set up your own Email account to send emails"

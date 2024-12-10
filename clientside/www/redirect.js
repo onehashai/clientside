@@ -71,26 +71,8 @@ async function createNewUser(
     });
 }
 async function redirect() {
-  const url =
-    window.location.protocol +
-    "//" +
-    window.location.host +
-    "/app?onboard=true";
+  const url = window.location.protocol + "//" + window.location.host + "/app?onboard=true";
   window.location.href = url;
-
-  // const poll_url =
-  //   "/api/method/clientside.stripe.hasActiveSubscription?invalidate_cache=true";
-  // poll until the cache is updated
-  // const subPoll = await fetch(poll_url, {
-  //   method: "GET",
-  // }).then((r) => r.json());
-  // if (subPoll.message) {
-  //   window.location.href = url;
-  // } else {
-  //   setTimeout(() => {
-  //     redirect();
-  //   }, 2000);
-  // }
 }
 
 async function login(email, password) {
