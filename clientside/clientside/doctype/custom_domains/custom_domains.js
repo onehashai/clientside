@@ -1,10 +1,10 @@
 // Copyright (c) 2023, OneHash and contributors
 // For license information, please see license.txt
 
-frappe.ui.form.on("Custom domains", {
+frappe.ui.form.on("Custom Domains", {
   refresh: async function (frm) {
     frm.set_df_property("verified", "hidden", true);
-    const http_url = `${window.location.protocol}//${window.location.host}/api/method/clientside.clientside.utils.verify_custom_domain`;
+    const http_url = `${window.location.protocol}//${window.location.host}/api/method/clientside.clientside.doctype.custom_domains.custom_domains.verify_custom_domain`;
     $(".btn[data-fieldname='verify']").text("Verifying domain...");
     $(".btn[data-fieldname='verify']").attr("disabled", true);
     try {
@@ -35,7 +35,7 @@ frappe.ui.form.on("Custom domains", {
         args: {
           new_domain: frm.doc.new_domain,
         },
-        method: "clientside.clientside.utils.verify_custom_domain",
+        method: "clientside.clientside.doctype.custom_domains.custom_domains.verify_custom_domain",
         freeze: true,
         freeze_message: "Verifying domain",
         callback: function (r) {

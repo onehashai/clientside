@@ -17,7 +17,7 @@ frappe.pages["market-place"].on_page_load = function (wrapper) {
  		 	</div>
 		`;
     frappe.call({
-      method: "clientside.clientside.utils.get_all_apps",
+      method: "clientside.clientside.page.market_place.market_place.get_all_apps",
       callback: (res) => {
         document.getElementById("app_div").innerHTML = "";
         Object.keys(res.message).forEach(function (key, index) {
@@ -74,7 +74,7 @@ $(document).ready(function () {
       ).innerHTML = ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Installing...`;
       $(":button").prop("disabled", true);
       frappe.call({
-        method: "clientside.clientside.utils.install_app",
+        method: "clientside.clientside.page.market_place.market_place.install_app",
         args: {
           app_name: this.name,
         },
@@ -99,7 +99,7 @@ $(document).ready(function () {
       ).innerHTML = ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uninstalling...`;
       $(":button").prop("disabled", true);
       frappe.call({
-        method: "clientside.clientside.utils.uninstall_app",
+        method: "clientside.clientside.page.market_place.market_place.uninstall_app",
         args: {
           app_name: this.name,
         },

@@ -12,7 +12,7 @@ app_license = "MIT"
 
 # include js, css files in header of desk.html
 app_include_css = ["/assets/clientside/css/usage_info.css","/assets/clientside/css/clientside.css"]
-app_include_js = ["assets/clientside/js/client.js", "assets/clientside/js/file.js","assets/clientside/js/notification.js","assets/clientside/js/web_form.js","assets/clientside/js/user.js"]
+app_include_js = ["assets/clientside/js/file.js","assets/clientside/js/notification.js","assets/clientside/js/web_form.js"]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/clientside/css/clientside.css"
@@ -45,6 +45,7 @@ page_js = {"/": "public/js/file.js"}
 # role_home_page = {
 # 	"Role": "home_page"
 # }
+
 
 # Generators
 # ----------
@@ -122,11 +123,12 @@ scheduler_events = {
 #   "monthly": [
 # 	    "whitelabel.tasks.monthly"
 #   ]
-    "cron": {
-        "*/6 * * * *": [
-            "clientside.clientside.utils.schedule_files_backup"
-        ]
-    }
+# TODO
+    # "cron": {
+    #     "*/6 * * * *": [
+    #         "clientside.clientside.utils.schedule_files_backup"
+    #     ]
+    # }
 }
 
 # Testing
@@ -138,9 +140,8 @@ scheduler_events = {
 # ------------------------------
 #
 override_whitelisted_methods = {
-    "frappe.client.save": "clientside.clientside.overrides.globals.save_method",
-    "frappe.desk.form.save.savedocs": "clientside.clientside.overrides.globals.save_docs",
-    "frappe.client.delete": "clientside.clientside.overrides.globals.delete_method",
+    "frappe.client.save": "clientside.clientside.overrides.globals.save",
+    "frappe.desk.form.save.savedocs": "clientside.clientside.overrides.globals.savedocs",
     "frappe.desk.page.backups.backups.schedule_files_backup": "clientside.clientside.overrides.globals.schedule_files_backup",
 }
 #
@@ -150,7 +151,7 @@ override_whitelisted_methods = {
 # override_doctype_dashboards = {
 # 	"Task": "clientside.task.get_dashboard_data"
 # }
-boot_session = "clientside.api.boot_session"
+# boot_session = ""
 # exempt linked doctypes from being automatically cancelled
 #
 # auto_cancel_exempted_doctypes = ["Auto Repeat"]
@@ -197,6 +198,4 @@ website_redirects = [
 ]
 # Authentication and authorization
 # --------------------------------
-# auth_hooks = ["clientside.clientside.utils.update_last_active"]
-
 # on_session_creation = "clientside.clientside.utils.alertForUpgrade"

@@ -1,4 +1,4 @@
-frappe.listview_settings["Custom domains"] = {
+frappe.listview_settings["Custom Domains"] = {
   add_fields: ["short_description", "verified"],
   get_indicator: function (doc) {
     console.log("doc", doc);

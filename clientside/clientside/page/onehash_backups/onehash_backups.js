@@ -11,8 +11,7 @@ frappe.pages['onehash-backups'].on_page_load = function(wrapper) {
 	
 	page.add_inner_button(__("Schedule a Backup Now"), function () {
 		frappe.call({
-			method: "clientside.clientside.utils.schedule_files_backup",
-			args: { user_email: frappe.session.user_email },
+			method: "clientside.clientside.page.onehash_backups.onehash_backups.schedule_files_backup",
 		});
 	});
 	

@@ -1,24 +1,12 @@
 import frappe
-import requests
 import json
 import os
-import sys
-import click
 import subprocess
-from clientside.stripe import StripeSubscriptionManager
-from frappe import _
-from frappe.utils import cint, get_url, validate_email_address
+import requests
+from frappe.utils import validate_email_address
 from frappe.core.doctype.user.user import test_password_strength
-from frappe.integrations.offsite_backup_utils import (
-    generate_files_backup,
-    get_latest_backup_file,
-    validate_file_size,
-)
 from frappe.geo.country_info import get_country_timezone_info
-from rq.timeouts import JobTimeoutException
-
-frappe.utils.logger.set_log_level("DEBUG")
-logger = frappe.logger("api", allow_site=True, file_count=50)
+from clientside.stripe import StripeSubscriptionManager
 
 @frappe.whitelist(allow_guest=True)
 def check_password_strength(*args, **kwargs):
@@ -97,19 +85,23 @@ def create_user_on_target_site(*args, **kwargs):
     )
     subscription_manager = StripeSubscriptionManager(country)
     customer = subscription_manager.create_customer(frappe.local.site, email, firstname, lastname)
-    # TODO: Insert Customer Id to SaaS Sites
-    frappe.utils.execute_in_shell(
-        "bench --site {} set-config customer_id {}".format(frappe.local.site, customer.id)
-    )
-    subscription = subscription_manager.create_subscription(customer.id)
-    frappe.utils.execute_in_shell(
-        "bench --site {} set-config subscription_id {}".format(frappe.local.site, subscription.id)
-    )
+    subscription_manager.create_subscription(customer.id, country, frappe.local.site)
     return {"status": "OK"}
 
 @frappe.whitelist()
 def get_number_of_users():
     return frappe.db.count("User")
+
+@frappe.whitelist()
+def get_backup_size_of_site():
+    url = (
+        "http://"
+        + frappe.conf.admin_url
+        + "/api/method/bettersaas.bettersaas.doctype.saas_sites.saas_sites.get_site_backup_size?site_name="
+        + frappe.local.site
+    )
+    resp = requests.get(url)
+    return resp.json()["message"]
 
 @frappe.whitelist()
 def get_database_size_of_site():
@@ -119,6 +111,7 @@ def get_database_size_of_site():
         + ", SUM(data_length + index_length)  'Database Size in B' FROM information_schema.TABLES GROUP BY table_schema;"
     )
 
+@frappe.whitelist()
 def get_total_files_size():
     files = frappe.db.get_list('File', fields=['file_size'])
     total_size = sum(file['file_size'] for file in files if file['file_size'] is not None)
@@ -138,375 +131,3 @@ def convert_to_bytes(sizeInStringWithPrefix):
     if prefix == "K":
         return float(sizeInStringWithPrefix[:-1]) * 1024
     return float(sizeInStringWithPrefix)
-
-def get_backup_size_of_site():
-    url = (
-        "http://"
-        + frappe.conf.admin_url
-        + "/api/method/bettersaas.bettersaas.doctype.saas_sites.saas_sites.get_site_backup_size?site_name="
-        + frappe.local.site
-    )
-    resp = requests.get(url)
-    return resp.json()["message"]
-
-def encrypt_backup():
-    return frappe.get_system_settings("encrypt_backup")
-
-def backup_encryption(site_path):
-    from shutil import which
-    from frappe.utils.backups import get_or_generate_backup_encryption_key
-
-    if which("gpg") is None:
-        click.secho("Please install `gpg` and ensure its available in your PATH", fg="red")
-        sys.exit(1)
-    file_paths = [os.path.join(site_path, file) for file in os.listdir(site_path) if os.path.isfile(os.path.join(site_path, file))]
-    for path in file_paths:
-        if os.path.exists(path):
-            if path.endswith(".json"):
-                continue
-            cmd_string = "gpg --yes --passphrase {passphrase} --pinentry-mode loopback -c {filelocation}"
-        try:
-            command = cmd_string.format(
-                passphrase=get_or_generate_backup_encryption_key(),
-                filelocation=path,
-            )
-
-            frappe.utils.execute_in_shell(command)
-            os.rename(path + ".gpg", path)
-        except Exception as err:
-            print(err)
-            click.secho(
-                "Error occurred during encryption. Files are stored without encryption.", fg="red"
-            )
-
-def create_zip_with_files(zip_file_path, files_to_zip):
-    import zipfile
-
-    with zipfile.ZipFile(zip_file_path, "w", zipfile.ZIP_DEFLATED) as zipf:
-        for file_path in files_to_zip:
-            zipf.write(file_path, os.path.basename(file_path))
-
-@frappe.whitelist()
-def take_backups_s3(retry_count=0, backup_limit=3, site=frappe.local.site):
-    try:
-        validate_file_size()
-        backup_to_s3(backup_limit=backup_limit, site=site)
-    except JobTimeoutException:
-        if retry_count < 2:
-            take_backups_s3(
-                retry_count=retry_count + 1,
-                backup_limit=backup_limit,
-                site=site,
-            )
-    except Exception:
-        print(frappe.get_traceback())
-
-def backup_to_s3(backup_limit=3, site=frappe.local.site):
-    import boto3
-    from frappe.utils import get_backups_path
-    from frappe.utils.backups import new_backup
-
-    bucket = frappe.conf.aws_bucket_name
-    backup_files = True
-
-    conn = boto3.client(
-        "s3",
-        aws_access_key_id=frappe.conf.aws_access_key_id,
-        aws_secret_access_key=frappe.conf.aws_secret_access_key,
-        region_name=frappe.conf.aws_bucket_region_name,
-        endpoint_url="https://s3." + frappe.conf.aws_bucket_region_name + ".amazonaws.com",
-    )
-    bucket = frappe.conf.aws_bucket_name
-
-    if frappe.flags.create_new_backup:
-        backup = new_backup(
-            ignore_files=False,
-            backup_path_db=None,
-            backup_path_files=None,
-            backup_path_private_files=None,
-            force=True,
-        )
-        db_filename = os.path.join(
-            get_backups_path(), os.path.basename(backup.backup_path_db)
-        )
-        site_config = os.path.join(
-            get_backups_path(), os.path.basename(backup.backup_path_conf)
-        )
-        if backup_files:
-            files_filename = os.path.join(
-                get_backups_path(), os.path.basename(backup.backup_path_files)
-            )
-            private_files = os.path.join(
-                get_backups_path(), os.path.basename(backup.backup_path_private_files)
-            )
-    else:
-        if backup_files:
-            (
-                db_filename,
-                site_config,
-                files_filename,
-                private_files,
-            ) = get_latest_backup_file(with_files=backup_files)
-
-            if not files_filename or not private_files:
-                generate_files_backup()
-                (
-                    db_filename,
-                    site_config,
-                    files_filename,
-                    private_files,
-                ) = get_latest_backup_file(with_files=backup_files)
-
-        else:
-            db_filename, site_config = get_latest_backup_file()
-
-    folder = os.path.basename(db_filename)[:15] + "/"
-    to_upload_config = []
-    to_upload_config.append([db_filename, folder])
-    to_upload_config.append([site_config, folder])
-
-    if backup_files:
-        if private_files:
-            to_upload_config.append([private_files, folder])
-
-        if files_filename:
-            to_upload_config.append([files_filename, folder])
-
-    server_keys = [x[0] for x in to_upload_config]
-    site_config_util = frappe.get_site_config(site_path=site)
-    storage_limit = int(site_config_util["max_storage"]) * 1024
-    current_usage = (get_total_files_size() + get_database_size_of_site()[1][1] + get_backup_size_of_site())
-
-    if current_usage > convert_to_bytes(str(storage_limit) + "G"):
-        frappe.throw("Storage Limit Exceeded")
-        for x in server_keys:
-            os.remove(x)
-            
-    replaced_site_name = site.replace(".", "_")
-    target_zip_file_name = (
-        to_upload_config[0][1][:-1] + "-" + replaced_site_name + ".zip"
-    )
-    on_server_zip_key = site + "/private/" + target_zip_file_name
-    if encrypt_backup():
-        backup_encryption(get_backups_path())
-        
-    create_zip_with_files(on_server_zip_key, server_keys)
-    if frappe.conf.domain == "onehash.ai":
-        dest_path = "production/site_backups/" + site + "/" + target_zip_file_name
-    else:
-        dest_path = "staging/site_backups/" + site + "/" + target_zip_file_name
-    try:
-        conn.upload_file(on_server_zip_key, bucket, dest_path)
-        backup_size = check_disk_size("./" + site + "/private/" + target_zip_file_name) 
-        try:
-            insert_cmd = "bench --site {} execute bettersaas.bettersaas.doctype.saas_sites.saas_sites.insert_backup_record --args \"'{}','{}','{}','{}'\"".format(
-                frappe.conf.admin_subdomain + "." + frappe.conf.domain, site, dest_path, backup_size, encrypt_backup()
-                )
-            frappe.utils.execute_in_shell(insert_cmd)
-            delete_cmd = "bench --site {} execute bettersaas.bettersaas.doctype.saas_sites.saas_sites.delete_old_backups --args \"'{}','{}'\"".format(
-                frappe.conf.admin_subdomain + "." + frappe.conf.domain, site, backup_limit
-                )
-            frappe.utils.execute_in_shell(delete_cmd)
-            for key in server_keys:
-                os.remove(key)
-            os.remove(on_server_zip_key)
-        except Exception as e:
-            print(e)
-    except Exception as e:
-        print("Error uploading files to s3", e)
-
-@frappe.whitelist(allow_guest=True)
-def get_all_apps():
-    url = "http://{site_name}/api/method/bettersaas.bettersaas.doctype.available_apps.available_apps.get_apps".format(
-        site_name=frappe.conf.admin_url
-    )
-    try:
-        site_apps = [x["app_name"] for x in frappe.utils.get_installed_apps_info()]
-        res = json.loads(requests.get(url).text)
-        apps_to_return = []
-        for app in res["message"]:
-            if app["app_name"] in site_apps:
-                app["installed"] = "true"
-            else:
-                app["installed"] = "false"
-            apps_to_return.append(app)
-        return apps_to_return
-    except requests.exceptions.RequestException as e:
-        print(f"An error occurred: {e}")
-        return e
-
-@frappe.whitelist()
-def install_app(*args, **kwrgs):
-    arr = []
-    for key, value in kwrgs.items():
-        arr.append((key, value))
-    app_name = arr[0][1]
-    site_name = frappe.local.site
-    frappe.utils.execute_in_shell(
-        "bench --site {s_name} install-app {app_name}".format(
-            s_name=site_name, app_name=app_name
-        )
-    )
-    return "Success"
-
-@frappe.whitelist()
-def uninstall_app(*args, **kwrgs):
-    arr = []
-    for key, value in kwrgs.items():
-        arr.append((key, value))
-    app_name = arr[0][1]
-    site_name = frappe.local.site
-    frappe.utils.execute_in_shell(
-        "bench --site {s_name} uninstall-app {a_name} --yes --no-backup".format(
-            s_name=site_name, a_name=app_name
-        )
-    )
-    return "Success"
-
-@frappe.whitelist()
-def delete_site_from_server():
-    frappe.utils.execute_in_shell(
-        "bench drop-site {site} --root-password {db_root_password} --force --no-backup".format(
-            site=frappe.local.site, db_root_password=frappe.conf.root_password
-        )
-    )
-
-@frappe.whitelist()
-def verify_custom_domain(new_domain):
-    current_domains = []
-    for key in frappe.conf.domains:
-        if type(key) == dict:
-            current_domains.append(key["domain"])
-        else:
-            current_domains.append(key)
-    if new_domain in current_domains:
-        return ["VERIFIED", new_domain]
-    parts = new_domain.split(".")
-    if len(parts) < 2:
-        return ["INVALID_DOMAIN_FORMAT", ""]
-    if len(parts) == 2:
-        new_domain = "www." + new_domain
-    command = "dig {} CNAME +short".format(new_domain)
-    try:
-        import time
-
-        cname = frappe.utils.execute_in_shell(command)[1].decode("utf-8").strip()[:-1]
-        if cname == frappe.local.site and new_domain != frappe.local.site:
-            command = "bench setup nginx --yes"
-            frappe.utils.execute_in_shell(command)
-            command = "echo {} | sudo -S service nginx reload"
-            frappe.utils.execute_in_shell(command)
-            command = "bench setup add-domain {} --site {}".format(
-                new_domain, frappe.local.site
-            )
-            frappe.utils.execute_in_shell(command)
-            command = "echo {} | sudo -S certbot certonly --nginx -d {}".format(
-                frappe.conf.root_password, new_domain
-            )
-            resp = frappe.utils.execute_in_shell(command)
-            frappe.msgprint("SSL certificate added" + str(resp))
-            new_domains = frappe.conf.domains
-            new_domains.append(
-                new_domain
-                # {
-                #     "ssl_certificate": "/etc/letsencrypt/live/{}/fullchain.pem".format(
-                #         new_domain
-                #     ),
-                #     "ssl_certificate_key": "/etc/letsencrypt/live/{}/privkey.pem".format(
-                #         new_domain
-                #     ),
-                #     "domain": new_domain,
-                # }
-            )
-            frappe.installer.update_site_config("domains", new_domains, validate=True)
-            # after adding the domain, reload nginx after 4 seconds async task
-            time.sleep(4)
-            frappe.utils.execute_in_shell("bench setup nginx --yes")
-            frappe.utils.execute_in_shell(
-                "echo {} | sudo -S service nginx reload".format(
-                    frappe.conf.root_password
-                )
-            )
-        if new_domain == frappe.local.site:
-            return ["ALREADY_REGISTERED", cname]
-        return ["INVALID_RECORD", cname]
-    except Exception as e:
-        print(e)
-        return ["INVALID_DOMAIN", ""]
-
-@frappe.whitelist(allow_guest=True)
-def create_new_purchase_session(*args, **kwargs):
-    stripe = StripeSubscriptionManager()
-    resp = stripe.create_new_purchase_session(
-        frappe.conf.customer_id, kwargs["price_id"], frappe.local.site.split(".")[0]
-    )
-    return {"url": resp}
-
-@frappe.whitelist(allow_guest=True)
-def upgrade_onehash_plan(*args, **kwargs):
-    stripe = StripeSubscriptionManager(country=frappe.conf.country or "US")
-    res = stripe.upgrade_subscription(
-        frappe.conf.customer_id, kwargs["price_id"], frappe.local.site.split(".")[0]
-    )
-    if res != "SUCCESS" and res != "PENDING_UPDATE":
-        frappe.publish_realtime(
-            "upgrade_failed",
-            room=f"{frappe.local.site}:website",
-            message={"reason": res},
-        )
-    elif res == "SUCCESS":
-        frappe.publish_realtime(
-            "upgrade_succeeded",
-            room=f"{frappe.local.site}:website",
-            message={"reason": res},
-        )
-    return {"url": "response"}
-
-@frappe.whitelist(allow_guest=True)
-def get_site_stripe_config():
-    country = frappe.conf.country or "US"
-    if country == "IN":
-        return {
-            "publishable_key": frappe.conf.publishable_key_in,
-            "customer_portal": frappe.conf.customer_portal_in,
-            "country": frappe.conf.country,
-            "pricing": frappe.conf.stripe_prices["IN"]["prices"],
-        }
-    else:
-        return {
-            "publishable_key": frappe.conf.publishable_key,
-            "customer_portal": frappe.conf.customer_portal,
-            "country": frappe.conf.country,
-            "pricing": frappe.conf.stripe_prices["US"]["prices"],
-        }
-
-def update_last_active():
-    time = frappe.utils.now_datetime().strftime("%Y-%m-%d")
-    command = "bench --site {site} set-config last_active '{time}'".format(
-        site=frappe.local.site, time=time
-    )
-    frappe.utils.execute_in_shell(command)
-
-def get_scheduled_backup_limit():
-	backup_limit = frappe.db.get_singles_value("System Settings", "backup_limit")
-	return cint(backup_limit)
-
-@frappe.whitelist()
-def schedule_files_backup():
-    from frappe.utils.background_jobs import enqueue, get_jobs
-
-    frappe.only_for("System Manager")
-
-    queued_jobs = get_jobs(site=frappe.local.site, queue="long")
-    method = "clientside.clientside.utils.take_backups_s3"
-    backup_limit = get_scheduled_backup_limit()
-
-    if method not in queued_jobs[frappe.local.site]:
-        enqueue(
-            "clientside.clientside.utils.take_backups_s3",
-            queue="long",
-            backup_limit=backup_limit,
-        )
-        frappe.msgprint(_("Queued for backup."))
-    else:
-        frappe.msgprint(_("Backup job is already queued."))

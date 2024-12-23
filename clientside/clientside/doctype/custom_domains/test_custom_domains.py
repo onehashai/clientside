@@ -5,5 +5,5 @@
 from frappe.tests.utils import FrappeTestCase
 
 
-class TestCustomdomains(FrappeTestCase):
+class TestCustomDomains(FrappeTestCase):
 	pass

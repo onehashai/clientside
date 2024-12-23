@@ -1,53 +1,53 @@
 import frappe
 import json
+import requests
 from frappe import _
-from frappe.client import save, delete
-from frappe.desk.form.save import savedocs
-from clientside.stripe import update_subscription_quantity
-from clientside.clientside.page.usage_info.usage_info import get_usage
-
-frappe.utils.logger.set_log_level("DEBUG")
-logger = frappe.logger("api", allow_site=True, file_count=50)
+from frappe.client import save as clientside_save
+from frappe.desk.form.save import savedocs as clientside_savedocs
+from clientside.clientside.page.subscription_info.subscription_info import get_active_users
 
 def user_creation_allowed():
-    usage = get_usage()
-    if usage["plan_name"] == "CRM Starter" or usage["plan_name"] == "ERP Starter":
-        if usage["users"] >= 10 and usage["users"] < 15: 
-            update_subscription_quantity(usage["users"])
-            return True
-        elif (usage["users"] >= 15):
-            return False
-        return True
+    site_config = frappe.get_site_config(site_path=frappe.local.site)
+    req = requests.get(
+        "http://"
+        + frappe.conf.admin_url
+        + "/api/method/bettersaas.bettersaas.doctype.saas_sites.saas_sites.user_contacted?site_name="
+        + frappe.local.site
+    ).json()
+    active_users = get_active_users()
+    if site_config["country"]=="IN":
+        if active_users>=15 and site_config["license_limit"]==15:
+            if req["message"]:
+                return True 
+            else:
+                return False
+    else:
+        if active_users>=10 and site_config["license_limit"]==10:
+            if req["message"]:
+                return True 
+            else:
+                return False
+    return True
 
 @frappe.whitelist(methods=["POST", "PUT"])
-def save_method(doc):
+def save(doc):
     doc_data = json.loads(doc)
     if doc_data.get("doctype") == "User":
         if user_creation_allowed():
-            return save(doc)
+            return clientside_save(doc)
         else:
             frappe.throw(_("The user limit for your current plan has been reached. Kindly get in touch with <b>support@onehash.ai</b> to upgrade."))
-
-    else:
-        return save(doc)
+    return clientside_save(doc)
 
 @frappe.whitelist()
-def save_docs(doc, action):
+def savedocs(doc, action):
     doc_data = json.loads(doc)
-    if doc_data.get("doctype") == "User" and 'new-user' in doc_data.get("name", "") :
+    if doc_data.get("doctype") == "User" and 'new-user' in doc_data.get("name", ""):
         if user_creation_allowed():
-            return savedocs(doc, action)
+            return clientside_savedocs(doc, action)
         else:
             frappe.throw(_("The user limit for your current plan has been reached. Kindly get in touch with <b>support@onehash.ai</b> to upgrade."))
-    else:
-        return savedocs(doc, action)
-
-# TODO
-@frappe.whitelist(methods=["DELETE", "POST"])
-def delete_method(doctype, name):
-    logger.info(doctype)
-    logger.info(name)
-    return delete(doctype, name)
+    return clientside_savedocs(doc, action)
 
 @frappe.whitelist()
 def schedule_files_backup():
