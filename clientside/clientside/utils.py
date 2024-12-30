@@ -120,14 +120,14 @@ def get_total_files_size():
 def check_disk_size(path):
     return subprocess.check_output(["du", "-hs", path]).decode("utf-8").split("\t")[0]
 
-def convert_to_bytes(sizeInStringWithPrefix):
-    if sizeInStringWithPrefix == "0":
+def convert_to_bytes(size):
+    if size == "0":
         return 0
-    prefix = sizeInStringWithPrefix[-1]
+    prefix = size[-1]
     if prefix == "G":
-        return float(sizeInStringWithPrefix[:-1]) * 1024 * 1024 * 1024
+        return float(size[:-1]) * 1024 * 1024 * 1024
     if prefix == "M":
-        return float(sizeInStringWithPrefix[:-1]) * 1024 * 1024
+        return float(size[:-1]) * 1024 * 1024
     if prefix == "K":
-        return float(sizeInStringWithPrefix[:-1]) * 1024
-    return float(sizeInStringWithPrefix)
+        return float(size[:-1]) * 1024
+    return float(size)

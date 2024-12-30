@@ -105,7 +105,7 @@ def create_zip_with_files(zip_file_path, files_to_zip):
             zipf.write(file_path, os.path.basename(file_path))
 
 @frappe.whitelist()
-def take_backups_s3(retry_count=0, backup_limit=3, site=frappe.local.site):
+def take_backups_s3(retry_count=0, backup_limit=3, site=None):
     try:
         validate_file_size()
         backup_to_s3(backup_limit=backup_limit, site=site)
@@ -119,7 +119,7 @@ def take_backups_s3(retry_count=0, backup_limit=3, site=frappe.local.site):
     except Exception:
         print(frappe.get_traceback())
 
-def backup_to_s3(backup_limit=3, site=frappe.local.site):
+def backup_to_s3(backup_limit=3, site=None):
     import boto3
     from frappe.utils import get_backups_path
     from frappe.utils.backups import new_backup
@@ -192,7 +192,7 @@ def backup_to_s3(backup_limit=3, site=frappe.local.site):
 
     server_keys = [x[0] for x in to_upload_config]
     site_config_util = frappe.get_site_config(site_path=site)
-    storage_limit = int(site_config_util["max_storage"]) * 1024
+    storage_limit = int(site_config_util["max_storage"])
     current_usage = (get_total_files_size() + get_database_size_of_site()[1][1] + get_backup_size_of_site())
 
     if current_usage > convert_to_bytes(str(storage_limit) + "G"):
@@ -238,10 +238,11 @@ def get_scheduled_backup_limit():
 	return cint(backup_limit)
 
 @frappe.whitelist()
-def schedule_files_backup(*args, **kwargs):
+def schedule_files_backup(site_name=None):
     from frappe.utils.background_jobs import enqueue, get_jobs
 
     frappe.only_for("System Manager")
+    site_name = site_name or frappe.local.site
     queued_jobs = get_jobs(site=frappe.local.site, queue="long")
     method = "clientside.clientside.page.onehash_backups.onehash_backups.take_backups_s3"
     backup_limit = get_scheduled_backup_limit()
@@ -251,6 +252,7 @@ def schedule_files_backup(*args, **kwargs):
             "clientside.clientside.page.onehash_backups.onehash_backups.take_backups_s3",
             queue="long",
             backup_limit=backup_limit,
+            site=site_name
         )
         frappe.msgprint(_("Queued for backup."))
     else:

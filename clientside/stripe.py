@@ -177,7 +177,8 @@ def update_subscription_quantity(subscription_id, quantity):
     return stripe.Subscription.modify(
         subscription_id,
         items=items,
-        proration_behavior="always_invoice"
+        proration_behavior="always_invoice",
+        metadata={"site_name": frappe.local.site}
     )
 
 class StripeSubscriptionManager:

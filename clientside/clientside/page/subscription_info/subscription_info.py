@@ -1,5 +1,6 @@
 import frappe
 from frappe.utils.password import decrypt
+from clientside.clientside.page.onehash_backups.onehash_backups import schedule_files_backup
 from clientside.clientside.utils import get_database_size_of_site, get_total_files_size, get_backup_size_of_site
 
 def site_stripe_config():
@@ -43,7 +44,6 @@ def format_bytes(bytes, decimals=2):
     result = round(bytes, dm)
     return f"{result} {sizes[i]}" 
 
-@frappe.whitelist()
 def get_subscription_info():
     return {
         "users": get_active_users(),
@@ -67,19 +67,17 @@ def licenses():
         "license_limit": int(frappe.conf.min_license)
     }
 
-@frappe.whitelist()
 def get_context(context):
     subscription_info = get_subscription_info()
     return {"subscription_info": subscription_info}
 
 @frappe.whitelist()
 def delete_site():
-    # TODO: Take backup before deletion and also delete from saas sites
+    # TODO: Delete saas site and user
+    schedule_files_backup(site_name=frappe.local.site)
     frappe.utils.execute_in_shell(
-        "bench drop-site {site} --root-password {db_root_password} --force --no-backup".format(
-            site=frappe.local.site, db_root_password=frappe.conf.root_password
+        "bench drop-site {site} --root-password {root_password} --force --no-backup".format(
+            site=frappe.local.site, root_password=frappe.conf.root_password
+
         )
-    )
-    frappe.utils.execute_in_shell(
-        "bench setup nginx --yes".format
     )
