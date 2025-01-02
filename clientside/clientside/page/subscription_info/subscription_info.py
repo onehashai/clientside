@@ -20,12 +20,20 @@ def get_number_of_emails_sent():
 def get_active_users():
     try:
         active_users_list = frappe.get_all("User", fields=['name', 'email', 'user_type', 'enabled'])
-        active_users = sum(
-                1 for user in active_users_list 
-                if user.get("enabled") 
-                and not user["email"].endswith("@onehash.ai") 
-                and user["name"] not in ['Administrator', 'Guest']
-            )
+        customer_email = frappe.conf.get('customer_email')
+        if customer_email.endswith("@onehash.ai"):
+            active_users = sum(
+                    1 for user in active_users_list 
+                    if user.get("enabled") 
+                    and user["name"] not in ['Administrator', 'Guest']
+                )
+        else:
+            active_users = sum(
+                    1 for user in active_users_list 
+                    if user.get("enabled") 
+                    and not user["email"].endswith("@onehash.ai") 
+                    and user["name"] not in ['Administrator', 'Guest']
+                )
         return active_users
     except Exception as e:
         print(f"Error Counting Active Users: {e}")
