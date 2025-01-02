@@ -68,16 +68,14 @@ def licenses():
     }
 
 def get_context(context):
+    frappe.only_for("OneHash Manager")
+
     subscription_info = get_subscription_info()
     return {"subscription_info": subscription_info}
 
 @frappe.whitelist()
 def delete_site():
-    # TODO: Delete saas site and user
-    schedule_files_backup(site_name=frappe.local.site)
-    frappe.utils.execute_in_shell(
-        "bench drop-site {site} --root-password {root_password} --force --no-backup".format(
-            site=frappe.local.site, root_password=frappe.conf.root_password
-
+    cmd="bench --site {} execute bettersaas.api.delete_site --args {}".format(
+            frappe.conf.admin_url, frappe.local.site
         )
-    )
+    frappe.utils.execute_in_shell(cmd)

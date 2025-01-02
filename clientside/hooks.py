@@ -123,12 +123,6 @@ scheduler_events = {
 #   "monthly": [
 # 	    "whitelabel.tasks.monthly"
 #   ]
-# TODO
-    # "cron": {
-    #     "*/6 * * * *": [
-    #         "clientside.clientside.utils.schedule_files_backup"
-    #     ]
-    # }
 }
 
 # Testing
@@ -158,7 +152,7 @@ override_whitelisted_methods = {
 # Ignore links to specified DocTypes when deleting documents
 # -----------------------------------------------------------
 
-# ignore_links_on_delete = ["Communication", "ToDo"]
+# ignore_links_on_delete = ["Communication"]
 
 # Request Events
 # ----------------
