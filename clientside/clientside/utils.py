@@ -24,9 +24,128 @@ def check_password_strength(*args, **kwargs):
         }
     return test_password_strength(passphrase, user_data=user_data)
 
+def get_fy(country):
+    from datetime import datetime
+    from frappe.utils import getdate, today, now_datetime
+
+    year = now_datetime().year
+    current_date = datetime.now().date()
+    if country in ["Antigua and Barbuda","Barbados","Belize","Botswana","Brunei Darussalam","Canada","Swaziland","India","Jamaica","Japan","Kuwait","Lesotho","Namibia","New Zealand","Qatar","Saint Lucia","Singapore","South Africa"]:
+        fy_start_date = getdate(f"{year}-04-01")
+        if current_date < fy_start_date:
+            return {
+                "fy_start_date": f"{year-1}-04-01",
+                "fy_end_date": f"{year}-03-31"
+            }
+        else:
+            return {
+                "fy_start_date": f"{year}-04-01",
+                "fy_end_date": f"{year+1}-03-31"
+            }
+    elif country in ["Australia","Bahamas","Bangladesh","Bhutan","Cameroon","Dominica","Egypt","Kenya","Malawi","Mauritius","Nauru","Pakistan","Tonga","Uganda","United of Republic of Tanzania"]:
+        fy_start_date = getdate(f"{year}-07-01")
+        if current_date < fy_start_date:
+            return {
+                "fy_start_date": f"{year-1}-07-01",
+                "fy_end_date": f"{year}-06-30"
+            }
+        else:
+            return {
+                "fy_start_date": f"{year}-07-01",
+                "fy_end_date": f"{year+1}-06-30"
+            }
+    elif country in ["Haiti","Lao People's Democratic Republic","Marshall Islands","Micronesia","Myanmar","Palau","Thailand","Trinidad and Tobago","United States"]:
+        fy_start_date = getdate(f"{year}-10-01")
+        if current_date < fy_start_date:
+            return {
+                "fy_start_date": f"{year-1}-10-01",
+                "fy_end_date": f"{year}-09-30"
+            }
+        else:
+            return {
+                "fy_start_date": f"{year}-10-01",
+                "fy_end_date": f"{year+1}-09-30"
+            }
+    elif country in ["Nepal"]:
+        fy_start_date = getdate(f"{year}-07-16")
+        if current_date < fy_start_date:
+            return {
+                "fy_start_date": f"{year-1}-07-16",
+                "fy_end_date": f"{year}-07-15"
+            }
+        else:
+            return {
+                "fy_start_date": f"{year}-07-16",
+                "fy_end_date": f"{year+1}-07-15"
+            }
+    elif country in ["Afghanistan"]:
+        fy_start_date = getdate(f"{year}-12-21")
+        if current_date < fy_start_date:
+            return {
+                "fy_start_date": f"{year-1}-12-21",
+                "fy_end_date": f"{year}-12-20"
+            }
+        else:
+            return {
+                "fy_start_date": f"{year}-12-21",
+                "fy_end_date": f"{year+1}-12-20"
+            }
+    elif country in ["Iran"]:
+        fy_start_date = getdate(f"{year}-03-21")
+        if current_date < fy_start_date:
+            return {
+                "fy_start_date": f"{year-1}-03-21",
+                "fy_end_date": f"{year}-03-20"
+            }
+        else:
+            return {
+                "fy_start_date": f"{year}-03-21",
+                "fy_end_date": f"{year+1}-03-20"
+            }
+    elif country in ["United Kingdom"]:
+        fy_start_date = getdate(f"{year}-04-06")
+        if current_date < fy_start_date:
+            return {
+                "fy_start_date": f"{year-1}-04-06",
+                "fy_end_date": f"{year}-04-05"
+            }
+        else:
+            return {
+                "fy_start_date": f"{year}-04-06",
+                "fy_end_date": f"{year+1}-04-05"
+            }
+    elif country in ["Ethiopia"]:
+        fy_start_date = getdate(f"{year}-08-08")
+        if current_date < fy_start_date:
+            return {
+                "fy_start_date": f"{year-1}-08-08",
+                "fy_end_date": f"{year}-08-07"
+            }
+        else:
+            return {
+                "fy_start_date": f"{year}-08-08",
+                "fy_end_date": f"{year+1}-08-07"
+            }
+    elif country in ["Samoa"]:
+        fy_start_date = getdate(f"{year}-06-01")
+        if current_date < fy_start_date:
+            return {
+                "fy_start_date": f"{year-1}-06-01",
+                "fy_end_date": f"{year}-05-31"
+            }
+        else:
+            return {
+                "fy_start_date": f"{year}-06-01",
+                "fy_end_date": f"{year+1}-05-31"
+            }
+    else: 
+        return {
+            "fy_start_date": f"{year}-01-01",
+            "fy_end_date": f"{year}-12-31"
+        }
+
 @frappe.whitelist(allow_guest=True)
 def create_user_on_target_site(*args, **kwargs):
-    from frappe.utils.data import now_datetime
     from frappe.desk.page.setup_wizard.setup_wizard import setup_complete
 
     file_path = os.path.join(
@@ -54,7 +173,7 @@ def create_user_on_target_site(*args, **kwargs):
     if not lastname:
         return "LAST_NAME_NOT_PROVIDED"
     frappe.clear_cache()
-    current_year = now_datetime().year
+    fy = get_fy(f[country]["common"])
     setup_complete(
         {
             "currency": f[country]["currency"],
@@ -68,8 +187,8 @@ def create_user_on_target_site(*args, **kwargs):
                 f[country]["common"]
             ]["timezones"][0],
             "country": f[country]["common"],
-            "fy_start_date": f"{current_year}-04-01",
-            "fy_end_date": f"{current_year+1}-03-31",
+            "fy_start_date": fy["fy_start_date"],
+            "fy_end_date": fy["fy_end_date"],
             "language": "english",
             "chart_of_accounts": "Standard",
         }

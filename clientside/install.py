@@ -72,7 +72,7 @@ def update_workspace_shortcut():
 
 def update_navbar_settings():
     navbar_settings = frappe.get_single("Navbar Settings")
-    
+
     for navbar_item in navbar_settings.settings_dropdown[3:]:
         navbar_item.idx = navbar_item.idx + 2
           
@@ -97,3 +97,9 @@ def update_navbar_settings():
         },
     )
     navbar_settings.save()
+
+    label = frappe.get_all("Navbar Item", filters={"item_label": "Apps"}, fields=['*'])
+    if label:
+        frappe.db.set_value("Navbar Item", label[0]["name"], "hidden", 1)
+        frappe.db.commit()
+            
