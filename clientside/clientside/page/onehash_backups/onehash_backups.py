@@ -119,7 +119,7 @@ def take_backups_s3(retry_count=0, backup_limit=3, site=None):
     except Exception:
         print(frappe.get_traceback())
 
-def backup_to_s3(backup_limit=3, site=None):
+def backup_to_s3(backup_limit, site):
     import boto3
     from frappe.utils import get_backups_path
     from frappe.utils.backups import new_backup
@@ -191,15 +191,6 @@ def backup_to_s3(backup_limit=3, site=None):
             to_upload_config.append([files_filename, folder])
 
     server_keys = [x[0] for x in to_upload_config]
-    site_config_util = frappe.get_site_config(site_path=site)
-    storage_limit = int(site_config_util["max_storage"])
-    current_usage = (get_total_files_size() + get_database_size_of_site()[1][1] + get_backup_size_of_site())
-
-    if current_usage > convert_to_bytes(str(storage_limit) + "G"):
-        frappe.throw("Storage Limit Exceeded")
-        for x in server_keys:
-            os.remove(x)
-            
     replaced_site_name = site.replace(".", "_")
     target_zip_file_name = (
         to_upload_config[0][1][:-1] + "-" + replaced_site_name + ".zip"
@@ -243,11 +234,11 @@ def schedule_files_backup(site_name=None):
 
     frappe.only_for("System Manager")
     site_name = site_name or frappe.local.site
-    queued_jobs = get_jobs(site=frappe.local.site, queue="long")
+    queued_jobs = get_jobs(site=site_name, queue="long")
     method = "clientside.clientside.page.onehash_backups.onehash_backups.take_backups_s3"
     backup_limit = get_scheduled_backup_limit()
 
-    if method not in queued_jobs[frappe.local.site]:
+    if method not in queued_jobs[site_name]:
         enqueue(
             "clientside.clientside.page.onehash_backups.onehash_backups.take_backups_s3",
             queue="long",
