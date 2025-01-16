@@ -2,6 +2,9 @@ import frappe
 import json
 import requests
 from frappe import _
+from clientside.clientside.overrides.communication import can_send_from_onehash_email_account
+from frappe.core.doctype.communication.communication import Communication
+from frappe.email.doctype.email_queue.email_queue import send_now as clientside_send_now
 from frappe.client import save as clientside_save
 from frappe.desk.form.save import savedocs as clientside_savedocs
 from clientside.clientside.page.subscription_info.subscription_info import get_active_users
@@ -48,6 +51,27 @@ def savedocs(doc, action):
         else:
             frappe.throw(_("The user limit for your current plan has been reached. Kindly get in touch with <b>support@onehash.ai</b> to upgrade."))
     return clientside_savedocs(doc, action)
+
+@frappe.whitelist()
+def send_now(name):
+    email_account = Communication.get_outgoing_email_account()
+    if email_account.as_dict().login_id == frappe.conf.get("mail_login"):
+        if can_send_from_onehash_email_account():
+            current_usage = int(frappe.conf.get("onehash_mail_usage") or 0)
+            command = "bench --site {} set-config onehash_mail_usage {}".format(
+                frappe.local.site, int(current_usage) + 1
+            )
+            frappe.utils.execute_in_shell(command)
+            clientside_send_now(name)
+        else:
+            frappe.throw(
+                _(
+                    "Please set up your own Email account to send emails"
+                ),
+                exc=frappe.OutgoingEmailError,
+            )
+    else:
+        clientside_send_now(name)
 
 @frappe.whitelist()
 def schedule_files_backup():

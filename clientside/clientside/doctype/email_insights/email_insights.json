@@ -1,0 +1,42 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-01-16 15:02:39.609537",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "email",
+  "opened",
+  "opened_at"
+ ],
+ "fields": [
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email"
+  },
+  {
+   "fieldname": "opened",
+   "fieldtype": "Int",
+   "label": "Opened"
+  },
+  {
+   "fieldname": "opened_at",
+   "fieldtype": "Long Text",
+   "label": "Opened At"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-01-16 15:03:39.785064",
+ "modified_by": "Administrator",
+ "module": "Clientside",
+ "name": "Email Insights",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

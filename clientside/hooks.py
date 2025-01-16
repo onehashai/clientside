@@ -11,7 +11,7 @@ app_license = "MIT"
 # ------------------
 
 # include js, css files in header of desk.html
-app_include_css = ["/assets/clientside/css/subscription_info.css","/assets/clientside/css/clientside.css"]
+# app_include_css = ""
 app_include_js = ["assets/clientside/js/file.js","assets/clientside/js/notification.js","assets/clientside/js/web_form.js"]
 
 # include js, css files in header of web template
@@ -134,6 +134,7 @@ scheduler_events = {
 # ------------------------------
 #
 override_whitelisted_methods = {
+    "frappe.email.doctype.email_queue.email_queue.send_now": "clientside.clientside.overrides.globals.send_now",
     "frappe.client.save": "clientside.clientside.overrides.globals.save",
     "frappe.desk.form.save.savedocs": "clientside.clientside.overrides.globals.savedocs",
     "frappe.desk.page.backups.backups.schedule_files_backup": "clientside.clientside.overrides.globals.schedule_files_backup",

@@ -9,6 +9,7 @@ def after_install():
     hide_integrations()
     update_workspace_shortcut()
     update_navbar_settings()
+    add_email_insights_custom_form()
 
 def create_role(role_name):
     role = frappe.get_doc(
@@ -103,3 +104,40 @@ def update_navbar_settings():
         frappe.db.set_value("Navbar Item", label[0]["name"], "hidden", 1)
         frappe.db.commit()
             
+def add_email_insights_custom_form():
+    tab_break_field = frappe.get_doc({
+        "doctype": "Custom Field",
+        "dt": "Communication",
+        "label": "Email Insights",
+        "fieldname": "email_insights",
+        "fieldtype": "Tab Break",
+        "insert_after": "feedback_request"
+    })
+
+    tab_break_field.insert()
+    tab_break_field.save()
+
+    section_break_field = frappe.get_doc({
+        "doctype": "Custom Field",
+        "dt": "Communication",
+        "label": "Overview",
+        "fieldname": "overview",
+        "fieldtype": "Section Break",
+        "insert_after": "email_insights"
+    })
+
+    section_break_field.insert()
+    section_break_field.save()
+
+    table_field = frappe.get_doc({
+        "doctype": "Custom Field",
+        "dt": "Communication",
+        "label": "All Emails",
+        "fieldname": "all_emails",
+        "fieldtype": "Table",
+        "insert_after": "overview",
+        "options": "Email Insights"
+    })
+
+    table_field.insert()
+    table_field.save()

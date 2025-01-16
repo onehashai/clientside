@@ -228,12 +228,24 @@ def get_scheduled_backup_limit():
 	backup_limit = frappe.db.get_singles_value("System Settings", "backup_limit")
 	return cint(backup_limit)
 
+def can_take_backup(site):
+    site_config_util = frappe.get_site_config(site_path=site)
+    storage_limit = int(site_config_util["max_storage"])
+    current_usage = (get_total_files_size() + get_database_size_of_site()[1][1] + get_backup_size_of_site())
+    if current_usage < convert_to_bytes(str(storage_limit) + "G"):
+        return True
+    else:
+        return False
+
 @frappe.whitelist()
 def schedule_files_backup(site_name=None):
     from frappe.utils.background_jobs import enqueue, get_jobs
 
     frappe.only_for("System Manager")
     site_name = site_name or frappe.local.site
+    if not can_take_backup(site_name):
+        frappe.throw(_('Insufficient Available Storage. Please buy additional storage'))  
+        return
     queued_jobs = get_jobs(site=site_name, queue="long")
     method = "clientside.clientside.page.onehash_backups.onehash_backups.take_backups_s3"
     backup_limit = get_scheduled_backup_limit()
