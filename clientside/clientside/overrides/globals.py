@@ -54,7 +54,7 @@ def savedocs(doc, action):
 
 @frappe.whitelist()
 def send_now(name):
-    email_account = Communication.get_outgoing_email_account()
+    email_account = Communication().get_outgoing_email_account()
     if email_account.as_dict().login_id == frappe.conf.get("mail_login"):
         if can_send_from_onehash_email_account():
             current_usage = int(frappe.conf.get("onehash_mail_usage") or 0)
