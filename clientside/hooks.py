@@ -134,7 +134,6 @@ scheduler_events = {
 # ------------------------------
 #
 override_whitelisted_methods = {
-    "frappe.email.doctype.email_queue.email_queue.send_now": "clientside.clientside.overrides.globals.send_now",
     "frappe.client.save": "clientside.clientside.overrides.globals.save",
     "frappe.desk.form.save.savedocs": "clientside.clientside.overrides.globals.savedocs",
     "frappe.desk.page.backups.backups.schedule_files_backup": "clientside.clientside.overrides.globals.schedule_files_backup",
