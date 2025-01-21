@@ -10,11 +10,11 @@ frappe.ui.form.on("Custom Domains", {
         <li>Open your DNS provider settings</li>
         <li>Create a CNAME record with target to your onehash site name</li>
       </ol>
-      <strong>For example</strong>, if you want to add <i>www.human.com</i> to your site <i>example.${currentDomain}</i>
+      <strong>For example</strong>, if you want to add <i>www.human.com</i> to your site <i>${currentDomain}</i>
       <ol>
         <li>Open your DNS provider (e.g., GoDaddy)</li>
         <li>Select CNAME as the record type</li>
-        <li>Put "www" (your root subdomain) in the "Name" field and <i>example.${currentDomain}</i> in the "Value" field</li>
+        <li>Put "www" (your root subdomain) in the "Name" field and <i>${currentDomain}</i> in the "Value" field</li>
         <li>Click the Save button</li>
         <li>Click on the Verify button. The verification might fail for a few minutes due to delay in DNS propagation by your DNS provider</li>
       </ol>
