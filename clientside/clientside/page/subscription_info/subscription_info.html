@@ -2,20 +2,27 @@
 <div>
     <div class="row mt-4">
       <div class="col-12">
-          <div class="frappe-card card-body h-100">
-            <h4 class="card-title">Subscription</h4>
-            <div>
-              <p>
-                Manage your Subscription and Billing Information.
-              </p>
-              <button 
-                class="btn btn-primary" 
-                id="customer-portal" 
-                data-customer-id="{{ subscription_info.customer_id }}"
-                onclick="open_customer_portal()">
-                <i class="fa fa-money"></i>
-                Billing Portal
-              </button>
+          <div class="frappe-card card-body h-100 d-flex justify-content-between align-items-start">
+            <div class="left-section">
+              <h4 class="card-title">Subscription</h4>
+              <div>
+                <p>
+                  Manage your Subscription and Billing Information.
+                </p>
+                <button 
+                  class="btn btn-primary" 
+                  id="customer-portal" 
+                  data-customer-id="{{ subscription_info.customer_id }}"
+                  onclick="open_customer_portal()">
+                  <i class="fa fa-money"></i>
+                  Billing Portal
+                </button>
+              </div>
+            </div>
+            <div class="right-section text-end">
+              <p class="h5 mt-2">Current Plan - {{ subscription_info.plan_name | replace('_', ' ') }}</p>
+              <p class="h5 mt-2">Subscription Status - {{ subscription_info.subscription_status }}</p>
+              <p class="h5 mt-2">Subscription Ends On - {{ subscription_info.subscription_ends_on }}</p>
             </div>
         </div>
       </div>

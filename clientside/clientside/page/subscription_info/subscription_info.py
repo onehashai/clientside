@@ -1,6 +1,4 @@
 import frappe
-from frappe.utils.password import decrypt
-from clientside.clientside.page.onehash_backups.onehash_backups import schedule_files_backup
 from clientside.clientside.utils import get_database_size_of_site, get_total_files_size, get_backup_size_of_site
 
 def site_stripe_config():
@@ -53,6 +51,7 @@ def format_bytes(bytes, decimals=2):
     return f"{result} {sizes[i]}" 
 
 def get_subscription_info():
+    from frappe.utils import datetime
     return {
         "users": get_active_users(),
         "emails": get_number_of_emails_sent(),
@@ -65,7 +64,9 @@ def get_subscription_info():
         "customer_id": frappe.conf.customer_id,
         "subscription_id": frappe.conf.subscription_id,
         "plan_name": frappe.conf.plan_name,
-        "licenses": int(frappe.conf.subscription_quantity)
+        "licenses": int(frappe.conf.subscription_quantity),
+        "subscription_status": frappe.conf.subscription_status,
+        "subscription_ends_on": datetime.datetime.strptime(frappe.conf.subscription_ends_on, "%Y-%m-%d").strftime("%d %B %Y")
     }
 
 @frappe.whitelist()
