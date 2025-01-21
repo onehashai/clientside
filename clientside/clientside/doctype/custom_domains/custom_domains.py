@@ -5,19 +5,22 @@ import frappe
 import time
 import subprocess
 import re
-import dns.resolver
 from frappe.utils import execute_in_shell
 from frappe.model.document import Document
 
 def check_cname_record(domain):
     try:
-        result = dns.resolver.resolve(domain, 'CNAME')
-        for cname in result:
-            if cname.target.to_text().strip('.') == frappe.local.site:
+        command = f"dig +short CNAME {domain}"
+        result = subprocess.check_output(command, shell=True).decode('utf-8').strip()
+        c_names = result.split("\n")
+        for cname in c_names:
+            cname = cname.strip('.')
+            if cname == frappe.local.site:
                 return True
         return False
-            
-    except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
+    except subprocess.CalledProcessError as e:
+        return False
+    except Exception as e:
         return False
 
 def generate_custom_domain_cert(domain):
