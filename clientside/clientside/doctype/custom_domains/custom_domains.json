@@ -11,7 +11,7 @@
   "short_description",
   "verify",
   "kjlkj",
-  "text",
+  "verification_steps",
   "verified"
  ],
  "fields": [
@@ -37,7 +37,8 @@
   {
    "default": "0",
    "fieldname": "verified",
-   "fieldtype": "Data",
+   "fieldtype": "Check",
+   "hidden": 1,
    "label": "Verified"
   },
   {
@@ -45,17 +46,15 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "Go to your DNS provider and create a CNAME record with target same as your current site name.\nfor example is your current site name is example.onehash.is and you want to add www.newdomain.com then follow these steps\n1. Open DNS settings\n2. Create CNAME record with subdomain as \"www\" and target as example.onehash.is\n3. Return to document and click on verify\n4. Once verified your newly added domain will be live",
-   "fieldname": "text",
+   "fieldname": "verification_steps",
    "fieldtype": "HTML",
-   "label": "How to set Custom Domain",
-   "options": "<strong>Steps to add custom subdomain</strong>\n<ol>\n<li> Open your DNS provider settings</li>\n<li> create a CNAME record with target to your current site name </li>\n</ol>\n<strong>For example</strong> if you want to add <i>www.human.com</i> to your site <i>example.onehash.is</i>\n<ol>\n  <li>Open your DNS provider ( eg GoDaddy)</li>\n  <li>\n    Select CNAME as record type\n  </li>\n  <li>\n    Put \"www\" (your root subdomain) in the field \"Name\" and <i>example.onehash.is</i> in the \"Value\" field\n  </li>\n  <li> Click Save button</li>\n  <li> Click on the verify button. The verification might fail for few minutes due to delay in DNS propogation by your DNS provider </li>\n  \n</ol>\n<p>\n  For more information contact OneHash Support!\n</p>",
+   "label": "Verification Steps",
    "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-12-11 13:48:28.444147",
+ "modified": "2025-01-21 16:12:16.656428",
  "modified_by": "Administrator",
  "module": "Clientside",
  "name": "Custom Domains",

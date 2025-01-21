@@ -1,9 +1,7 @@
 frappe.listview_settings["Custom Domains"] = {
   add_fields: ["short_description", "verified"],
   get_indicator: function (doc) {
-    console.log("doc", doc);
-    console.log("doc.verified", doc.verified);
-    if (doc.verified === "1") {
+    if (doc.verified === 1) {
       return [__("Verified"), "green", "new_domain,=," + doc.new_domain];
     }
     return [__("Not Verified"), "red", "new_domain,=," + doc.new_domain];

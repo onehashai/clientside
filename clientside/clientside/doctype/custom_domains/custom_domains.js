@@ -2,65 +2,54 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("Custom Domains", {
-  refresh: async function (frm) {
-    frm.set_df_property("verified", "hidden", true);
-    const http_url = `${window.location.protocol}//${window.location.host}/api/method/clientside.clientside.doctype.custom_domains.custom_domains.verify_custom_domain`;
-    $(".btn[data-fieldname='verify']").text("Verifying domain...");
-    $(".btn[data-fieldname='verify']").attr("disabled", true);
-    try {
-      let { message } = await $.ajax({
-        url: http_url,
-        type: "GET",
-        dataType: "json",
-        data: {
-          new_domain: frm.doc.new_domain,
-        },
-      });
-      message = message[0];
-      if (message !== "VERIFIED") {
-        $(".btn[data-fieldname='verify']").text("Verify");
-        $(".btn[data-fieldname='verify']").attr("disabled", false);
-      } else {
-        $(".btn[data-fieldname='verify']").hide();
-        frm.set_value("verified", "1");
-        frm.save();
-      }
-    } catch (error) {
-      console.log(error);
-    }
+  refresh: function (frm) {
+    const currentDomain = window.location.hostname;
+    const htmlContent = `
+      <strong>Steps to add a Custom Domain</strong>
+      <ol>
+        <li>Open your DNS provider settings</li>
+        <li>Create a CNAME record with target to your onehash site name</li>
+      </ol>
+      <strong>For example</strong>, if you want to add <i>www.human.com</i> to your site <i>example.${currentDomain}</i>
+      <ol>
+        <li>Open your DNS provider (e.g., GoDaddy)</li>
+        <li>Select CNAME as the record type</li>
+        <li>Put "www" (your root subdomain) in the "Name" field and <i>example.${currentDomain}</i> in the "Value" field</li>
+        <li>Click the Save button</li>
+        <li>Click on the Verify button. The verification might fail for a few minutes due to delay in DNS propagation by your DNS provider</li>
+      </ol>
+      <p>For more information, contact <a href="mailto:support@onehash.ai">OneHash Support</a>!</p>
+    `;
 
-    $(frm.fields_dict.verify.wrapper).on("click", function () {
-      console.log("verify button clicked");
-      frappe.call({
-        args: {
-          new_domain: frm.doc.new_domain,
-        },
-        method: "clientside.clientside.doctype.custom_domains.custom_domains.verify_custom_domain",
-        freeze: true,
-        freeze_message: "Verifying domain",
-        callback: function (r) {
-          let { message } = r;
-          message = message[0];
-          if (message == "VERIFIED") {
-            frappe.msgprint("Domain verified successfully");
-            $(".btn[data-fieldname='verify']").hide();
-            frm.reload_doc();
-          } else if (message == "INVALID_DOMAIN_FORMAT") {
-            frappe.throw("Please enter a valid domain name");
-          } else if (message == "INVALID_RECORD") {
-            console.log("invalid record");
-            frappe.throw("Please check your DNS records");
-          } else if (message == "ALREADY_REGISTERED") {
-            frappe.throw("Domain already registered");
-          } else if (message == "INVALID_DOMAIN") {
-            frappe.throw("Please enter a valid domain name");
-          }
-        },
-      });
-    });
-    setCSS();
+    frm.set_df_property('verification_steps', 'options', htmlContent);
+    if (frm.doc.verified === 1) {
+      frm.set_df_property('verify','hidden', true);
+    }
   },
+
+  verify: function (frm) {
+    frappe.call({
+        method: "clientside.clientside.doctype.custom_domains.custom_domains.verify_custom_domain",
+        args: {
+            domain: frm.doc.new_domain || ""
+        },
+        callback: function (r) {
+          if (r.message[0]) {
+            frm.set_value('verified', 1);
+            frappe.msgprint({
+                title: "Success",
+                indicator: "green",
+                message: "Domain verified successfully!"
+            });
+            frm.save()
+        } else{
+            frappe.msgprint({
+                title: "Error",
+                indicator: "red",
+                message: r.message[1]
+            });
+          }
+        }
+    });
+  }
 });
-function setCSS() {
-  $(".btn[data-fieldname='verify']").addClass("btn-primary");
-}
