@@ -28,6 +28,8 @@ frappe.ui.form.on("Custom Domains", {
   },
 
   verify: function (frm) {
+    frm.set_df_property('verify', 'label', 'Verifying...');
+    frm.refresh_field('verify');
     frappe.call({
         method: "clientside.clientside.doctype.custom_domains.custom_domains.verify_custom_domain",
         args: {
@@ -41,13 +43,19 @@ frappe.ui.form.on("Custom Domains", {
                 indicator: "green",
                 message: "Domain verified successfully!"
             });
-            frm.save()
+            setTimeout(() => {
+              frm.save(); 
+            }, 3000); 
+            frm.set_df_property('verify', 'label', 'Verify');
+            frm.refresh_field('verify'); 
         } else{
             frappe.msgprint({
                 title: "Error",
                 indicator: "red",
                 message: r.message[1]
             });
+            frm.set_df_property('verify', 'label', 'Verify');
+            frm.refresh_field('verify');
           }
         }
     });
