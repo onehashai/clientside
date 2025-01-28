@@ -235,7 +235,7 @@ def get_scheduled_backup_limit(frequency):
         response = requests.get(
             f"http://{frappe.conf.admin_url}/api/method/bettersaas.bettersaas.doctype.saas_settings.saas_settings.get_backup_limit?frequency={frequency}"
         )
-        response.raise_for_status()  # Raise an error for HTTP errors (4xx/5xx)
+        response.raise_for_status()
         req = response.json()
         if "message" in req:
             return req["message"]
