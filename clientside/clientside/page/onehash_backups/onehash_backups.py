@@ -231,13 +231,11 @@ logger = frappe.logger("api", allow_site=True, file_count=50)
 
 
 def get_scheduled_backup_limit(frequency):
-    req = requests.get(
-        "http://"
-        + frappe.conf.admin_url
-        + "/api/method/bettersaas.bettersaas.doctype.saas_settings.saas_settings.get_backup_limit?frequency="
-        + frequency
-    ).json()
+    response = requests.get(
+        f"http://{frappe.conf.admin_url}/api/method/bettersaas.bettersaas.doctype.saas_settings.saas_settings.get_backup_limit?frequency={frequency}"
+    )
     
+    req = response.json()
     return req["message"]
 
 @frappe.whitelist()
