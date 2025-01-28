@@ -117,12 +117,20 @@ scheduler_events = {
 # 	"hourly": [
 # 		"whitelabel.tasks.hourly"
 # 	],
-# 	"weekly": [
-# 		"whitelabel.tasks.weekly"
-# 	]
-#   "monthly": [
-# 	    "whitelabel.tasks.monthly"
-#   ]
+	"monthly": [
+        "clientside.clientside.page.onehash_backups.onehash_backups.schedule_files_backup_monthly",
+    ],
+    "weekly": [
+        "clientside.clientside.page.onehash_backups.onehash_backups.schedule_files_backup_weekly",
+    ],
+    "cron":{
+        "0 */6 * * *": [
+            "clientside.clientside.page.onehash_backups.onehash_backups.schedule_files_backup_daily",
+        ],
+        "0 0 */2 * *" : [
+            "clientside.clientside.page.onehash_backups.onehash_backups.schedule_files_backup_alternate_days",
+        ],
+    }
 }
 
 # Testing

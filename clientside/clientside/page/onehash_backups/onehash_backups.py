@@ -5,7 +5,6 @@ import requests
 import click
 import boto3
 import datetime
-from frappe.utils import cint
 from frappe import _
 from frappe.integrations.offsite_backup_utils import (
     generate_files_backup,
@@ -61,7 +60,8 @@ def get_context(context):
             get_download_link(file["path"]), 
             get_time(file["created_on"]),
             file["encrypted"],
-            file["size"]
+            file["size"],
+            file["frequency"]
         )
         for file in files
     ]
@@ -105,21 +105,22 @@ def create_zip_with_files(zip_file_path, files_to_zip):
             zipf.write(file_path, os.path.basename(file_path))
 
 @frappe.whitelist()
-def take_backups_s3(retry_count=0, backup_limit=3, site=None):
+def take_backups_s3(retry_count=0, backup_limit=None, site=None, frequency=None):
     try:
         validate_file_size()
-        backup_to_s3(backup_limit=backup_limit, site=site)
+        backup_to_s3(backup_limit=backup_limit, site=site, frequency=frequency)
     except JobTimeoutException:
         if retry_count < 2:
             take_backups_s3(
                 retry_count=retry_count + 1,
                 backup_limit=backup_limit,
                 site=site,
+                frequency=frequency,
             )
     except Exception:
         print(frappe.get_traceback())
 
-def backup_to_s3(backup_limit, site):
+def backup_to_s3(backup_limit, site, frequency):
     import boto3
     from frappe.utils import get_backups_path
     from frappe.utils.backups import new_backup
@@ -208,12 +209,12 @@ def backup_to_s3(backup_limit, site):
         conn.upload_file(on_server_zip_key, bucket, dest_path)
         backup_size = check_disk_size("./" + site + "/private/" + target_zip_file_name) 
         try:
-            insert_cmd = "bench --site {} execute bettersaas.bettersaas.doctype.saas_sites.saas_sites.insert_backup_record --args \"'{}','{}','{}','{}'\"".format(
-                frappe.conf.admin_subdomain + "." + frappe.conf.domain, site, dest_path, backup_size, encrypt_backup()
+            insert_cmd = "bench --site {} execute bettersaas.bettersaas.doctype.saas_sites.saas_sites.insert_backup_record --args \"'{}','{}','{}','{}','{}'\"".format(
+                frappe.conf.admin_subdomain + "." + frappe.conf.domain, site, dest_path, backup_size, encrypt_backup(), frequency
                 )
             frappe.utils.execute_in_shell(insert_cmd)
-            delete_cmd = "bench --site {} execute bettersaas.bettersaas.doctype.saas_sites.saas_sites.delete_old_backups --args \"'{}','{}'\"".format(
-                frappe.conf.admin_subdomain + "." + frappe.conf.domain, site, backup_limit
+            delete_cmd = "bench --site {} execute bettersaas.bettersaas.doctype.saas_sites.saas_sites.delete_old_backups --args \"'{}','{}','{}'\"".format(
+                frappe.conf.admin_subdomain + "." + frappe.conf.domain, site, backup_limit, frequency
                 )
             frappe.utils.execute_in_shell(delete_cmd)
             for key in server_keys:
@@ -224,9 +225,44 @@ def backup_to_s3(backup_limit, site):
     except Exception as e:
         print("Error uploading files to s3", e)
 
-def get_scheduled_backup_limit():
-	backup_limit = frappe.db.get_singles_value("System Settings", "backup_limit")
-	return cint(backup_limit)
+
+frappe.utils.logger.set_log_level("DEBUG")
+logger = frappe.logger("api", allow_site=True, file_count=50)
+
+
+def get_scheduled_backup_limit(frequency):
+    req = requests.get(
+        "http://"
+        + frappe.conf.admin_url
+        + "/api/method/bettersaas.bettersaas.doctype.saas_settings.saas_settings.get_backup_limit?frequency="
+        + frequency
+    ).json()
+    
+    return req["message"]
+
+@frappe.whitelist()
+def schedule_files_backup_daily(site_name=None):
+    backup_limit = get_scheduled_backup_limit("Daily")
+    site_name = site_name or frappe.local.site
+    schedule_files_backup(site_name, backup_limit, "Daily")
+
+@frappe.whitelist()
+def schedule_files_backup_alternate_days(site_name=None):
+    backup_limit = get_scheduled_backup_limit("Alternate Days")
+    site_name = site_name or frappe.local.site
+    schedule_files_backup(site_name, backup_limit, "Alternate Days")
+
+@frappe.whitelist()
+def schedule_files_backup_weekly(site_name=None):
+    backup_limit = get_scheduled_backup_limit("Weekly")
+    site_name = site_name or frappe.local.site
+    schedule_files_backup(site_name, backup_limit, "Weekly")
+
+@frappe.whitelist()
+def schedule_files_backup_monthly(site_name=None):
+    backup_limit = get_scheduled_backup_limit("Monthly")
+    site_name = site_name or frappe.local.site
+    schedule_files_backup(site_name, backup_limit, "Monthly")
 
 def can_take_backup(site):
     site_config_util = frappe.get_site_config(site_path=site)
@@ -237,25 +273,23 @@ def can_take_backup(site):
     else:
         return False
 
-@frappe.whitelist()
-def schedule_files_backup(site_name=None):
+def schedule_files_backup(site_name, backup_limit, frequency):
     from frappe.utils.background_jobs import enqueue, get_jobs
 
     frappe.only_for("System Manager")
-    site_name = site_name or frappe.local.site
     if not can_take_backup(site_name):
         frappe.throw(_('Insufficient Available Storage. Please buy additional storage'))  
         return
     queued_jobs = get_jobs(site=site_name, queue="long")
     method = "clientside.clientside.page.onehash_backups.onehash_backups.take_backups_s3"
-    backup_limit = get_scheduled_backup_limit()
 
     if method not in queued_jobs[site_name]:
         enqueue(
             "clientside.clientside.page.onehash_backups.onehash_backups.take_backups_s3",
             queue="long",
             backup_limit=backup_limit,
-            site=site_name
+            site=site_name,
+            frequency=frequency,
         )
         frappe.msgprint(_("Queued for backup."))
     else:

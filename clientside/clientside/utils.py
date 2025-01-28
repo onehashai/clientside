@@ -205,7 +205,14 @@ def create_user_on_target_site(*args, **kwargs):
     subscription_manager = StripeSubscriptionManager(country)
     customer = subscription_manager.create_customer(frappe.local.site, email, firstname, lastname)
     subscription_manager.create_subscription(customer.id, country, frappe.local.site)
+    update_lead_status(email)
     return {"status": "OK"}
+
+def update_lead_status(email):
+    cmd="bench --site {} execute bettersaas.api.update_lead_status --args {}".format(
+            frappe.conf.admin_url, email
+        )
+    frappe.utils.execute_in_shell(cmd)
 
 @frappe.whitelist()
 def get_number_of_users():
