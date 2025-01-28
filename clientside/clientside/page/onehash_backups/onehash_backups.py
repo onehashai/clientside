@@ -231,12 +231,20 @@ logger = frappe.logger("api", allow_site=True, file_count=50)
 
 
 def get_scheduled_backup_limit(frequency):
-    response = requests.get(
-        f"http://{frappe.conf.admin_url}/api/method/bettersaas.bettersaas.doctype.saas_settings.saas_settings.get_backup_limit?frequency={frequency}"
-    )
-    
-    req = response.json()
-    return req["message"]
+    try:
+        response = requests.get(
+            f"http://{frappe.conf.admin_url}/api/method/bettersaas.bettersaas.doctype.saas_settings.saas_settings.get_backup_limit?frequency={frequency}"
+        )
+        response.raise_for_status()  # Raise an error for HTTP errors (4xx/5xx)
+        req = response.json()
+        if "message" in req:
+            return req["message"]
+        else:
+            frappe.log_error(f"Unexpected response format: {req}", "Backup Limit Error")
+            return None
+    except requests.exceptions.RequestException as e:
+        frappe.log_error(f"Error fetching backup limit: {e}", "Backup Limit Error")
+        return None
 
 @frappe.whitelist()
 def schedule_files_backup_daily(site_name=None):
