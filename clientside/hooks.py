@@ -12,7 +12,7 @@ app_license = "MIT"
 
 # include js, css files in header of desk.html
 # app_include_css = ""
-app_include_js = ["assets/clientside/js/file.js","assets/clientside/js/notification.js","assets/clientside/js/web_form.js"]
+app_include_js = ["assets/clientside/js/check_subscription.js", "assets/clientside/js/file.js","assets/clientside/js/notification.js","assets/clientside/js/web_form.js"]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/clientside/css/clientside.css"
@@ -153,7 +153,7 @@ override_whitelisted_methods = {
 # override_doctype_dashboards = {
 # 	"Task": "clientside.task.get_dashboard_data"
 # }
-# boot_session = ""
+boot_session = "clientside.clientside.page.subscription_info.subscription_info.check_subscription"
 # exempt linked doctypes from being automatically cancelled
 #
 # auto_cancel_exempted_doctypes = ["Auto Repeat"]

@@ -21,7 +21,7 @@
             </div>
             <div class="right-section text-end">
               <p class="h5 mt-2">Current Plan - {{ subscription_info.plan_name | replace('_', ' ') }}</p>
-              <p class="h5 mt-2">Subscription Status - {{ subscription_info.subscription_status }}</p>
+              <p class="h5 mt-2">Subscription Status - {{ subscription_info.subscription_status | replace('_', ' ') | replace('trialing', 'trial') | title }}</p>
               <p class="h5 mt-2">Subscription Ends On - {{ subscription_info.subscription_ends_on }}</p>
             </div>
         </div>
@@ -79,11 +79,11 @@
     <div class="row mt-4">
       <div class="col-12">
           <div class="frappe-card card-body h-100">
-            <h4 class="card-title">Delete site</h4>
+            <h4 class="card-title">Delete Site</h4>
             <div>
               <p>
-                Please note that this action is irreversible. This will wipe all
-                data from our servers and you will not be able to recover it.
+                Please note that this action cannot be undone. This will erase all of your
+                data from our servers and there will be no way for you to get it back.
               </p>
               <button 
                 class="btn btn-danger" 
