@@ -1,0 +1,23 @@
+{% extends "templates/web.html" %}
+{% block page_content %}
+<div class="main">
+  <div class="container">
+    <center>
+      <img
+        class="image"
+        src="/assets/clientside/images/login_redirect_loader.gif"
+        alt=""
+      />
+      </center>
+  </div>
+</div>
+{% endblock %}
+{% block script %}
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"
+  integrity="sha512-E8QSvWZ0eCLGk4km3hxSsNmGWbLtSCSUcewDQPQWZF6pEU8GlT8a5fF32wOl1i8ftdMhssTrF/OhyGWwonTcXA=="
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+></script>
+<script src="./redirect.js"></script>
+{% endblock %}
