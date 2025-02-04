@@ -280,23 +280,19 @@ def can_take_backup(site):
         return False
 
 def schedule_files_backup(site_name, backup_limit, frequency):
-    from frappe.utils.background_jobs import enqueue, get_jobs
+    from frappe.utils.background_jobs import enqueue
 
     frappe.only_for("System Manager")
     if not can_take_backup(site_name):
         frappe.throw(_('Insufficient Available Storage. Please buy additional storage'))  
         return
-    queued_jobs = get_jobs(site=site_name, queue="long")
     method = "clientside.clientside.page.onehash_backups.onehash_backups.take_backups_s3"
-
-    if method not in queued_jobs[site_name]:
-        enqueue(
-            "clientside.clientside.page.onehash_backups.onehash_backups.take_backups_s3",
-            queue="long",
-            backup_limit=backup_limit,
-            site=site_name,
-            frequency=frequency,
-        )
-        frappe.msgprint(_("Queued for backup."))
-    else:
-        frappe.msgprint(_("Backup job is already queued."))
+    enqueue(
+        method=method,
+        queue="long",
+        backup_limit=backup_limit,
+        site=site_name,
+        frequency=frequency,
+    )
+    frappe.msgprint(_("Queued for backup."))
+   
