@@ -46,6 +46,7 @@ page_js = {"/": "public/js/file.js"}
 # 	"Role": "home_page"
 # }
 
+after_migrate = ['clientside.api.clientside_patch']
 
 # Generators
 # ----------
