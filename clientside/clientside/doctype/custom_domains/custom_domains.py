@@ -9,7 +9,6 @@ from frappe.utils import execute_in_shell
 from frappe.model.document import Document
 
 def check_cname_record(domain):
-    return True
     try:
         command = f"dig +short CNAME {domain}"
         result = subprocess.check_output(command, shell=True).decode('utf-8').strip()
@@ -23,9 +22,6 @@ def check_cname_record(domain):
         return False
     except Exception as e:
         return False
-
-frappe.utils.logger.set_log_level("DEBUG")
-logger = frappe.logger("api", allow_site=True, file_count=50)
 
 def generate_custom_domain_cert(domain):
     domains_config = frappe.get_site_config(site_path=frappe.local.site).get("domains")
