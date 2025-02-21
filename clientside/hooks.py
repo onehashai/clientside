@@ -99,6 +99,8 @@ after_install = "clientside.install.after_install"
 
 override_doctype_class = {
     "Communication": "clientside.clientside.overrides.communication.CommunicationOverride",
+    "System Settings": "clientside.clientside.overrides.system_settings.SystemSettingsOverride",
+    "Email Queue": "clientside.clientside.overrides.email_queue.EmailQueueOverride"
 }
 # Document Events
 # ---------------
@@ -146,6 +148,7 @@ override_whitelisted_methods = {
     "frappe.client.save": "clientside.clientside.overrides.globals.save",
     "frappe.desk.form.save.savedocs": "clientside.clientside.overrides.globals.savedocs",
     "frappe.desk.page.backups.backups.schedule_files_backup": "clientside.clientside.overrides.globals.schedule_files_backup",
+    "frappe.core.doctype.communication.email.mark_email_as_seen": "clientside.clientside.overrides.email.mark_email_as_seen"
 }
 #
 # each overriding function accepts a `data` argument;
