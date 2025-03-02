@@ -1,5 +1,6 @@
 import quopri
 import requests
+import urllib.parse
 from email.parser import Parser
 from email.policy import SMTP
 
@@ -171,7 +172,24 @@ class SendMailContext:
 			if file_filters:
 				_file = frappe.get_doc("File", file_filters)
 				if _file.file_url.startswith(("http://", "https://")):
-					response = requests.get(_file.file_url, stream=True)
+					if "frappe_s3_attachment.controller.generate_file" in _file.file_url:
+						site_base_url = frappe.utils.get_url()
+						parsed_url = urllib.parse.urlparse(_file.file_url)
+						query_params = urllib.parse.parse_qs(parsed_url.query)
+						content_hash = query_params.get("key", [None])[0]
+						file_name = query_params.get("file_name", [None])[0]
+						signed_url_request = f"{site_base_url}/api/method/frappe_s3_attachment.controller.generate_signed_url?key={content_hash}&file_name={file_name}"
+						response = requests.get(signed_url_request)
+						
+						if response.status_code == 200:
+							signed_url = response.json().get("message")
+							response = requests.get(signed_url, stream=True)
+							if response.status_code == 200:
+								fcontent = response.content
+							else:
+								frappe.throw(f"Failed to fetch file from signed URL (Status: {response.status_code})")
+					else:
+						response = requests.get(_file.file_url, stream=True)
 					if response.status_code == 200:
 						fcontent = response.content 
 					else:
