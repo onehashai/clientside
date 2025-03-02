@@ -1,4 +1,5 @@
 import quopri
+import requests
 from email.parser import Parser
 from email.policy import SMTP
 
@@ -169,12 +170,20 @@ class SendMailContext:
 
 			if file_filters:
 				_file = frappe.get_doc("File", file_filters)
-				fcontent = _file.get_content()
+				if _file.file_url.startswith(("http://", "https://")):
+					response = requests.get(_file.file_url, stream=True)
+					if response.status_code == 200:
+						fcontent = response.content 
+					else:
+						frappe.throw(f"Failed to fetch file from {_file.file_url} (Status: {response.status_code})")
+				else:
+					fcontent = _file.get_content()
+
 				attachment.update({"fname": _file.file_name, "fcontent": fcontent, "parent": message_obj})
 				attachment.pop("fid", None)
 				attachment.pop("file_url", None)
 				add_attachment(**attachment)
-
+				
 			elif attachment.get("print_format_attachment") == 1:
 				attachment.pop("print_format_attachment", None)
 				print_format_file = frappe.attach_print(**attachment)

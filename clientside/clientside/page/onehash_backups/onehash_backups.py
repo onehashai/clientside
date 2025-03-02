@@ -225,11 +225,6 @@ def backup_to_s3(backup_limit, site, frequency):
     except Exception as e:
         print("Error uploading files to s3", e)
 
-
-frappe.utils.logger.set_log_level("DEBUG")
-logger = frappe.logger("api", allow_site=True, file_count=50)
-
-
 def get_scheduled_backup_limit(frequency):
     try:
         response = requests.get(
