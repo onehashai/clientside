@@ -26,7 +26,7 @@ app_include_js = ["assets/clientside/js/check_subscription.js"]
 # webform_include_css = {"doctype": "public/css/doctype.css"}
 
 # include js in page
-page_js = {"/": "public/js/file.js"}
+# page_js = {"/": "public/js/file.js"}
 
 
 # include js in doctype views
