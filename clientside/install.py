@@ -21,6 +21,7 @@ def create_role(role_name):
         }
     )
     role.insert(ignore_permissions=True)
+    frappe.db.commit()
     return role.name
 
 def update_workspace_title():
@@ -106,77 +107,67 @@ def update_navbar_settings():
         frappe.db.commit()
             
 def add_custom_fields_to_communication():
-    tab_break_field = frappe.get_doc({
-        "doctype": "Custom Field",
-        "dt": "Communication",
-        "label": "Email Insights",
-        "fieldname": "email_insights",
-        "fieldtype": "Tab Break",
-        "insert_after": "feedback_request"
-    })
+    custom_fields = [
+        {
+            "label": "Email Insights",
+            "fieldname": "email_insights",
+            "fieldtype": "Tab Break",
+            "insert_after": "feedback_request"
+        },
+        {
+            "label": "Overview",
+            "fieldname": "overview",
+            "fieldtype": "Section Break",
+            "insert_after": "email_insights"
+        },
+        {
+            "label": "All Emails",
+            "fieldname": "all_emails",
+            "fieldtype": "Table",
+            "insert_after": "overview",
+            "options": "Email Insights"
+        }
+    ]
 
-    tab_break_field.insert()
-    tab_break_field.save()
-
-    section_break_field = frappe.get_doc({
-        "doctype": "Custom Field",
-        "dt": "Communication",
-        "label": "Overview",
-        "fieldname": "overview",
-        "fieldtype": "Section Break",
-        "insert_after": "email_insights"
-    })
-
-    section_break_field.insert()
-    section_break_field.save()
-
-    table_field = frappe.get_doc({
-        "doctype": "Custom Field",
-        "dt": "Communication",
-        "label": "All Emails",
-        "fieldname": "all_emails",
-        "fieldtype": "Table",
-        "insert_after": "overview",
-        "options": "Email Insights"
-    })
-
-    table_field.insert()
-    table_field.save()
+    for field in custom_fields:
+        if not frappe.db.exists("Custom Field", {"dt": "Communication", "fieldname": field["fieldname"]}):
+            new_field = frappe.get_doc({
+                "doctype": "Custom Field",
+                "dt": "Communication",
+                **field
+            })
+            new_field.insert()
+            frappe.db.commit()
 
 def add_custom_fields_to_email_campaign():
-    tab_break_field = frappe.get_doc({
-        "doctype": "Custom Field",
-        "dt": "Email Campaign",
-        "label": "Email Insights",
-        "fieldname": "email_insights",
-        "fieldtype": "Tab Break",
-        "insert_after": "status"
-    })
+    custom_fields = [
+        {
+            "label": "Email Insights",
+            "fieldname": "email_insights",
+            "fieldtype": "Tab Break",
+            "insert_after": "status"
+        },
+        {
+            "label": "Overview",
+            "fieldname": "overview",
+            "fieldtype": "Section Break",
+            "insert_after": "email_insights"
+        },
+        {
+            "label": "All Emails",
+            "fieldname": "all_emails",
+            "fieldtype": "Table",
+            "insert_after": "overview",
+            "options": "Email Insights"
+        }
+    ]
 
-    tab_break_field.insert()
-    tab_break_field.save()
-
-    section_break_field = frappe.get_doc({
-        "doctype": "Custom Field",
-        "dt": "Email Campaign",
-        "label": "Overview",
-        "fieldname": "overview",
-        "fieldtype": "Section Break",
-        "insert_after": "email_insights"
-    })
-
-    section_break_field.insert()
-    section_break_field.save()
-
-    table_field = frappe.get_doc({
-        "doctype": "Custom Field",
-        "dt": "Email Campaign",
-        "label": "All Emails",
-        "fieldname": "all_emails",
-        "fieldtype": "Table",
-        "insert_after": "overview",
-        "options": "Email Insights"
-    })
-
-    table_field.insert()
-    table_field.save()
+    for field in custom_fields:
+        if not frappe.db.exists("Custom Field", {"dt": "Email Campaign", "fieldname": field["fieldname"]}):
+            new_field = frappe.get_doc({
+                "doctype": "Custom Field",
+                "dt": "Email Campaign",
+                **field
+            })
+            new_field.insert()
+            frappe.db.commit()
