@@ -196,6 +196,7 @@ def create_user_on_target_site(*args, **kwargs):
     user = frappe.get_doc("User", email)
     user.add_roles("OneHash Manager")
     user.save(ignore_permissions=True)
+    remove_erpnext_workspace()
     frappe.utils.execute_in_shell(
         "bench --site {} clear-cache".format(frappe.local.site)
     )
@@ -208,6 +209,16 @@ def create_user_on_target_site(*args, **kwargs):
     update_lead_status(email)
     return {"status": "OK"}
 
+def remove_erpnext_workspace():
+    workspaces_to_remove = frappe.get_all(
+		"Workspace",
+		filters={"name": ("in", ["ERPNext Integrations", "ERPNext Settings"])},
+		fields=["name", "title", "icon", "indicator_color", "parent_page as parent", "public"],
+	)
+    for workspace in workspaces_to_remove:
+        frappe.delete_doc("Workspace", workspace["name"], force=True)
+        frappe.db.commit()
+        
 def update_lead_status(email):
     cmd="bench --site {} execute bettersaas.api.update_lead_status --args {}".format(
             frappe.conf.admin_url, email
