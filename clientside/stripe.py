@@ -46,13 +46,15 @@ def create_billing_portal_session(customer_id, return_url):
     stripe.api_version = frappe.conf.stripe_api_version
     if country == 'IN':
         stripe.api_key = frappe.conf.stripe_secret_key_in
+        headline = "OneHash Technologies Pvt Ltd. partners with Stripe for simplified billing"
     else:
         stripe.api_key = frappe.conf.stripe_secret_key
+        headline = "OneHash, Inc. partners with Stripe for simplified billing"
 
     try:
         configuration = stripe.billing_portal.Configuration.create(
             business_profile={
-                "headline": "OneHash, Inc. partners with Stripe for simplified billing"
+                "headline": headline
             },
             features={
                 "subscription_update": {
