@@ -19,13 +19,13 @@ def user_creation_allowed():
     ).json()
     active_users = get_active_users()
     if site_config["country"]=="IN":
-        if active_users>=15 and site_config["license_limit"]==15:
+        if active_users>=15 and site_config["min_license"]==15:
             if req["message"]:
                 return True 
             else:
                 return False
     else:
-        if active_users>=10 and site_config["license_limit"]==10:
+        if active_users>=10 and site_config["min_license"]==10:
             if req["message"]:
                 return True 
             else:
