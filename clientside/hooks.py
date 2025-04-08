@@ -148,7 +148,8 @@ override_whitelisted_methods = {
     "frappe.client.save": "clientside.clientside.overrides.globals.save",
     "frappe.desk.form.save.savedocs": "clientside.clientside.overrides.globals.savedocs",
     "frappe.desk.page.backups.backups.schedule_files_backup": "clientside.clientside.overrides.globals.schedule_files_backup",
-    "frappe.core.doctype.communication.email.mark_email_as_seen": "clientside.clientside.overrides.email.mark_email_as_seen"
+    "frappe.core.doctype.communication.email.mark_email_as_seen": "clientside.clientside.overrides.email.mark_email_as_seen",
+    "frappe.core.doctype.communication.email.make": "clientside.clientside.overrides.email.make"
 }
 #
 # each overriding function accepts a `data` argument;
