@@ -24,12 +24,16 @@ def user_creation_allowed():
                 return True 
             else:
                 return False
+        if active_users >= site_config["subscription_quantity"]:
+            return False
     else:
         if active_users>=10 and site_config["min_license"]==10:
             if req["message"]:
                 return True 
             else:
                 return False
+        if active_users >= site_config["subscription_quantity"]:
+            return False
     return True
 
 @frappe.whitelist(methods=["POST", "PUT"])
