@@ -250,9 +250,7 @@ def get_database_size_of_site():
 
 @frappe.whitelist()
 def get_total_files_size():
-    files = frappe.db.get_list('File', fields=['file_size'])
-    total_size = sum(file['file_size'] for file in files if file['file_size'] is not None)
-    return total_size
+    return frappe.qb.sum("File", "file_size")
 
 def check_disk_size(path):
     return subprocess.check_output(["du", "-hs", path]).decode("utf-8").split("\t")[0]
