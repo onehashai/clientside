@@ -82,15 +82,6 @@ def get_context(context):
     subscription_info = get_subscription_info()
     return {"subscription_info": subscription_info}
 
-def check_subscription(bootinfo):
-    from frappe.utils import today, getdate, add_days
-
-    subscription_ends_on = frappe.conf.subscription_ends_on
-
-    if subscription_ends_on:
-        if getdate(today()) > add_days(getdate(subscription_ends_on), 5):
-            bootinfo.subscription_expired = True
-
 @frappe.whitelist()
 def delete_site():
     cmd="bench --site {} execute bettersaas.api.delete_site --args {}".format(
