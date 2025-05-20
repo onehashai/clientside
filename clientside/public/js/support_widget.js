@@ -1,4 +1,4 @@
-frappe.ready(() => {
+$(document).ready(function () {
   const baseUrl = frappe.boot.chat_widget_base_url;
   const token = frappe.boot.chat_widget_token;
   if (!token || !baseUrl) return;
