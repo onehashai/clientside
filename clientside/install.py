@@ -11,6 +11,8 @@ def after_install():
     update_navbar_settings()
     add_custom_fields_to_communication()
     add_custom_fields_to_email_campaign()
+    update_notification_channels()
+
 
 def create_role(role_name):
     role = frappe.get_doc(
@@ -171,3 +173,11 @@ def add_custom_fields_to_email_campaign():
             })
             new_field.insert()
             frappe.db.commit()
+def update_notification_channels():
+    field = frappe.db.get_list(
+        "DocField", ["*"], {"parent": "Notification", "fieldname": "channel"}
+    )[0]
+    if "WhatsApp" not in field.options:
+        new_options = field.options + "\nWhatsApp"
+        frappe.db.set_value("DocField", field.name, "options", new_options)
+        frappe.db.commit()
