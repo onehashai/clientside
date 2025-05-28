@@ -266,3 +266,63 @@ def convert_to_bytes(size):
     if prefix == "K":
         return float(size[:-1]) * 1024
     return float(size)
+
+def create_user_in_user_details(doc, method):
+    user_obj = {
+        "site_name": frappe.local.site,
+        "email": doc.name,
+        "firstname": doc.first_name,
+        "lastname": doc.last_name,
+        "user_type": doc.user_type,
+        "enabled": doc.enabled,
+        "last_active": doc.last_active,
+    }
+    try:
+        url = f"http://{frappe.conf.admin_url}/api/method/bettersaas.bettersaas.doctype.saas_sites.saas_sites.create_user_entry_in_saas_site"
+        cookies = {"sid": get_login_sid()}
+        requests.post(url, json=user_obj, cookies=cookies)
+        return
+    except Exception as e:
+        print(f"Error creating entry in bettersaas: {str(e)}")
+
+def update_user_in_user_details(doc, method):
+    user_obj = {
+        "site_name": frappe.local.site,
+        "email": doc.name,
+        "firstname": doc.first_name,
+        "lastname": doc.last_name,
+        "user_type": doc.user_type,
+        "enabled": doc.enabled,
+        "last_active": doc.last_active,
+    }
+    try:
+        url = f"http://{frappe.conf.admin_url}/api/method/bettersaas.bettersaas.doctype.saas_sites.saas_sites.update_user_entry_in_saas_site"
+        cookies = {"sid": get_login_sid()}
+        requests.post(url, json=user_obj, cookies=cookies)
+        return
+    except Exception as e:
+        print(f"Error updating entry in bettersaas: {str(e)}")
+
+def delete_user_in_user_details(doc, method):
+    user_obj = {
+        "site_name": frappe.local.site,
+        "email": doc.name,
+    }
+    try:
+        url = f"http://{frappe.conf.admin_url}/api/method/bettersaas.bettersaas.doctype.saas_sites.saas_sites.delete_user_entry_in_saas_site"
+        cookies = {"sid": get_login_sid()}
+        requests.post(url, json=user_obj, cookies=cookies)
+        return
+    except Exception as e:
+        print(f"Error deleting entry in bettersaas: {str(e)}")
+
+def get_login_sid():
+    admin_site_name = frappe.conf.admin_url
+    admin_password = frappe.conf.administrator_password
+    response = requests.post(
+            f"http://{admin_site_name}/api/method/login",
+            data={"usr": "Administrator", "pwd": admin_password},
+        )
+    sid = response.cookies.get("sid")
+    if sid:
+        return sid

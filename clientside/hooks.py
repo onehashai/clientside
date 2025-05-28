@@ -106,7 +106,13 @@ override_doctype_class = {
 # ---------------
 # Hook on document methods and events
 
-doc_events = {}
+doc_events = {
+    "User": {
+        "after_insert": "clientside.clientside.utils.create_user_in_user_details",
+        "on_update": "clientside.clientside.utils.update_user_in_user_details",
+        "after_delete": "clientside.clientside.utils.delete_user_in_user_details",
+    }
+}
 
 # Scheduled Tasks
 # ---------------
