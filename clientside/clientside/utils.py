@@ -278,7 +278,7 @@ def create_user_in_user_details(doc, method):
         "last_active": doc.last_active,
     }
     try:
-        url = f"http://{frappe.conf.admin_url}/api/method/bettersaas.bettersaas.doctype.saas_sites.saas_sites.create_user_entry_in_saas_site"
+        url = f"https://{frappe.conf.admin_url}/api/method/bettersaas.bettersaas.doctype.saas_sites.saas_sites.create_user_entry_in_saas_site"
         cookies = {"sid": get_login_sid()}
         requests.post(url, json=user_obj, cookies=cookies)
         return
@@ -309,7 +309,7 @@ def delete_user_in_user_details(doc, method):
         "email": doc.name,
     }
     try:
-        url = f"http://{frappe.conf.admin_url}/api/method/bettersaas.bettersaas.doctype.saas_sites.saas_sites.delete_user_entry_in_saas_site"
+        url = f"https://{frappe.conf.admin_url}/api/method/bettersaas.bettersaas.doctype.saas_sites.saas_sites.delete_user_entry_in_saas_site"
         cookies = {"sid": get_login_sid()}
         requests.post(url, json=user_obj, cookies=cookies)
         return
