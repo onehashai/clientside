@@ -319,10 +319,21 @@ def delete_user_in_user_details(doc, method):
 def get_login_sid():
     admin_site_name = frappe.conf.admin_url
     admin_password = frappe.conf.administrator_password
-    response = requests.post(
-            f"http://{admin_site_name}/api/method/login",
-            data={"usr": "Administrator", "pwd": admin_password},
-        )
-    sid = response.cookies.get("sid")
-    if sid:
+    try:
+        response = requests.post(
+                f"http://{admin_site_name}/api/method/login",
+                data={"usr": "Administrator", "pwd": admin_password},
+            )
+        if response.status_code != 200:
+            frappe.log_error(f"Login failed: {response.text}", "get_login_sid")
+
+        sid = response.cookies.get("sid")
+        if not sid:
+            frappe.log_error("SID not received", "get_login_sid")
+            return None
+
         return sid
+
+    except Exception as e:
+        frappe.log_error(f"Exception during login: {str(e)}", "get_login_sid")
+        return None
