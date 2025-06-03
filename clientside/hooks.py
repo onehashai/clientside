@@ -1,4 +1,5 @@
 from . import __version__ as app_version
+import clientside
 
 app_name = "clientside"
 app_title = "Clientside"
@@ -12,7 +13,10 @@ app_license = "MIT"
 
 # include js, css files in header of desk.html
 # app_include_css = ""
-app_include_js = ["assets/clientside/js/check_subscription.js" ,"/assets/clientside/js/support_widget.js"]
+app_include_js = [
+    "assets/clientside/js/check_subscription.js",
+    "/assets/clientside/js/support_widget.js",
+]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/clientside/css/clientside.css"
@@ -100,7 +104,8 @@ after_install = "clientside.install.after_install"
 override_doctype_class = {
     "Communication": "clientside.clientside.overrides.communication.CommunicationOverride",
     "System Settings": "clientside.clientside.overrides.system_settings.SystemSettingsOverride",
-    "Email Queue": "clientside.clientside.overrides.email_queue.EmailQueueOverride"
+    "Email Queue": "clientside.clientside.overrides.email_queue.EmailQueueOverride",
+    "Notification": "clientside.clientside.overrides.notification.NotificationOverride",
 }
 # Document Events
 # ---------------
@@ -117,29 +122,29 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 scheduler_events = {
-# 	"all": [
-# 		"whitelabel.tasks.all"
-# 	],
-# 	"daily": [
-# 		"whitelabel.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"whitelabel.tasks.hourly"
-# 	],
-	"monthly": [
+    # 	"all": [
+    # 		"whitelabel.tasks.all"
+    # 	],
+    # 	"daily": [
+    # 		"whitelabel.tasks.daily"
+    # 	],
+    # 	"hourly": [
+    # 		"whitelabel.tasks.hourly"
+    # 	],
+    "monthly": [
         "clientside.clientside.page.onehash_backups.onehash_backups.schedule_files_backup_monthly",
     ],
     "weekly": [
         "clientside.clientside.page.onehash_backups.onehash_backups.schedule_files_backup_weekly",
     ],
-    "cron":{
+    "cron": {
         "0 */6 * * *": [
             "clientside.clientside.page.onehash_backups.onehash_backups.schedule_files_backup_daily",
         ],
-        "0 0 */2 * *" : [
+        "0 0 */2 * *": [
             "clientside.clientside.page.onehash_backups.onehash_backups.schedule_files_backup_alternate_days",
         ],
-    }
+    },
 }
 
 # Testing
@@ -155,7 +160,7 @@ override_whitelisted_methods = {
     "frappe.desk.form.save.savedocs": "clientside.clientside.overrides.globals.savedocs",
     "frappe.desk.page.backups.backups.schedule_files_backup": "clientside.clientside.overrides.globals.schedule_files_backup",
     "frappe.core.doctype.communication.email.mark_email_as_seen": "clientside.clientside.overrides.email.mark_email_as_seen",
-    "frappe.core.doctype.communication.email.make": "clientside.clientside.overrides.email.make"
+    "frappe.core.doctype.communication.email.make": "clientside.clientside.overrides.email.make",
 }
 #
 # each overriding function accepts a `data` argument;
@@ -206,9 +211,7 @@ boot_session = "clientside.boot.extend_bootinfo"
 # 		"doctype": "{doctype_4}"
 # 	}
 # ]
-website_redirects = [
-    {"source": "/app/backups", "target": "/app/onehash-backups"}
-]
+website_redirects = [{"source": "/app/backups", "target": "/app/onehash-backups"}]
 # Authentication and authorization
 # --------------------------------
 # on_session_creation = "clientside.clientside.utils.alertForUpgrade"
