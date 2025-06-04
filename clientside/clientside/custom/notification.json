@@ -35,7 +35,7 @@
       "link_filters": null,
       "mandatory_depends_on": "eval:doc.channel==\"WhatsApp\"",
       "modified": "2025-05-27 12:28:40.610758",
-      "module": null,
+      "module": "Clientside",
       "name": "Notification-custom_whatsapp_app",
       "no_copy": 0,
       "non_negative": 0,
