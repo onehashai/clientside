@@ -1,0 +1,2 @@
+clientside.patches.update_notification_channels
+clientside.patches.add_custom_fields_to_notification
