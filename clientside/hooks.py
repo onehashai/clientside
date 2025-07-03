@@ -50,7 +50,7 @@ app_include_js = [
 # 	"Role": "home_page"
 # }
 
-# after_migrate = ['clientside.api.clientside_patch']
+after_migrate = ['clientside.api.update_workspaces']
 
 # Generators
 # ----------

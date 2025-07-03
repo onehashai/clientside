@@ -12,7 +12,7 @@ def extend_bootinfo(bootinfo):
         bootinfo.subscription_expired = True
 
 
-    elif subscription_status in ["past_due", "active", "trialing"]:
+    elif subscription_status in ["past_due", "trialing"]:
         if subscription_ends_on:
             today_date = getdate(today())
             expiry_date = getdate(subscription_ends_on)
