@@ -30,7 +30,10 @@ def get_active_users(exclude_users=[]):
         active_users_list = frappe.get_all(
             "User",
             fields=["name", "email", "user_type", "enabled"],
-            filters={"name": ["not in", exclude_users]},
+            filters={
+                "name": ["not in", exclude_users],
+                "user_type": ["!=", "Website User"],
+            },
         )
         customer_email = frappe.conf.get("customer_email")
         if customer_email.endswith("@onehash.ai"):
@@ -107,4 +110,3 @@ def delete_site():
         frappe.conf.admin_url, frappe.local.site
     )
     frappe.utils.execute_in_shell(cmd)
-
