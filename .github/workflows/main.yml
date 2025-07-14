@@ -18,9 +18,9 @@ jobs:
       - name: Execute commands via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secrets.EC2_IP }}
+          host: ${{ secrets.CRM_EC2_IP }}
           username: ubuntu
-          key: ${{ secrets.EC2_KEY }}
+          key: ${{ secrets.CRM_EC2_KEY }}
           script: |
             echo "🔄 Deploying clientside to EC2..."
             
@@ -44,7 +44,3 @@ jobs:
             '
             echo "🚀 Restarting supervisor services..."
             sudo supervisorctl restart all
-            
-            
-
-
