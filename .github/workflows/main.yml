@@ -25,10 +25,16 @@ jobs:
             echo "🔄 Deploying clientside to EC2..."
 
             sudo -u onehash bash -c '
+              export NVM_DIR="/home/onehash/.nvm"
+              [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
+              nvm use 18
+
+              echo "✅ Node version in use:"
+              node -v
+
               cd /home/onehash/frappe-bench/apps/clientside
 
               echo "⬇️ Pulling latest code from v-15 branch..."
-              git checkout v-15 
               git pull upstream v-15
 
               echo "⚙️ Building clientside app..."
