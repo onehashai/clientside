@@ -23,6 +23,7 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             echo "🔄 Deploying clientside to EC2..."
+            cd /home/onehash
 
             sudo -u onehash bash -c '
               export NVM_DIR="/home/onehash/.nvm"
@@ -39,8 +40,11 @@ jobs:
 
               echo "⚙️ Building clientside app..."
               bench build --app clientside
+
+              echo "🚀 Restarting supervisor services..."
+              echo "${{secrets.EC2_PW}}" | sudo -S supervisorctl restart all
             '
-            echo "🚀 Restarting supervisor services..."
-            sudo supervisorctl restart all
+            
+            
 
 
