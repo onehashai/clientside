@@ -19,7 +19,7 @@ jobs:
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_IP }}
-          username: onehash
+          username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           script: |
             echo "🔄 Deploying clientside to EC2..."
