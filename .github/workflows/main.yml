@@ -41,7 +41,6 @@ jobs:
 
               echo "⚙️ Building clientside app..."
               bench build --app clientside
-
             '
             echo "🚀 Restarting supervisor services..."
             echo "${{secrets.EC2_PW}}" | sudo -S supervisorctl restart all
