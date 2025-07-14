@@ -25,9 +25,6 @@ jobs:
             echo "🔄 Deploying clientside to EC2..."
             cd /home/onehash/frappe-bench/apps/clientside
 
-            echo "📦 Stashing any local changes..."
-            git stash
-
             echo "⬇️ Pulling latest code from v-15 branch..."
             git checkout v-15 
             git pull upstream v-15
