@@ -22,3 +22,4 @@ def extend_bootinfo(bootinfo):
 
     bootinfo.chat_widget_base_url = frappe.conf.chat_widget_base_url
     bootinfo.chat_widget_token = frappe.conf.chat_widget_token
+    bootinfo.chat_widget_disabled = frappe.conf.chat_widget_disabled
