@@ -1,7 +1,9 @@
 $(document).ready(function () {
   const baseUrl = frappe.boot.chat_widget_base_url;
   const token = frappe.boot.chat_widget_token;
+  const disabled = frappe.boot.chat_widget_disabled;
   if (!token || !baseUrl) return;
+  if (disabled) return;
 
   (function(d, t) {
     var BASE_URL = baseUrl;
