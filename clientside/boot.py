@@ -8,7 +8,7 @@ def extend_bootinfo(bootinfo):
 
     bootinfo.subscription_expired = False
 
-    if subscription_status in ["unpaid", "canceled", "incomplete", "incomplete_expired"]:
+    if subscription_status in ["unpaid", "canceled", "incomplete", "incomplete_expired", "paused"]:
         bootinfo.subscription_expired = True
 
 
