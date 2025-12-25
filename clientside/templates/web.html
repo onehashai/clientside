@@ -2,6 +2,15 @@
 %} {% macro main_content() %}
 <div class="page-content-wrapper">
   {% block page_container %}
+  <div class="page-header-wrapper">
+    <div class="page-header">{% block header %}{% endblock %}</div>
+
+    {% if self.header_actions() %}
+    <div class="page-header-actions-block">
+      {% block header_actions %}{% endblock %}
+    </div>
+    {% endif %}
+  </div>
 
   <div class="page_content">{%- block page_content -%}{%- endblock -%}</div>
 

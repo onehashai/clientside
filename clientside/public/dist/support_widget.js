@@ -14,4 +14,3 @@ $(document).ready(function () {
     d.getElementsByTagName("head")[0].appendChild(s);
   })(document);
 });
-
