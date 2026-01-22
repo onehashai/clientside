@@ -43,7 +43,7 @@ frappe.pages["market-place"].on_page_load = function (wrapper) {
                   `<button type="button" class="btn btn-danger" id="btn${index} " name='${res.message[key].app_name}' value="uninstall" >Uninstall <i class="fa fa-remove" aria-hidden="true"></i></button>`;
               } else if (res.message[key].connection_url) {
                 document.getElementById(`div${index}`).innerHTML +=
-                  `<a target="_blank" href="${res.message[key].connection_url}" class="btn btn-primary" name=${res.message[key].app_name} value="connect" >Connect <i class="fa-solid fa-arrow-up-right-from-square"></i></button>`;
+                  `<a target="_blank" href="${res.message[key].connection_url}" class="btn btn-primary" name=${res.message[key].app_name} value="connect" >Connect <i class="fa fa-link" style="rotate: 90deg;"></i></button>`;
               } else {
                 document.getElementById(`div${index}`).innerHTML +=
                   `<button type="button" class="btn btn-primary" id="btn${index} " name=${res.message[key].app_name} value="install" >Install <i class="fa fa-download" aria-hidden="true"></i></button>`;
