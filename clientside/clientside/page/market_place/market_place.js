@@ -5,19 +5,19 @@ frappe.pages["market-place"].on_page_load = function (wrapper) {
     single_column: true,
   });
   $(frappe.render_template("market_place")).appendTo(
-    page.body.addClass("no-border")
+    page.body.addClass("no-border"),
   );
   $(document).ready(function () {
-    document.getElementById(
-      "app_div"
-    ).innerHTML = `	<div class='d-flex justify-content-center w-100'>
+    document.getElementById("app_div").innerHTML =
+      `	<div class='d-flex justify-content-center w-100'>
   			<div class="spinner-border text-primary" role="status">
     			<span class="visually-hidden"></span>
  		 	</div>
  		 	</div>
 		`;
     frappe.call({
-      method: "clientside.clientside.page.market_place.market_place.get_all_apps",
+      method:
+        "clientside.clientside.page.market_place.market_place.get_all_apps",
       callback: (res) => {
         document.getElementById("app_div").innerHTML = "";
         Object.keys(res.message).forEach(function (key, index) {
@@ -35,28 +35,24 @@ frappe.pages["market-place"].on_page_load = function (wrapper) {
 							</div>
 							</div> 
 						</div>`;
-          if(res.message[key].enabled==1)
-          {
+          if (res.message[key].enabled == 1) {
             var userRoles = frappe.user_roles;
-            if (userRoles.includes('OneHash Manager'))
-              {
-                if (res.message[key].installed == "true") {
-                  document.getElementById(
-                    `div${index}`
-                  ).innerHTML += `<button type="button" class="btn btn-danger" id="btn${index} " name='${res.message[key].app_name}' value="uninstall" >Uninstall <i class="fa fa-remove" aria-hidden="true"></i></button>`;
-                } else {
-                  document.getElementById(
-                    `div${index}`
-                  ).innerHTML += `<button type="button" class="btn btn-primary" id="btn${index} " name=${res.message[key].app_name} value="install" >Install <i class="fa fa-download" aria-hidden="true"></i></button>`;
-                }
+            if (userRoles.includes("OneHash Manager")) {
+              if (res.message[key].installed == "true") {
+                document.getElementById(`div${index}`).innerHTML +=
+                  `<button type="button" class="btn btn-danger" id="btn${index} " name='${res.message[key].app_name}' value="uninstall" >Uninstall <i class="fa fa-remove" aria-hidden="true"></i></button>`;
+              } else if (res.message[key].connection_url) {
+                document.getElementById(`div${index}`).innerHTML +=
+                  `<a target="_blank" href="${res.message[key].connection_url}" class="btn btn-primary" name=${res.message[key].app_name} value="connect" >Connect <i class="fa fa-link" style="rotate: 90deg;"></i></button>`;
+              } else {
+                document.getElementById(`div${index}`).innerHTML +=
+                  `<button type="button" class="btn btn-primary" id="btn${index} " name=${res.message[key].app_name} value="install" >Install <i class="fa fa-download" aria-hidden="true"></i></button>`;
               }
-          }
-          else
-            {
-              document.getElementById(
-                `div${index}`
-              ).innerHTML += `<button type="button" class="btn btn-success" id=" " name='comming_soon' disabled>Comming Soon  ; )</button>`;
             }
+          } else {
+            document.getElementById(`div${index}`).innerHTML +=
+              `<button type="button" class="btn btn-success" id=" " name='comming_soon' disabled>Comming Soon  ; )</button>`;
+          }
         });
       },
       error: (err) => {
@@ -69,12 +65,12 @@ frappe.pages["market-place"].on_page_load = function (wrapper) {
 $(document).ready(function () {
   $(document).on("click", "button", function () {
     if (this.value == "install") {
-      document.getElementById(
-        `${this.id}`
-      ).innerHTML = ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Installing...`;
+      document.getElementById(`${this.id}`).innerHTML =
+        ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Installing...`;
       $(":button").prop("disabled", true);
       frappe.call({
-        method: "clientside.clientside.page.market_place.market_place.install_app",
+        method:
+          "clientside.clientside.page.market_place.market_place.install_app",
         args: {
           app_name: this.name,
         },
@@ -94,12 +90,12 @@ $(document).ready(function () {
         },
       });
     } else {
-      document.getElementById(
-        `${this.id}`
-      ).innerHTML = ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uninstalling...`;
+      document.getElementById(`${this.id}`).innerHTML =
+        ` <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uninstalling...`;
       $(":button").prop("disabled", true);
       frappe.call({
-        method: "clientside.clientside.page.market_place.market_place.uninstall_app",
+        method:
+          "clientside.clientside.page.market_place.market_place.uninstall_app",
         args: {
           app_name: this.name,
         },
