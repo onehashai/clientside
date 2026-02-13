@@ -5,12 +5,19 @@ $(document).ready(function () {
   if (!token || !baseUrl) return;
   if (disabled) return;
 
-  window.$crisp = [];
-  window.CRISP_WEBSITE_ID = token;
-  (function (d) {
-    s = d.createElement("script");
-    s.src = baseUrl;
-    s.async = 1;
-    d.getElementsByTagName("head")[0].appendChild(s);
-  })(document);
+  (function (d, t) {
+    var BASE_URL = baseUrl;
+    var g = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    g.src = BASE_URL + "/packs/js/sdk.js";
+    g.defer = true;
+    g.async = true;
+    s.parentNode.insertBefore(g, s);
+    g.onload = function () {
+      window.chatwootSDK.run({
+        websiteToken: token,
+        baseUrl: BASE_URL,
+      });
+    };
+  })(document, "script");
 });
