@@ -14,6 +14,7 @@ app_license = "MIT"
 # include js, css files in header of desk.html
 # app_include_css = ""
 app_include_js = [
+    "clientside.bundle.js",
     "assets/clientside/js/check_subscription.js",
     "/assets/clientside/js/support_widget.js",
 ]
@@ -50,7 +51,7 @@ app_include_js = [
 # 	"Role": "home_page"
 # }
 
-after_migrate = ['clientside.api.update_workspaces']
+after_migrate = ["clientside.api.update_workspaces"]
 
 # Generators
 # ----------
