@@ -7,6 +7,7 @@ from frappe.desk.doctype.workspace.workspace import update_page
 def after_install():
     create_role("OneHash Manager")
     update_workspace_title()
+    update_workspace_shortcuts()
     hide_integrations()
     update_workspace_shortcut()
     update_navbar_settings()
@@ -54,6 +55,31 @@ def update_workspace_title():
 
         except Exception:
             frappe.db.rollback()
+
+
+def update_workspace_shortcuts():
+    workspaces_to_update = frappe.get_all(
+        "Workspace",
+        filters=[["Workspace Shortcut", "url", "like", "%frappe%"]],
+        fields=["name"],
+    )
+
+    for workspace in workspaces_to_update:
+        workspace_doc = frappe.get_doc("Workspace", workspace["name"])
+
+        shortcuts_to_remove = [
+            s
+            for s in workspace_doc.shortcuts
+            if s.url
+            and (
+                s.url.startswith("https://frappe") or s.url.startwith("https://erpnext")
+            )
+        ]
+        for shortcut in shortcuts_to_remove:
+            workspace_doc.remove(shortcut)
+
+        if len(shortcuts_to_remove):
+            workspace_doc.save()
 
 
 def hide_integrations():
