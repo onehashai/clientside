@@ -8,7 +8,6 @@ def after_install():
     create_role("OneHash Manager")
     update_workspace_title()
     hide_integrations()
-    update_workspace_shortcuts()
     update_navbar_settings()
     add_custom_fields_to_communication()
     add_custom_fields_to_email_campaign()
@@ -71,29 +70,6 @@ def hide_integrations():
             print(f"Workspace '{workspace['name']}' is already hidden.")
     else:
         print("Workspace 'Integrations' not found.")
-
-
-def update_workspace_shortcuts():
-    workspace_shortcuts = frappe.get_all(
-        "Workspace Shortcut", fields=["name", "label", "url"]
-    )
-
-    workspace_shortcuts_to_remove = []
-    for shortcut in workspace_shortcuts:
-        if shortcut["url"] and (
-            shortcut["url"].startswith("https://frappe")
-            or shortcut["url"].startwith("https://erpnext")
-        ):
-            workspace_shortcuts_to_remove.append(shortcut)
-        elif shortcut["label"] == "Browse Apps":
-            workspace_shortcuts_to_remove.append(shortcut)
-
-    if workspace_shortcuts_to_remove:
-        for shortcut in workspace_shortcuts_to_remove:
-            frappe.delete_doc("Workspace Shortcut", shortcut["name"])
-        frappe.db.commit()
-    else:
-        print("No workspace shortcut to update.")
 
 
 def update_navbar_settings():
