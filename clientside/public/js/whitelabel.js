@@ -25,7 +25,8 @@ function whitelabelLink(url) {
 
   if (/https?:\/\/docs\.(erpnext|frappe)\./i.test(url)) return DOCS_FALLBACK;
 
-  if (/https?:\/\/github\.com\/frappe\//i.test(url)) return GITHUB_FALLBACK;
+  if (/https?:\/\/github\.com\/(erpnext|frappe)\//i.test(url))
+    return GITHUB_FALLBACK;
 
   if (/https?:\/\/[^/]*(erpnext|frappe)[^/]*/i.test(url)) return HOME_FALLBACK;
 
