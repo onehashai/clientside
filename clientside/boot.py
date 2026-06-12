@@ -1,16 +1,25 @@
 import frappe
 
 
+def get_config_date(*keys):
+    for key in keys:
+        value = frappe.conf.get(key)
+        if value and value != "None":
+            return value
+
+
 def extend_bootinfo(bootinfo):
     from frappe.utils import today, getdate, add_days
 
     today_date = getdate(today())
 
-    subscription_ends_on = frappe.conf.subscription_ends_on
     subscription_status = frappe.conf.subscription_status
-    invoice_due_date = frappe.conf.invoice_due_date
+    site_expiry_date = get_config_date("site_expiry_date")
+    fallback_expiry_date = get_config_date("invoice_due_date", "subscription_ends_on")
 
-    expiry_date = getdate(invoice_due_date or subscription_ends_on)
+    expiry_date = getdate(site_expiry_date or fallback_expiry_date)
+    if not site_expiry_date and expiry_date:
+        expiry_date = add_days(expiry_date, 5)
     bootinfo.subscription_expired = False
 
     if subscription_status in [
@@ -24,9 +33,7 @@ def extend_bootinfo(bootinfo):
 
     elif subscription_status in ["past_due", "trialing"]:
         if expiry_date:
-            if subscription_status != "trialing" and today_date > add_days(
-                expiry_date, 5
-            ):
+            if today_date > expiry_date:
                 bootinfo.subscription_expired = True
 
     bootinfo.chat_widget_base_url = frappe.conf.chat_widget_base_url
