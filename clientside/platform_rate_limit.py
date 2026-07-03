@@ -27,9 +27,13 @@ ENDPOINT_DEFAULTS = {
 class PlatformRateLimitResponse:
     reset: int
     limit: int
+    counter: int
+    rejected: bool = True
+    previous_limiter: object | None = None
 
     def update(self):
-        pass
+        if self.previous_limiter and hasattr(self.previous_limiter, "update"):
+            self.previous_limiter.update()
 
     def headers(self):
         return {
@@ -69,7 +73,12 @@ def enforce_api_rate_limit():
     for key, limit in checks:
         count, reset = increment_window(key, window)
         if count > limit:
-            frappe.local.rate_limiter = PlatformRateLimitResponse(reset=reset, limit=limit)
+            frappe.local.rate_limiter = PlatformRateLimitResponse(
+                reset=reset,
+                limit=limit,
+                counter=count,
+                previous_limiter=getattr(frappe.local, "rate_limiter", None),
+            )
             raise frappe.TooManyRequestsError
 
 
