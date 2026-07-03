@@ -5,8 +5,6 @@ from urllib.parse import unquote
 
 from werkzeug.wrappers import Response
 
-
-
 DEFAULT_WINDOW_SECONDS = 60
 DEFAULT_IP_LIMIT = 180
 DEFAULT_GLOBAL_LIMIT = 1000
@@ -29,6 +27,9 @@ ENDPOINT_DEFAULTS = {
 class PlatformRateLimitResponse:
     reset: int
     limit: int
+
+    def update(self):
+        pass
 
     def headers(self):
         return {
