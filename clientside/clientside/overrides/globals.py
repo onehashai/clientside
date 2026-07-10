@@ -12,6 +12,7 @@ from frappe.desk.form.save import savedocs as clientside_savedocs
 from clientside.clientside.page.subscription_info.subscription_info import (
     get_active_users,
 )
+from clientside.clientside.access_control import reject_restricted_doctype_payload
 
 
 def user_creation_allowed(user=None):
@@ -44,6 +45,7 @@ def user_creation_allowed(user=None):
 
 @frappe.whitelist(methods=["POST", "PUT"])
 def save(doc):
+    reject_restricted_doctype_payload(doc)
     doc_data = json.loads(doc)
     if doc_data.get("doctype") == "User" and doc_data.get("enabled"):
         if user_creation_allowed(doc_data.get("name")):
@@ -59,6 +61,7 @@ def save(doc):
 
 @frappe.whitelist()
 def savedocs(doc, action):
+    reject_restricted_doctype_payload(doc)
     doc_data = json.loads(doc)
     if doc_data.get("doctype") == "User" and doc_data.get("enabled"):
         if user_creation_allowed(doc_data.get("name")):
