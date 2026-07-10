@@ -16,7 +16,6 @@ app_license = "MIT"
 app_include_js = [
     "clientside.bundle.js",
     "assets/clientside/js/check_subscription.js",
-    "/assets/clientside/js/support_widget.js",
 ]
 
 # include js, css files in header of web template
