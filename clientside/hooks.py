@@ -92,10 +92,20 @@ after_install = "clientside.install.after_install"
 # permission_query_conditions = {
 # 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
 # }
-#
+permission_query_conditions = {
+    "Server Script": "clientside.clientside.access_control.deny_script_control_query_conditions",
+    "Client Script": "clientside.clientside.access_control.deny_script_control_query_conditions",
+    "System Console": "clientside.clientside.access_control.deny_script_control_query_conditions",
+}
+
 # has_permission = {
 # 	"Event": "frappe.desk.doctype.event.event.has_permission",
 # }
+has_permission = {
+    "Server Script": "clientside.clientside.access_control.has_script_control_permission",
+    "Client Script": "clientside.clientside.access_control.has_script_control_permission",
+    "System Console": "clientside.clientside.access_control.has_script_control_permission",
+}
 
 # DocType Class
 # ---------------
@@ -158,6 +168,8 @@ scheduler_events = {
 override_whitelisted_methods = {
     "frappe.client.save": "clientside.clientside.overrides.globals.save",
     "frappe.desk.form.save.savedocs": "clientside.clientside.overrides.globals.savedocs",
+    "frappe.desk.doctype.system_console.system_console.execute_code": "clientside.clientside.access_control.execute_system_console_code",
+    "frappe.desk.doctype.system_console.system_console.show_processlist": "clientside.clientside.access_control.show_system_console_processlist",
     "frappe.desk.page.backups.backups.schedule_files_backup": "clientside.clientside.overrides.globals.schedule_files_backup",
     "frappe.core.doctype.communication.email.mark_email_as_seen": "clientside.clientside.overrides.email.mark_email_as_seen",
     "frappe.core.doctype.communication.email.make": "clientside.clientside.overrides.email.make",
