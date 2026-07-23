@@ -50,7 +50,10 @@ app_include_js = [
 # 	"Role": "home_page"
 # }
 
-after_migrate = ["clientside.api.update_workspaces"]
+after_migrate = [
+    "clientside.api.update_workspaces",
+    "clientside.install.apply_enterprise_defaults",
+]
 
 # Generators
 # ----------
@@ -131,31 +134,7 @@ doc_events = {
 
 # Scheduled Tasks
 # ---------------
-scheduler_events = {
-    # 	"all": [
-    # 		"whitelabel.tasks.all"
-    # 	],
-    # 	"daily": [
-    # 		"whitelabel.tasks.daily"
-    # 	],
-    # 	"hourly": [
-    # 		"whitelabel.tasks.hourly"
-    # 	],
-    "monthly": [
-        "clientside.clientside.page.onehash_backups.onehash_backups.schedule_files_backup_monthly",
-    ],
-    "weekly": [
-        "clientside.clientside.page.onehash_backups.onehash_backups.schedule_files_backup_weekly",
-    ],
-    "cron": {
-        "0 */6 * * *": [
-            "clientside.clientside.page.onehash_backups.onehash_backups.schedule_files_backup_daily",
-        ],
-        "0 0 */2 * *": [
-            "clientside.clientside.page.onehash_backups.onehash_backups.schedule_files_backup_alternate_days",
-        ],
-    },
-}
+scheduler_events = {}
 
 # Testing
 # -------
@@ -170,7 +149,6 @@ override_whitelisted_methods = {
     "frappe.desk.form.save.savedocs": "clientside.clientside.overrides.globals.savedocs",
     "frappe.desk.doctype.system_console.system_console.execute_code": "clientside.clientside.access_control.execute_system_console_code",
     "frappe.desk.doctype.system_console.system_console.show_processlist": "clientside.clientside.access_control.show_system_console_processlist",
-    "frappe.desk.page.backups.backups.schedule_files_backup": "clientside.clientside.overrides.globals.schedule_files_backup",
     "frappe.core.doctype.communication.email.mark_email_as_seen": "clientside.clientside.overrides.email.mark_email_as_seen",
     "frappe.core.doctype.communication.email.make": "clientside.clientside.overrides.email.make",
 }
@@ -223,7 +201,7 @@ before_request = ["clientside.platform_rate_limit.enforce_api_rate_limit"]
 # 		"doctype": "{doctype_4}"
 # 	}
 # ]
-website_redirects = [{"source": "/app/backups", "target": "/app/onehash-backups"}]
+website_redirects = []
 # Authentication and authorization
 # --------------------------------
 # on_session_creation = "clientside.clientside.utils.alertForUpgrade"

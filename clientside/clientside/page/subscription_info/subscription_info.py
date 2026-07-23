@@ -106,7 +106,4 @@ def get_context(context):
 
 @frappe.whitelist()
 def delete_site():
-    cmd = "bench --site {} execute bettersaas.api.delete_site --args {}".format(
-        frappe.conf.admin_url, frappe.local.site
-    )
-    frappe.utils.execute_in_shell(cmd)
+    frappe.throw("Delete Site is not available for enterprise sites.")

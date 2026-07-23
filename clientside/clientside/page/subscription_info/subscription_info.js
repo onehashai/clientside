@@ -190,11 +190,9 @@ function contact_us() {
 }
 
 function delete_site() {
-	frappe.confirm(__("This will delete your site permanently. Are you sure you want to proceed?"), function() {
-		frappe.call({
-			method: "clientside.clientside.page.subscription_info.subscription_info.delete_site",
-			callback: function (r) {
-			},
-		});
-	})
+	frappe.msgprint({
+		title: __("Not Available"),
+		message: __("Delete Site is not available for enterprise sites."),
+		indicator: "orange",
+	});
 }

@@ -4,9 +4,13 @@ frappe.pages["market-place"].on_page_load = function (wrapper) {
     title: "Marketplace",
     single_column: true,
   });
-  $(frappe.render_template("market_place")).appendTo(
-    page.body.addClass("no-border"),
+  page.body.html(
+    `<div class="frappe-card p-5 text-center">
+      <h4>${__("Marketplace is not available for enterprise sites.")}</h4>
+    </div>`,
   );
+  return;
+
   $(document).ready(function () {
     document.getElementById("app_div").innerHTML =
       `	<div class='d-flex justify-content-center w-100'>
