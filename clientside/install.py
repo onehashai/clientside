@@ -8,7 +8,7 @@ def after_install():
     create_role("OneHash Manager")
     update_workspace_title()
     hide_integrations()
-    update_navbar_settings()
+    apply_enterprise_defaults()
     add_custom_fields_to_communication()
     add_custom_fields_to_email_campaign()
     update_notification_channels()
@@ -104,6 +104,65 @@ def update_navbar_settings():
     if label:
         frappe.db.set_value("Navbar Item", label[0]["name"], "hidden", 1)
         frappe.db.commit()
+
+
+def apply_enterprise_defaults():
+    hide_apps_navbar_item()
+    hide_saas_navbar_items()
+    hide_saas_pages()
+    hide_saas_workspace_links()
+
+
+def hide_apps_navbar_item():
+    for item in frappe.get_all("Navbar Item", filters={"item_label": "Apps"}, pluck="name"):
+        frappe.db.set_value("Navbar Item", item, "hidden", 1)
+
+    frappe.db.commit()
+
+
+def hide_saas_navbar_items():
+    for item_label in ("Marketplace", "OneHash Backups"):
+        for item in frappe.get_all(
+            "Navbar Item", filters={"item_label": item_label}, pluck="name"
+        ):
+            frappe.db.set_value("Navbar Item", item, "hidden", 1)
+
+    frappe.db.commit()
+
+
+def hide_saas_pages():
+    for page in ("onehash-backups", "market-place"):
+        if frappe.db.exists("Page", page):
+            frappe.db.set_value("Page", page, "system_page", 1)
+
+    frappe.db.commit()
+
+
+def hide_saas_workspace_links():
+    page_names = ("onehash-backups", "market-place")
+    labels = ("OneHash Backups", "Marketplace", "Market Place")
+
+    if frappe.db.exists("DocType", "Workspace Link"):
+        for name in frappe.get_all(
+            "Workspace Link",
+            filters={"link_type": "Page", "link_to": ("in", page_names)},
+            pluck="name",
+        ):
+            frappe.db.set_value("Workspace Link", name, "hidden", 1)
+
+        for name in frappe.get_all(
+            "Workspace Link", filters={"label": ("in", labels)}, pluck="name"
+        ):
+            frappe.db.set_value("Workspace Link", name, "hidden", 1)
+
+    if frappe.db.exists("DocType", "Workspace Shortcut"):
+        frappe.db.delete(
+            "Workspace Shortcut",
+            {"type": "Page", "link_to": ("in", page_names)},
+        )
+        frappe.db.delete("Workspace Shortcut", {"label": ("in", labels)})
+
+    frappe.db.commit()
 
 
 def add_custom_fields_to_communication():

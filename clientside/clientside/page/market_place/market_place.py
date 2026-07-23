@@ -4,6 +4,8 @@ import json
 
 @frappe.whitelist(allow_guest=True)
 def get_all_apps():
+    frappe.throw("Marketplace is not available for enterprise sites.")
+
     url = "http://{site_name}/api/method/bettersaas.bettersaas.doctype.available_apps.available_apps.get_apps".format(
         site_name=frappe.conf.admin_url
     )
@@ -24,6 +26,8 @@ def get_all_apps():
 
 @frappe.whitelist()
 def install_app(*args, **kwargs):
+    frappe.throw("Marketplace app installation is not available for enterprise sites.")
+
     arr = []
     for key, value in kwargs.items():
         arr.append((key, value))
@@ -38,6 +42,8 @@ def install_app(*args, **kwargs):
 
 @frappe.whitelist()
 def uninstall_app(*args, **kwargs):
+    frappe.throw("Marketplace app uninstallation is not available for enterprise sites.")
+
     arr = []
     for key, value in kwargs.items():
         arr.append((key, value))

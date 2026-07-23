@@ -5,6 +5,13 @@ frappe.pages['onehash-backups'].on_page_load = function(wrapper) {
 		single_column: true
 	});
 
+	frappe.show_alert({
+		message: __("Opening native Frappe backups."),
+		indicator: "blue",
+	});
+	frappe.set_route("backups");
+	return;
+
 	
 	page.add_inner_button(__("Schedule a Backup Now"), function () {
 		let d = new frappe.ui.Dialog({

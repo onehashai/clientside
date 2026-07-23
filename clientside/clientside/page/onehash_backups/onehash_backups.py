@@ -23,6 +23,9 @@ from rq.timeouts import JobTimeoutException
 
 @frappe.whitelist()
 def get_context(context):
+    frappe.local.flags.redirect_location = "/app/backups"
+    raise frappe.Redirect
+
     def get_download_link(key):
         from botocore.client import Config
         from botocore.exceptions import ClientError
@@ -290,4 +293,3 @@ def schedule_files_backup(site_name, backup_limit, frequency):
         frequency=frequency,
     )
     frappe.msgprint(_("Queued for backup."))
-   
