@@ -13,7 +13,7 @@ def get_config_bool(key):
 
 
 def extend_bootinfo(bootinfo):
-    from frappe.utils import today, getdate, add_days
+    from frappe.utils import add_days, cint, getdate, today
 
     today_date = getdate(today())
 
@@ -27,10 +27,12 @@ def extend_bootinfo(bootinfo):
 
         expiry_date = getdate(site_expiry_date or fallback_expiry_date)
         if not site_expiry_date and expiry_date:
-            expiry_date = add_days(expiry_date, 5)
+            expiry_date = add_days(
+                expiry_date,
+                cint(frappe.conf.get("subscription_expiry_grace_days", 5)),
+            )
 
         if subscription_status in [
-            "unpaid",
             "canceled",
             "incomplete",
             "incomplete_expired",
@@ -38,7 +40,7 @@ def extend_bootinfo(bootinfo):
         ]:
             bootinfo.subscription_expired = True
 
-        elif subscription_status in ["past_due", "trialing"]:
+        elif subscription_status in ["past_due", "trialing", "unpaid"]:
             if expiry_date:
                 if today_date > expiry_date:
                     bootinfo.subscription_expired = True
