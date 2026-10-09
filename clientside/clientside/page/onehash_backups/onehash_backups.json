@@ -10,7 +10,11 @@
  "name": "onehash-backups",
  "owner": "Administrator",
  "page_name": "onehash-backups",
- "roles": [],
+ "roles": [
+  {
+   "role": "System Manager"
+  }
+ ],
  "script": null,
  "standard": "Yes",
  "style": null,

@@ -58,3 +58,17 @@ def update_workspace_shortcuts():
     else:
         print("No workspace shortcut to update.")
 
+
+def disable_legacy_backup_jobs():
+    """Stop obsolete custom and off-site backup jobs on tenant sites."""
+    patterns = (
+        "%onehash_backups%",
+        "%s3_backup_settings%",
+        "%google_drive%backup%",
+        "%dropbox_settings%backup%",
+    )
+    conditions = " OR ".join(["method LIKE %s"] * len(patterns))
+    frappe.db.sql(
+        f"UPDATE `tabScheduled Job Type` SET stopped = 1 WHERE {conditions}",  # nosec B608
+        patterns,
+    )

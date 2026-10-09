@@ -53,6 +53,7 @@ app_include_js = [
 after_migrate = [
     "clientside.api.update_workspaces",
     "clientside.install.apply_enterprise_defaults",
+    "clientside.api.disable_legacy_backup_jobs",
 ]
 
 # Generators
