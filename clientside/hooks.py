@@ -171,7 +171,10 @@ boot_session = "clientside.boot.extend_bootinfo"
 
 # Request Events
 # ----------------
-before_request = ["clientside.platform_rate_limit.enforce_api_rate_limit"]
+before_request = [
+    "clientside.enterprise_management.enforce_site_enabled",
+    "clientside.platform_rate_limit.enforce_api_rate_limit",
+]
 # after_request = ["clientside.utils.after_request"]
 
 # Job Events
