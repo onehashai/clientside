@@ -17,30 +17,23 @@ from clientside.clientside.access_control import reject_restricted_doctype_paylo
 
 def user_creation_allowed(user=None):
     site_config = frappe.get_site_config(site_path=frappe.local.site)
+    active_users = get_active_users([user]) if user else get_active_users()
+    next_user_count = active_users + 1
+    free_allowance = int(site_config.get("min_license") or 0)
+    purchased_quantity = int(site_config.get("subscription_quantity") or 0)
+    if (
+        next_user_count <= free_allowance
+        or next_user_count <= purchased_quantity
+    ):
+        return True
+
     req = requests.get(
         "http://"
         + frappe.conf.admin_url
         + "/api/method/bettersaas.bettersaas.doctype.saas_sites.saas_sites.user_contacted?site_name="
         + frappe.local.site
     ).json()
-    active_users = get_active_users([user]) if user else get_active_users()
-    if site_config["country"] == "IN":
-        if active_users + 1 > 15 and site_config["min_license"] == 15:
-            if req["message"]:
-                return True
-            else:
-                return False
-        if active_users + 1 > int(site_config["subscription_quantity"]):
-            return False
-    else:
-        if active_users + 1 > 10 and site_config["min_license"] == 10:
-            if req["message"]:
-                return True
-            else:
-                return False
-        if active_users + 1 > int(site_config["subscription_quantity"]):
-            return False
-    return True
+    return bool(req["message"])
 
 
 @frappe.whitelist(methods=["POST", "PUT"])
